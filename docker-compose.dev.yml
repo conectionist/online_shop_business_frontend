@@ -1,0 +1,23 @@
+services:
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: online_shop_frontend_dev
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8001/api/v1
+      - NODE_ENV=development
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./package.json:/app/package.json
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./index.html:/app/index.html
+    env_file:
+      - .env
+    stdin_open: true
+    tty: true 

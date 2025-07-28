@@ -1,0 +1,11 @@
+services:
+  frontend-test:
+    build: .
+    environment:
+      - NODE_ENV=test
+    env_file:
+      - .env.test
+    command: ["npm", "run", "test"]
+    volumes:
+      - .:/app
+      - /app/node_modules 
