@@ -65,19 +65,19 @@ This roadmap outlines the complete development plan for the online shop business
   - Create cart store with persistence
   - Setup proper TypeScript typing
 
-#### 1.3 Basic Configuration
-- [ ] **TypeScript Configuration**
+#### 1.3 Basic Configuration ✅
+- [x] **TypeScript Configuration**
   - Define base types for API responses
   - Setup type definitions for all entities
   - Configure strict TypeScript settings
 
-- [ ] **API Service Layer**
+- [x] **API Service Layer**
   - Create base API client with axios/fetch
   - Setup API base URL configuration
   - Create error handling utilities
   - Setup request/response interceptors
 
-- [ ] **Routing Setup**
+- [x] **Routing Setup**
   - Configure React Router
   - Setup route guards for admin/customer areas
   - Create basic layout components
