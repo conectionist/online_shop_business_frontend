@@ -8,24 +8,31 @@ import CustomerLayout from './components/layout/CustomerLayout'
 import WelcomePage from './pages/WelcomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/admin/Dashboard'
+import CategoriesList from './pages/admin/CategoriesList'
+import CategoryForm from './pages/admin/CategoryForm'
 import CustomerDashboard from './pages/customer/Dashboard'
 import { queryClient } from './lib/queryClient'
+import { ToastProvider } from './components/ui/ToastContainer'
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ToastProvider>
       <Router>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<WelcomePage />} />
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Admin routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            {/* Future admin routes will go here */}
-          </Route>
+                  {/* Admin routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="categories" element={<CategoriesList />} />
+          <Route path="categories/new" element={<CategoryForm />} />
+          <Route path="categories/:id/edit" element={<CategoryForm />} />
+          {/* Future admin routes will go here */}
+        </Route>
 
           {/* Customer routes */}
           <Route path="/customer" element={<CustomerLayout />}>
@@ -41,6 +48,7 @@ function App() {
       
       {/* React Query Devtools - only in development */}
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

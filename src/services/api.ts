@@ -131,4 +131,39 @@ export const createQueryParams = (params: Record<string, any>): string => {
   });
   
   return searchParams.toString();
+};
+
+// Helper function to construct full image URLs
+export const getImageUrl = (imagePath: string | null | undefined): string | null => {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // If it starts with /, it's already a relative path to the API
+  if (imagePath.startsWith('/')) {
+    return `${API_BASE_URL}${imagePath}`;
+  }
+  
+  // Otherwise, construct the full URL
+  return `${API_BASE_URL}/api/v1/static/${imagePath}`;
+};
+
+// Utility function for category images
+export const getCategoryImageUrl = (category: any, version: 'original' | 'medium' | 'thumbnail' = 'thumbnail') => {
+  if (!category.image_versions) {
+    return `${API_BASE_URL}/api/v1/static/placeholders/category_placeholder.jpg`;
+  }
+  
+  const imagePath = category.image_versions[version];
+  
+  // If it's already a full URL (starts with /api/v1/static/), use it as is
+  if (imagePath.startsWith('/api/v1/static/')) {
+    return `${API_BASE_URL}${imagePath}`;
+  }
+  
+  // Otherwise, construct the full URL
+  return `${API_BASE_URL}/api/v1/static/uploads/${imagePath}`;
 }; 

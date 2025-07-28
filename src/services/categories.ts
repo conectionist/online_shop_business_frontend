@@ -3,9 +3,8 @@ import { Category } from '@/types/api';
 
 // Types for category operations
 export interface CreateCategoryData {
-  nume: string;
-  descriere?: string;
-  imagine?: File;
+  name: string;
+  image?: File;
 }
 
 export interface UpdateCategoryData extends CreateCategoryData {

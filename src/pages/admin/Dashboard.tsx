@@ -1,4 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { FolderOpen, Package, List } from 'lucide-react';
+import Card from '@/components/ui/Card';
 
 const AdminDashboard: React.FC = () => {
   return (
@@ -11,16 +14,19 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-blue-50 p-6 rounded-lg">
-          <h3 className="text-lg font-medium text-blue-900">Categories</h3>
-          <p className="mt-2 text-sm text-blue-700">
-            Manage product categories and organization.
-          </p>
-          <div className="mt-4">
-            <span className="text-2xl font-bold text-blue-900">0</span>
-            <span className="text-sm text-blue-700 ml-2">categories</span>
-          </div>
-        </div>
+        <Link to="/admin/categories" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="p-6">
+              <div className="flex items-center space-x-3">
+                <FolderOpen className="h-8 w-8 text-blue-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Categories</h3>
+                  <p className="text-gray-600 text-sm">Manage product categories</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </Link>
 
         <div className="bg-green-50 p-6 rounded-lg">
           <h3 className="text-lg font-medium text-green-900">Products</h3>
