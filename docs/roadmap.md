@@ -9,20 +9,20 @@ This roadmap outlines the complete development plan for the online shop business
 ### Phase 1: Project Setup & Foundation
 **Goal**: Establish the development environment and basic project structure
 
-#### 1.1 Project Initialization
-- [ ] **Setup React + TypeScript project with Vite**
+#### 1.1 Project Initialization ✅
+- [x] **Setup React + TypeScript project with Vite**
   - Create new React project with TypeScript template
   - Configure Vite build tool
   - Setup basic project structure
   - Configure ESLint and Prettier
 
-- [ ] **Docker Configuration**
+- [x] **Docker Configuration**
   - Create Dockerfile for development
   - Create docker-compose.yml for local development
   - Create docker-compose.test.yml for testing
   - Setup environment variables (.env files)
 
-- [ ] **Core Dependencies Installation**
+- [x] **Core Dependencies Installation**
   - Install React Router for navigation
   - Install TanStack Query for API state management
   - Install Zustand for local state management
