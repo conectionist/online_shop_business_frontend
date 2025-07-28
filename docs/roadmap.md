@@ -114,14 +114,14 @@ This roadmap outlines the complete development plan for the online shop business
   - Create form submission handlers
   - Create file upload components
 
-#### 2.3 State Management
-- [ ] **Global State Setup**
+#### 2.3 State Management ✅
+- [x] **Global State Setup**
   - Create auth store
   - Create cart store
   - Create UI state store
   - Setup store persistence
 
-- [ ] **API State Management**
+- [x] **API State Management**
   - Setup TanStack Query configuration
   - Create query keys structure
   - Setup error handling and retry logic
