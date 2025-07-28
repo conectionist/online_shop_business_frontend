@@ -1,0 +1,11 @@
+---
+alwaysApply: false
+description: Use baby steps for complex tasks
+---
+Implementing complex tasks in one go is prone to error if not done correctly and in a rushed way. 
+To ensure success, we will always use a "baby steps" approach for complex tasks (i.e. one step at a time).
+That means you will perform a step then wait for the user to give feedback. 
+If the user wants changes, you will implement them. 
+If the user doesn't want changes, the user will give you the green light to move to the next step.
+You will make an effort to actually stick to this (baby step) approach until the end. You will not get ahead of yourself and start implementing multiple steps at a time halfway though the process. 
+Remember: implement step --> get feedback --> apply feedback (if necessary) --> get green light --> implement next step.
