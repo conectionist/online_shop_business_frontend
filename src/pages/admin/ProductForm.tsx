@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useProduct, useCreateProduct, useUpdateProduct } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 import { ProductCreate, ProductUpdate } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
@@ -30,10 +32,13 @@ const ProductForm: React.FC = () => {
   // Fetch product data if editing
   const { data: product, isLoading: isLoadingProduct } = useProduct(Number(id));
 
-  // Mutations
+  // Mutations and queries
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
   const { handleError } = useErrorHandler();
+  
+  // Fetch categories for dropdown
+  const { data: categories, isLoading: isLoadingCategories } = useCategories();
 
   // Load product data when editing
   useEffect(() => {
@@ -117,6 +122,12 @@ const ProductForm: React.FC = () => {
     }
   };
 
+  // Prepare category options for dropdown
+  const categoryOptions = categories?.map((category: any) => ({
+    value: category.id.toString(),
+    label: category.name,
+  })) || [];
+
   if (isEditing && isLoadingProduct) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -194,16 +205,21 @@ const ProductForm: React.FC = () => {
           {/* Category and Unit Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Input
-                label="Category ID"
-                type="number"
-                min="1"
-                value={formData.category_id}
-                onChange={(e) => handleInputChange('category_id', parseInt(e.target.value) || 1)}
-                placeholder="1"
-                error={errors.category_id}
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              {isLoadingCategories ? (
+                <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                  Loading categories...
+                </div>
+              ) : (
+                <Select
+                  options={categoryOptions}
+                  value={formData.category_id?.toString()}
+                  onChange={(value) => handleInputChange('category_id', parseInt(value))}
+                  placeholder="Select a category"
+                />
+              )}
             </div>
             <div>
               <Input

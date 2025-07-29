@@ -2,9 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 import { Product } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 import Image from '@/components/ui/Image';
 import Loading from '@/components/ui/Loading';
@@ -15,28 +17,59 @@ import { useErrorHandler } from '@/hooks/useErrorHandler';
 const ProductsList: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // Fetch all products
   const { data: products, isLoading, error } = useProducts();
   
+  // Fetch categories for display and filtering
+  const { data: categories, isLoading: isLoadingCategories } = useCategories();
+  
   // Delete product mutation
   const deleteProductMutation = useDeleteProduct();
   const { handleError } = useErrorHandler();
 
-  // Filter products based on search term
+  // Helper function to get category name by ID
+  const getCategoryName = (categoryId: number) => {
+    const category = categories?.find(cat => cat.id === categoryId);
+    return category?.name || 'Unknown Category';
+  };
+
+  // Prepare category options for filter dropdown
+  const categoryFilterOptions = [
+    { value: '', label: 'All Categories' },
+    ...(categories?.map(category => ({
+      value: category.id.toString(),
+      label: category.name,
+    })) || [])
+  ];
+
+  // Filter products based on search term and category
   const filteredProducts = useMemo(() => {
-    if (!products || !searchTerm.trim()) {
-      return products;
+    if (!products) return products;
+    
+    let filtered = products;
+    
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter(product => 
+        product.category_id.toString() === selectedCategory
+      );
     }
     
-    const searchLower = searchTerm.toLowerCase();
-    return products.filter(product => 
-      product.nume.toLowerCase().includes(searchLower) ||
-      product.description?.toLowerCase().includes(searchLower)
-    );
-  }, [products, searchTerm]);
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(product => 
+        product.nume.toLowerCase().includes(searchLower) ||
+        product.description?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  }, [products, searchTerm, selectedCategory]);
 
   const handleDeleteClick = (product: Product) => {
     setProductToDelete(product);
@@ -96,14 +129,33 @@ const ProductsList: React.FC = () => {
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="max-w-md">
-        <Input
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          leftIcon={<Search className="w-4 h-4" />}
-        />
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1 max-w-md">
+          <Input
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leftIcon={<Search className="w-4 h-4" />}
+          />
+        </div>
+        <div className="w-full sm:w-48">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Category
+          </label>
+          {isLoadingCategories ? (
+            <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 text-sm">
+              Loading categories...
+            </div>
+          ) : (
+            <Select
+              options={categoryFilterOptions}
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              placeholder="All Categories"
+            />
+          )}
+        </div>
       </div>
 
       {/* Products Grid */}
@@ -137,13 +189,18 @@ const ProductsList: React.FC = () => {
                       {product.description}
                     </p>
                   )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-green-600">
-                      ${product.pret}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      Stock: {product.cantitate}
-                    </span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold text-green-600">
+                        ${product.pret}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        Stock: {product.cantitate}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Category: {getCategoryName(product.category_id)}
+                    </div>
                   </div>
                 </div>
 
@@ -177,15 +234,15 @@ const ProductsList: React.FC = () => {
             <Eye className="w-12 h-12 mx-auto" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm ? 'No products found' : 'No products yet'}
+            {searchTerm || selectedCategory ? 'No products found' : 'No products yet'}
           </h3>
           <p className="text-gray-600 mb-6">
-            {searchTerm 
-              ? 'Try adjusting your search terms'
+            {searchTerm || selectedCategory
+              ? 'Try adjusting your search terms or category filter'
               : 'Get started by adding your first product'
             }
           </p>
-          {!searchTerm && (
+          {!searchTerm && !selectedCategory && (
             <Button
               variant="primary"
               onClick={() => navigate('/admin/products/new')}
