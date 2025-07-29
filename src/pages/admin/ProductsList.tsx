@@ -4,6 +4,7 @@ import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { Product } from '@/types/api';
+import { getProductImageUrl } from '@/services/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -168,7 +169,7 @@ const ProductsList: React.FC = () => {
                 <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                   {product.image_versions?.thumbnail ? (
                     <Image
-                      src={product.image_versions.thumbnail}
+                      src={getProductImageUrl(product, 'thumbnail')}
                       alt={product.nume}
                       className="w-full h-full object-cover"
                     />

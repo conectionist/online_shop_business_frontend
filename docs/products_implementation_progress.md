@@ -12,33 +12,33 @@
 
 ---
 
-### **⏳ Baby Step 3.2.2: Product-Category Integration** - NEXT
-- [ ] Add category selection to product form
-- [ ] Fetch and display categories in dropdown
-- [ ] Show category name in products list
-- [ ] Filter products by category
+### **✅ Baby Step 3.2.2: Product-Category Integration** - COMPLETED
+- [x] Add category selection to product form
+- [x] Fetch and display categories in dropdown
+- [x] Show category name in products list
+- [x] Filter products by category
 
-**Status:** ⏳ **PENDING** - Ready to start
-
----
-
-### **⏳ Baby Step 3.2.3: Single Image Upload** - PENDING
-- [ ] Add image upload to product form
-- [ ] Handle single image (like categories)
-- [ ] Display image in product list and form
-- [ ] Image preview and remove functionality
-
-**Status:** ⏳ **PENDING**
+**Status:** ✅ **DONE** - Category integration working perfectly!
 
 ---
 
-### **⏳ Baby Step 3.2.4: Multiple Images Management** - PENDING
+### **✅ Baby Step 3.2.3: Single Image Upload** - COMPLETED
+- [x] Add image upload to product form
+- [x] Handle single image (like categories)
+- [x] Display image in product list and form
+- [x] Image preview and remove functionality
+
+**Status:** ✅ **DONE** - Image upload working perfectly! Backend fixed file extension issue.
+
+---
+
+### **⏳ Baby Step 3.2.4: Multiple Images Management** - NEXT
 - [ ] Extend to handle multiple images
 - [ ] Image reordering interface
 - [ ] Primary image selection
 - [ ] Image gallery display
 
-**Status:** ⏳ **PENDING**
+**Status:** ⏳ **PENDING** - Ready to start
 
 ---
 
@@ -63,9 +63,9 @@
 ---
 
 ## 📊 **Progress Summary:**
-- **Completed:** 1/6 baby steps (16.7%)
-- **Current:** Baby Step 3.2.2 ready to start
-- **Remaining:** 5 baby steps
+- **Completed:** 3/6 baby steps (50%)
+- **Current:** Baby Step 3.2.4 ready to start
+- **Remaining:** 3 baby steps
 
 ## 🚀 **Next Action:**
-Ready to start **Baby Step 3.2.2: Product-Category Integration** 
+Ready to start **Baby Step 3.2.4: Multiple Images Management** 

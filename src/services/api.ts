@@ -191,4 +191,21 @@ export const getCategoryImageUrl = (category: any, version: 'original' | 'medium
   
   // Otherwise, construct the full URL
   return `${API_BASE_URL}/api/v1/static/uploads/${imagePath}`;
+};
+
+// Utility function for product images
+export const getProductImageUrl = (product: any, version: 'original' | 'medium' | 'thumbnail' = 'thumbnail') => {
+  if (!product.image_versions) {
+    return `${API_BASE_URL}/api/v1/static/placeholders/product_placeholder.jpg`;
+  }
+  
+  const imagePath = product.image_versions[version];
+  
+  // If it's already a full URL (starts with /api/v1/static/), use it as is
+  if (imagePath.startsWith('/api/v1/static/')) {
+    return `${API_BASE_URL}${imagePath}`;
+  }
+  
+  // Otherwise, construct the full URL
+  return `${API_BASE_URL}/api/v1/static/uploads/${imagePath}`;
 }; 

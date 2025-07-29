@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api';
-import { Product, ProductCreate, ProductUpdate } from '@/types/api';
+import { Product, ProductCreate, ProductUpdate, ProductImage } from '@/types/api';
 
 // Types for product operations
 export interface ProductFilters {
@@ -104,5 +104,33 @@ export const productService = {
   deleteProduct: async (id: number, permanent: boolean = false): Promise<void> => {
     const params = permanent ? '?permanent=true' : '';
     await apiClient.delete(`/products/${id}${params}`);
+  },
+
+  // Upload product image
+  uploadProductImage: async (productId: number, image: File, position?: number): Promise<ProductImage> => {
+    const formData = new FormData();
+    formData.append('file', image);
+    if (position !== undefined) {
+      formData.append('position', position.toString());
+    }
+
+    const response = await apiClient.post(`/products/${productId}/images`, formData, {
+      headers: {
+        'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
+      },
+    });
+    
+    return response.data;
+  },
+
+  // Get product images
+  getProductImages: async (productId: number): Promise<ProductImage[]> => {
+    const response = await apiClient.get(`/products/${productId}/images`);
+    return response.data;
+  },
+
+  // Delete product image
+  deleteProductImage: async (productId: number, imageId: number): Promise<void> => {
+    await apiClient.delete(`/products/${productId}/images/${imageId}`);
   },
 }; 

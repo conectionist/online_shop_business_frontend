@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { useProduct, useCreateProduct, useUpdateProduct } from '@/hooks/useProducts';
+import { ArrowLeft, Upload, X } from 'lucide-react';
+import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductCreate, ProductUpdate } from '@/types/api';
+import { productService } from '@/services/products';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
+import Image from '@/components/ui/Image';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { getProductImageUrl } from '@/services/api';
+
+// Helper function to check if product has a real image (not placeholder)
+const hasRealImage = (product: any): boolean => {
+  return !!(product.image_versions && 
+    product.image_versions.thumbnail && 
+    !product.image_versions.thumbnail.includes('placeholder'));
+};
 
 const ProductForm: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +37,8 @@ const ProductForm: React.FC = () => {
     unitati_id: 1, // Default to first unit
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch product data if editing
@@ -35,6 +47,7 @@ const ProductForm: React.FC = () => {
   // Mutations and queries
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
+  const uploadProductImageMutation = useUploadProductImage();
   const { handleError } = useErrorHandler();
   
   // Fetch categories for dropdown
@@ -51,8 +64,31 @@ const ProductForm: React.FC = () => {
         category_id: product.category_id,
         unitati_id: product.unitati_id,
       });
+      // Only show image preview if product has a real image (not placeholder)
+      if (hasRealImage(product) && product.image_versions?.thumbnail) {
+        setImagePreview(getProductImageUrl(product, 'thumbnail'));
+      }
     }
   }, [product, isEditing]);
+
+  // Handle file selection
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove image
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
 
   // Validate form
   const validateForm = () => {
@@ -97,13 +133,31 @@ const ProductForm: React.FC = () => {
         if (formData.category_id !== product?.category_id) updateData.category_id = formData.category_id;
         if (formData.unitati_id !== product?.unitati_id) updateData.unitati_id = formData.unitati_id;
 
-        await updateProductMutation.mutateAsync({
+        const updatedProduct = await updateProductMutation.mutateAsync({
           id: Number(id),
           data: updateData,
         });
+
+        // Upload image if selected
+        if (imageFile) {
+          await uploadProductImageMutation.mutateAsync({
+            productId: Number(id),
+            image: imageFile,
+            position: 0, // Primary image
+          });
+        }
       } else {
         // For creation, send all required fields
-        await createProductMutation.mutateAsync(formData);
+        const createdProduct = await createProductMutation.mutateAsync(formData);
+
+        // Upload image if selected
+        if (imageFile) {
+          await uploadProductImageMutation.mutateAsync({
+            productId: createdProduct.id,
+            image: imageFile,
+            position: 0, // Primary image
+          });
+        }
       }
 
       // Navigate back to products list
@@ -249,6 +303,55 @@ const ProductForm: React.FC = () => {
             />
           </div>
 
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Product Image
+            </label>
+            
+            {imagePreview ? (
+              <div className="space-y-3">
+                <div className="relative inline-block">
+                  <Image
+                    src={imagePreview}
+                    alt="Product preview"
+                    className="w-32 h-32 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Click the X to remove the image
+                </p>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-2">
+                  Upload a product image (optional)
+                </p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                >
+                  Choose Image
+                </label>
+              </div>
+            )}
+          </div>
+
           {/* Error Display */}
           {(createProductMutation.error || updateProductMutation.error || errors.submit) && (
             <Alert
@@ -270,7 +373,7 @@ const ProductForm: React.FC = () => {
             <Button
               type="submit"
               variant="primary"
-              loading={createProductMutation.isPending || updateProductMutation.isPending}
+              loading={createProductMutation.isPending || updateProductMutation.isPending || uploadProductImageMutation.isPending}
             >
               {isEditing ? 'Update Product' : 'Create Product'}
             </Button>

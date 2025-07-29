@@ -88,4 +88,68 @@ export const useDeleteProduct = () => {
       console.error('Failed to delete product:', error);
     },
   });
+};
+
+// Hook to upload product image
+export const useUploadProductImage = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ productId, image, position }: { productId: number; image: File; position?: number }) => 
+      productService.uploadProductImage(productId, image, position),
+    onSuccess: (uploadedImage, { productId }) => {
+      // Force refresh the data by invalidating queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.detail(productId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.list({}) });
+    },
+    onError: (error) => {
+      console.error('Failed to upload product image:', error);
+    },
+  });
+};
+
+// Hook to delete product image
+export const useDeleteProductImage = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ productId, imageId }: { productId: number; imageId: number }) => 
+      productService.deleteProductImage(productId, imageId),
+    onSuccess: (_, { productId, imageId }) => {
+      // Update the specific product in cache
+      queryClient.setQueryData(
+        queryKeys.products.detail(productId),
+        (oldProduct: any) => {
+          if (!oldProduct) return oldProduct;
+          return {
+            ...oldProduct,
+            images: (oldProduct.images || []).filter((img: any) => img.id !== imageId),
+          };
+        }
+      );
+      
+      // Also update the product in the products list cache
+      queryClient.setQueryData(
+        queryKeys.products.list({}),
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return oldData.map((product: any) => {
+            if (product.id === productId) {
+              return {
+                ...product,
+                images: (product.images || []).filter((img: any) => img.id !== imageId),
+              };
+            }
+            return product;
+          });
+        }
+      );
+      
+      // Invalidate and refetch products list
+      queryClient.invalidateQueries({ queryKey: invalidateQueries.products() });
+    },
+    onError: (error) => {
+      console.error('Failed to delete product image:', error);
+    },
+  });
 }; 
