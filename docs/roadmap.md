@@ -108,6 +108,12 @@ This roadmap outlines the complete development plan for the online shop business
   - Create Dropdown/Select component
   - Create Image component with fallbacks
 
+- [x] **Version System**
+  - Create version utility with environment detection
+  - Add version display component
+  - Integrate version display in layouts
+  - Setup build-time version injection
+
 - [ ] **Form Components**
   - Create FormField wrapper
   - Create validation utilities
@@ -129,15 +135,15 @@ This roadmap outlines the complete development plan for the online shop business
 ### Phase 3: Admin Dashboard - Core Features
 **Goal**: Build the admin interface for managing business data
 
-#### 3.1 Categories Management
-- [ ] **Categories CRUD**
+#### 3.1 Categories Management ✅
+- [x] **Categories CRUD**
   - Create categories list page
   - Create category form (create/edit)
   - Implement category image upload
   - Create category deletion with confirmation
   - Add category search and filtering
 
-- [ ] **Categories API Integration**
+- [x] **Categories API Integration**
   - Create categories service functions
   - Setup categories queries and mutations
   - Handle image upload for categories
