@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
+import VersionDisplay from '@/components/ui/VersionDisplay';
 
 const CustomerLayout: React.FC = () => {
   return (
@@ -10,6 +11,9 @@ const CustomerLayout: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Customer Dashboard</h1>
           <Outlet />
+        </div>
+        <div className="mt-4 text-center">
+          <VersionDisplay />
         </div>
       </div>
     </div>
