@@ -144,15 +144,18 @@ const CategoriesList: React.FC = () => {
                     <Edit className="w-4 h-4 mr-1" />
                     Edit
                   </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDeleteClick(category)}
-                    className="flex-1"
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
+                  {/* Only show delete button if category is not "Uncategorized" */}
+                  {category.name !== 'Uncategorized' && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDeleteClick(category)}
+                      className="flex-1"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
@@ -192,7 +195,7 @@ const CategoriesList: React.FC = () => {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete "{categoryToDelete?.nume}"? This action cannot be undone.
+            Are you sure you want to delete "{categoryToDelete?.name}"? This action cannot be undone.
           </p>
           
           <div className="flex gap-3">

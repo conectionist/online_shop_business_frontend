@@ -85,10 +85,35 @@ export const handleApiError = (error: any): ApiError => {
       };
     }
     
-    // Handle 4xx client errors
+    // Handle specific 4xx client errors
     if (error.response?.status >= 400 && error.response?.status < 500) {
+      const status = error.response.status;
+      const data = error.response?.data;
+      
+      // Handle 409 Conflict (duplicate resource)
+      if (status === 409) {
+        return {
+          detail: data?.detail || 'This item already exists. Please use a different name.'
+        };
+      }
+      
+      // Handle 422 Validation Error
+      if (status === 422) {
+        return {
+          detail: data?.detail || 'The provided data is invalid. Please check your input and try again.'
+        };
+      }
+      
+      // Handle 404 Not Found
+      if (status === 404) {
+        return {
+          detail: data?.detail || 'The requested item was not found.'
+        };
+      }
+      
+      // Handle other 4xx errors
       return {
-        detail: error.response?.data?.detail || 'The request could not be completed.'
+        detail: data?.detail || 'The request could not be completed.'
       };
     }
     

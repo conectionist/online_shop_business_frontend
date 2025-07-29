@@ -4,11 +4,13 @@ import { Category } from '@/types/api';
 // Types for category operations
 export interface CreateCategoryData {
   name: string;
-  image?: File;
+  primary_image?: File;
 }
 
-export interface UpdateCategoryData extends CreateCategoryData {
+export interface UpdateCategoryData {
   id: number;
+  name?: string;
+  clear_image?: boolean;
 }
 
 export interface CategoryFilters {
@@ -57,11 +59,18 @@ export const categoryService = {
   // Update an existing category
   updateCategory: async (data: UpdateCategoryData): Promise<Category> => {
     const { id, ...categoryData } = data;
-    const formData = createFormData(categoryData);
     
-    const response = await apiClient.put(`/categories/${id}`, formData, {
+    const formData = new FormData();
+    if (categoryData.name) {
+      formData.append('name', categoryData.name);
+    }
+    if (categoryData.clear_image) {
+      formData.append('clear_image', 'true');
+    }
+    
+    const response = await apiClient.patch(`/categories/${id}`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
       },
     });
     return response.data;
@@ -75,13 +84,17 @@ export const categoryService = {
   // Upload category image
   uploadCategoryImage: async (id: number, image: File): Promise<Category> => {
     const formData = new FormData();
-    formData.append('imagine', image);
+    formData.append('file', image);
     
-    const response = await apiClient.post(`/categories/${id}/image`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+    try {
+      const response = await apiClient.post(`/categories/${id}/image`, formData, {
+        headers: {
+          'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
   },
 }; 

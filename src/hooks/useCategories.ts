@@ -51,6 +51,17 @@ export const useUpdateCategory = () => {
         updatedCategory
       );
       
+      // Also update the category in the categories list cache
+      queryClient.setQueryData(
+        queryKeys.categories.list({}),
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return oldData.map((category: any) => 
+            category.id === updatedCategory.id ? updatedCategory : category
+          );
+        }
+      );
+      
       // Invalidate and refetch categories list
       queryClient.invalidateQueries({ queryKey: invalidateQueries.categories() });
     },
@@ -93,6 +104,17 @@ export const useUploadCategoryImage = () => {
       queryClient.setQueryData(
         queryKeys.categories.detail(updatedCategory.id),
         updatedCategory
+      );
+      
+      // Also update the category in the categories list cache immediately
+      queryClient.setQueryData(
+        queryKeys.categories.list({}),
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return oldData.map((category: any) => 
+            category.id === updatedCategory.id ? updatedCategory : category
+          );
+        }
       );
       
       // Invalidate and refetch categories list

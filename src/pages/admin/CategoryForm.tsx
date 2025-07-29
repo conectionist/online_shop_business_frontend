@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X } from 'lucide-react';
-import { useCreateCategory, useUpdateCategory, useCategory } from '@/hooks/useCategories';
+import { useCreateCategory, useUpdateCategory, useCategory, useUploadCategoryImage } from '@/hooks/useCategories';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getCategoryImageUrl } from '@/services/api';
+
+// Helper function to check if category has a real image (not placeholder)
+const hasRealImage = (category: any): boolean => {
+  return !!(category.image_path && category.image_path !== 'categories/placeholder');
+};
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
@@ -23,12 +28,14 @@ const CategoryForm: React.FC = () => {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [shouldClearImage, setShouldClearImage] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Queries and mutations
   const { data: category, isLoading: isLoadingCategory } = useCategory(Number(id));
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
+  const uploadCategoryImageMutation = useUploadCategoryImage();
   
   // Error handling
   const { handleError, errorDetails, showErrorModal, hideErrorModal } = useErrorHandler();
@@ -39,7 +46,8 @@ const CategoryForm: React.FC = () => {
       setFormData({
         name: category.name,
       });
-      if (category.image_versions?.thumbnail) {
+      // Only show image preview if category has a real image (not placeholder)
+      if (hasRealImage(category) && category.image_versions?.thumbnail) {
         setImagePreview(getCategoryImageUrl(category, 'thumbnail'));
       }
     }
@@ -62,6 +70,7 @@ const CategoryForm: React.FC = () => {
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
+    setShouldClearImage(true);
   };
 
   // Validate form
@@ -89,24 +98,46 @@ const CategoryForm: React.FC = () => {
     }
 
     try {
-      const submitData = {
-        ...formData,
-        ...(imageFile && { primary_image: imageFile }),
-      };
-
       if (isEditing) {
+        // For updates, send name and clear_image flag if needed
         await updateCategoryMutation.mutateAsync({
           id: Number(id),
-          ...submitData,
+          name: formData.name,
+          // Only clear image if we're not uploading a new one
+          ...(shouldClearImage && !imageFile && { clear_image: true }),
         });
+        
+        // Only upload new image if user selected a new file
+        if (imageFile) {
+          await uploadCategoryImageMutation.mutateAsync({
+            id: Number(id),
+            image: imageFile,
+          });
+        }
+        // If no new image file and not clearing, the existing image stays untouched
       } else {
+        // For creation, send name and image together
+        const submitData = {
+          name: formData.name,
+          ...(imageFile && { primary_image: imageFile }),
+        };
         await createCategoryMutation.mutateAsync(submitData);
       }
 
       // Navigate back to categories list
       navigate('/admin/categories');
     } catch (error) {
-      handleError(error, `Saving category: ${isEditing ? 'update' : 'create'}`);
+      // Check if this is a friendly error (409 conflict)
+      const isFriendlyError = error?.response?.status === 409;
+      
+      if (isFriendlyError) {
+        // For friendly errors, show the specific message in the form
+        const errorMessage = error?.response?.data?.detail || 'This item already exists. Please use a different name.';
+        setErrors(prev => ({ ...prev, submit: errorMessage }));
+      } else {
+        // For other errors, use the error handler
+        handleError(error, `Saving category: ${isEditing ? 'update' : 'create'}`);
+      }
     }
   };
 
@@ -214,11 +245,11 @@ const CategoryForm: React.FC = () => {
           </div>
 
           {/* Error Display */}
-          {(createCategoryMutation.error || updateCategoryMutation.error) && (
+          {(createCategoryMutation.error || updateCategoryMutation.error || errors.submit) && (
             <Alert
               type="error"
               title="Error"
-              message="Failed to save category. Please try again."
+              message={errors.submit || "Failed to save category. Please try again."}
             />
           )}
 

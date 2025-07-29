@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/components/ui/ToastContainer';
 import { ErrorDetails } from '@/components/ui/ErrorDetailsModal';
+import { handleApiError } from '@/services/api';
 
 export const useErrorHandler = () => {
   const { showToast } = useToast();
@@ -12,18 +13,24 @@ export const useErrorHandler = () => {
     userAction: string,
     showToastNotification: boolean = true
   ) => {
+    // Process error through API error handler to get user-friendly message
+    const apiError = handleApiError(error);
+    
+    // Check if this is a "friendly" error that doesn't need the scary modal
+    const isFriendlyError = error?.response?.status === 409; // Conflict (duplicate name)
+    
     // Create error details
     const errorDetails: ErrorDetails = {
       title: 'An error occurred',
-      message: 'Something went wrong. Please try again.',
+      message: typeof apiError.detail === 'string' ? apiError.detail : 'Something went wrong. Please try again.',
       technicalDetails: error?.message || error?.detail || JSON.stringify(error),
       timestamp: new Date().toISOString(),
       userAction,
       url: window.location.href,
     };
 
-    // Show toast notification if requested
-    if (showToastNotification) {
+    // Show toast notification if requested (but not for friendly errors)
+    if (showToastNotification && !isFriendlyError) {
       showToast({
         type: 'error',
         title: errorDetails.title,
@@ -32,9 +39,11 @@ export const useErrorHandler = () => {
       });
     }
 
-    // Store error details for modal
-    setErrorDetails(errorDetails);
-    setShowErrorModal(true);
+    // Only show the scary modal for non-friendly errors
+    if (!isFriendlyError) {
+      setErrorDetails(errorDetails);
+      setShowErrorModal(true);
+    }
 
     // Log to console for developers
     console.error('Error occurred:', {
