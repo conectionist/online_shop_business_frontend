@@ -150,7 +150,7 @@ This roadmap outlines the complete development plan for the online shop business
   - Implement soft delete functionality
 
 #### 3.2 Products Management
-- [ ] **Products CRUD**
+- [x] **Products CRUD**
   - Create products list page with pagination
   - Create product form (create/edit)
   - Implement product image management
@@ -163,7 +163,7 @@ This roadmap outlines the complete development plan for the online shop business
   - Create primary image selection
   - Handle multiple image uploads
 
-- [ ] **Products API Integration**
+- [x] **Products API Integration**
   - Create products service functions
   - Setup products queries and mutations
   - Handle complex image operations

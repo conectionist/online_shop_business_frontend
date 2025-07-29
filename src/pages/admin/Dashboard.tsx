@@ -28,16 +28,19 @@ const AdminDashboard: React.FC = () => {
           </Card>
         </Link>
 
-        <div className="bg-green-50 p-6 rounded-lg">
-          <h3 className="text-lg font-medium text-green-900">Products</h3>
-          <p className="mt-2 text-sm text-green-700">
-            Manage your product catalog and inventory.
-          </p>
-          <div className="mt-4">
-            <span className="text-2xl font-bold text-green-900">0</span>
-            <span className="text-sm text-green-700 ml-2">products</span>
-          </div>
-        </div>
+        <Link to="/admin/products" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="p-6">
+              <div className="flex items-center space-x-3">
+                <Package className="h-8 w-8 text-green-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Products</h3>
+                  <p className="text-gray-600 text-sm">Manage your product catalog</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </Link>
 
         <div className="bg-purple-50 p-6 rounded-lg">
           <h3 className="text-lg font-medium text-purple-900">Lists</h3>
