@@ -190,46 +190,46 @@ This roadmap outlines the complete development plan for the online shop business
 **Goal**: Build business configuration features
 
 #### 4.1 Business Details Management
-- [ ] **Business Details CRUD**
+- [x] **Business Details CRUD**
   - Create business details form
   - Implement business logo upload
   - Create business information display
   - Add contact information management
 
-- [ ] **Business Details API Integration**
+- [x] **Business Details API Integration**
   - Create business details service functions
   - Setup business details queries and mutations
 
 #### 4.2 Delivery Types Management
-- [ ] **Delivery Types CRUD**
+- [x] **Delivery Types CRUD**
   - Create delivery types list page
   - Create delivery type form (create/edit)
   - Implement delivery type deletion
   - Add delivery type validation
 
-- [ ] **Delivery Types API Integration**
+- [x] **Delivery Types API Integration**
   - Create delivery types service functions
   - Setup delivery types queries and mutations
 
 #### 4.3 Payment Methods Management
-- [ ] **Payment Methods CRUD**
+- [x] **Payment Methods CRUD**
   - Create payment methods list page
   - Create payment method form (create/edit)
   - Implement payment method deletion
   - Add payment method validation
 
-- [ ] **Payment Methods API Integration**
+- [x] **Payment Methods API Integration**
   - Create payment methods service functions
   - Setup payment methods queries and mutations
 
 #### 4.4 Delivery Schedules Management
-- [ ] **Delivery Schedules CRUD**
+- [x] **Delivery Schedules CRUD**
   - Create delivery schedules list page
   - Create delivery schedule form (create/edit)
   - Implement delivery schedule deletion
   - Add schedule validation
 
-- [ ] **Delivery Schedules API Integration**
+- [x] **Delivery Schedules API Integration**
   - Create delivery schedules service functions
   - Setup delivery schedules queries and mutations
 
