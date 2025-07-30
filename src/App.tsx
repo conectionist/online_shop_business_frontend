@@ -14,6 +14,8 @@ import ProductsList from './pages/admin/ProductsList'
 import ProductForm from './pages/admin/ProductForm'
 import UnitsList from './pages/admin/UnitsList'
 import UnitForm from './pages/admin/UnitForm'
+import DeliverySchedulesList from './pages/admin/DeliverySchedulesList'
+import DeliveryScheduleForm from './pages/admin/DeliveryScheduleForm'
 import CustomerDashboard from './pages/customer/Dashboard'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
@@ -41,6 +43,9 @@ function App() {
           <Route path="units" element={<UnitsList />} />
           <Route path="units/new" element={<UnitForm />} />
           <Route path="units/:id/edit" element={<UnitForm />} />
+          <Route path="delivery-schedules" element={<DeliverySchedulesList />} />
+          <Route path="delivery-schedules/new" element={<DeliveryScheduleForm />} />
+          <Route path="delivery-schedules/:id/edit" element={<DeliveryScheduleForm />} />
           {/* Future admin routes will go here */}
         </Route>
 

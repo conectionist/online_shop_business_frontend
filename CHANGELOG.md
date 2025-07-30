@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-01-30
+
+### Added
+- **Delivery Schedules Management**: Complete CRUD functionality for delivery schedules
+  - Delivery schedules list page with search functionality
+  - Create and edit delivery schedule forms with multi-line textarea support
+  - Delete delivery schedules with confirmation modal
+
 ## [0.7.0] - 2025-01-30
 
 ### Added
