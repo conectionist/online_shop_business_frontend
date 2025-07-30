@@ -90,18 +90,19 @@ const AdminDashboard: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="opacity-60 cursor-not-allowed">
-            <div className="p-6">
-              <div className="flex items-center space-x-3">
-                <Truck className="h-8 w-8 text-orange-600" />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Metode de Livrare</h3>
-                  <p className="text-gray-600 text-sm">Configurează opțiunile de livrare</p>
-                  <p className="text-xs text-gray-500 mt-1">În curând</p>
+          <Link to="/admin/delivery-types" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <Truck className="h-8 w-8 text-orange-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Metode de Livrare</h3>
+                    <p className="text-gray-600 text-sm">Configurează opțiunile de livrare</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
           <Link to="/admin/delivery-schedules" className="block">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">

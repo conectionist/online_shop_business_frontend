@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2025-01-30
+
+### Added
+- **Delivery Types Management**: Complete CRUD functionality for delivery types
+  - Delivery types list page with search functionality
+  - Create and edit delivery type forms with validation
+  - Delete delivery types with confirmation modal
+  - Updated admin dashboard with clickable delivery types card
+
 ## [0.8.0] - 2025-01-30
 
 ### Added
