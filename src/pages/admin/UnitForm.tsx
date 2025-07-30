@@ -43,11 +43,11 @@ const UnitForm: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.denumire.trim()) {
-      newErrors.denumire = 'Unit name is required';
+      newErrors.denumire = 'Numele unității este obligatoriu';
     }
 
     if (formData.denumire.length > 50) {
-      newErrors.denumire = 'Unit name must be less than 50 characters';
+      newErrors.denumire = 'Numele unității trebuie să aibă mai puțin de 50 de caractere';
     }
 
     setErrors(newErrors);
@@ -82,11 +82,11 @@ const UnitForm: React.FC = () => {
       
       if (isFriendlyError) {
         // For friendly errors, show the specific message in the form
-        const errorMessage = error?.response?.data?.detail || 'This unit already exists. Please use a different name.';
+        const errorMessage = error?.response?.data?.detail || 'Această unitate există deja. Vă rugăm să folosiți un nume diferit.';
         setErrors(prev => ({ ...prev, submit: errorMessage }));
       } else {
         // For other errors, use the error handler
-        handleError(error, `Saving unit: ${isEditing ? 'update' : 'create'}`);
+        handleError(error, `Salvarea unității: ${isEditing ? 'actualizare' : 'creare'}`);
       }
     }
   };
@@ -103,7 +103,7 @@ const UnitForm: React.FC = () => {
   if (isEditing && isLoadingUnit) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loading text="Loading unit..." />
+        <Loading text="Se încarcă unitatea..." />
       </div>
     );
   }
@@ -118,14 +118,14 @@ const UnitForm: React.FC = () => {
           onClick={() => navigate('/admin/units')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Units
+          Înapoi la Unități
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {isEditing ? 'Edit Unit' : 'Create Unit'}
+            {isEditing ? 'Editează Unitate' : 'Creează Unitate'}
           </h1>
           <p className="text-gray-600">
-            {isEditing ? 'Update unit information' : 'Add a new measurement unit to your shop'}
+            {isEditing ? 'Actualizează informațiile unității' : 'Adaugă o unitate de măsură nouă în magazin'}
           </p>
         </div>
       </div>
@@ -136,15 +136,15 @@ const UnitForm: React.FC = () => {
           {/* Name Field */}
           <div>
             <Input
-              label="Unit Name"
+              label="Numele Unității"
               value={formData.denumire}
               onChange={(e) => handleInputChange('denumire', e.target.value)}
-              placeholder="Enter unit name (e.g., kg, l, buc, pachet)"
+              placeholder="Introduceți numele unității (ex: kg, l, buc, pachet)"
               error={errors.denumire}
               required
             />
             <p className="text-sm text-gray-500 mt-1">
-              Examples: kg, l, buc, pachet, portii, g, ml
+              Exemple: kg, l, buc, pachet, porții, g, ml
             </p>
           </div>
 
@@ -152,8 +152,8 @@ const UnitForm: React.FC = () => {
           {(createUnitMutation.error || updateUnitMutation.error || errors.submit) && (
             <Alert
               type="error"
-              title="Error"
-              message={errors.submit || "Failed to save unit. Please try again."}
+              title="Eroare"
+              message={errors.submit || "Nu s-a putut salva unitatea. Vă rugăm să încercați din nou."}
             />
           )}
 
@@ -173,14 +173,14 @@ const UnitForm: React.FC = () => {
               variant="outline"
               onClick={() => navigate('/admin/units')}
             >
-              Cancel
+              Anulează
             </Button>
             <Button
               type="submit"
               variant="primary"
               loading={createUnitMutation.isPending || updateUnitMutation.isPending}
             >
-              {isEditing ? 'Update Unit' : 'Create Unit'}
+              {isEditing ? 'Actualizează Unitatea' : 'Creează Unitatea'}
             </Button>
           </div>
         </form>

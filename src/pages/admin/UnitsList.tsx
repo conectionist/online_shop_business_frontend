@@ -46,7 +46,7 @@ const UnitsList: React.FC = () => {
         setDeleteModalOpen(false);
         setUnitToDelete(null);
       } catch (error) {
-        console.error('Failed to delete unit:', error);
+        console.error('Nu s-a putut șterge unitatea:', error);
       }
     }
   };
@@ -59,7 +59,7 @@ const UnitsList: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loading text="Loading units..." />
+        <Loading text="Se încarcă unitățile..." />
       </div>
     );
   }
@@ -68,8 +68,8 @@ const UnitsList: React.FC = () => {
     return (
       <Alert
         type="error"
-        title="Error loading units"
-        message="Failed to load units. Please try again."
+        title="Eroare la încărcarea unităților"
+        message="Nu s-au putut încărca unitățile. Vă rugăm să încercați din nou."
       />
     );
   }
@@ -79,8 +79,8 @@ const UnitsList: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Units</h1>
-          <p className="text-gray-600">Manage your product measurement units</p>
+          <h1 className="text-2xl font-bold text-gray-900">Unități</h1>
+          <p className="text-gray-600">Gestionează unitățile de măsură pentru produse</p>
         </div>
         <Button
           variant="primary"
@@ -88,14 +88,14 @@ const UnitsList: React.FC = () => {
           onClick={() => navigate('/admin/units/new')}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Unit
+          Adaugă Unitate
         </Button>
       </div>
 
       {/* Search */}
       <div className="max-w-md">
         <Input
-          placeholder="Search units..."
+          placeholder="Caută unități..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           leftIcon={<Search className="w-4 h-4" />}
@@ -127,7 +127,7 @@ const UnitsList: React.FC = () => {
                     className="flex-1"
                   >
                     <Edit className="w-4 h-4 mr-1" />
-                    Edit
+                    Editează
                   </Button>
                   <Button
                     variant="danger"
@@ -136,7 +136,7 @@ const UnitsList: React.FC = () => {
                     className="flex-1"
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
+                    Șterge
                   </Button>
                 </div>
               </div>
@@ -150,9 +150,9 @@ const UnitsList: React.FC = () => {
               <Search className="w-12 h-12 mx-auto" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-gray-900">No units found</h3>
+              <h3 className="text-lg font-medium text-gray-900">Nu s-au găsit unități</h3>
               <p className="text-gray-600">
-                {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating your first unit.'}
+                {searchTerm ? 'Încercați să ajustați termenii de căutare.' : 'Începeți prin crearea primei unități.'}
               </p>
             </div>
             {!searchTerm && (
@@ -161,7 +161,7 @@ const UnitsList: React.FC = () => {
                 onClick={() => navigate('/admin/units/new')}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Create Unit
+                Creează Unitate
               </Button>
             )}
           </div>
@@ -172,15 +172,15 @@ const UnitsList: React.FC = () => {
       <Modal
         isOpen={deleteModalOpen}
         onClose={handleDeleteCancel}
-        title="Delete Unit"
+        title="Șterge Unitate"
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete "{unitToDelete?.denumire}"? This action cannot be undone.
+            Sunteți sigur că doriți să ștergeți "{unitToDelete?.denumire}"? Această acțiune nu poate fi anulată.
           </p>
           <p className="text-sm text-red-600">
-            Warning: This will permanently delete the unit. Make sure no products are using this unit.
+            Avertisment: Aceasta va șterge definitiv unitatea. Asigurați-vă că nicio unitate nu folosește această unitate.
           </p>
           
           <div className="flex gap-3">
@@ -189,7 +189,7 @@ const UnitsList: React.FC = () => {
               onClick={handleDeleteCancel}
               className="flex-1"
             >
-              Cancel
+              Anulează
             </Button>
             <Button
               variant="danger"
@@ -197,7 +197,7 @@ const UnitsList: React.FC = () => {
               loading={deleteUnitMutation.isPending}
               className="flex-1"
             >
-              Delete
+              Șterge
             </Button>
           </div>
         </div>

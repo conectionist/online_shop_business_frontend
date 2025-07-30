@@ -49,7 +49,7 @@ const CategoriesList: React.FC = () => {
         setDeleteModalOpen(false);
         setCategoryToDelete(null);
       } catch (error) {
-        console.error('Failed to delete category:', error);
+        console.error('Nu s-a putut șterge categoria:', error);
       }
     }
   };
@@ -62,7 +62,7 @@ const CategoriesList: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loading text="Loading categories..." />
+        <Loading text="Se încarcă categoriile..." />
       </div>
     );
   }
@@ -71,8 +71,8 @@ const CategoriesList: React.FC = () => {
     return (
       <Alert
         type="error"
-        title="Error loading categories"
-        message="Failed to load categories. Please try again."
+        title="Eroare la încărcarea categoriilor"
+        message="Nu s-au putut încărca categoriile. Vă rugăm să încercați din nou."
       />
     );
   }
@@ -82,8 +82,8 @@ const CategoriesList: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-600">Manage your product categories</p>
+          <h1 className="text-2xl font-bold text-gray-900">Categorii</h1>
+          <p className="text-gray-600">Gestionează categoriile de produse</p>
         </div>
         <Button
           variant="primary"
@@ -91,14 +91,14 @@ const CategoriesList: React.FC = () => {
           onClick={() => navigate('/admin/categories/new')}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Category
+          Adaugă Categorie
         </Button>
       </div>
 
       {/* Search */}
       <div className="max-w-md">
         <Input
-          placeholder="Search categories..."
+          placeholder="Caută categorii..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           leftIcon={<Search className="w-4 h-4" />}
@@ -142,7 +142,7 @@ const CategoriesList: React.FC = () => {
                     className="flex-1"
                   >
                     <Edit className="w-4 h-4 mr-1" />
-                    Edit
+                    Editează
                   </Button>
                   {/* Only show delete button if category is not "Uncategorized" */}
                   {category.name !== 'Uncategorized' && (
@@ -153,7 +153,7 @@ const CategoriesList: React.FC = () => {
                       className="flex-1"
                     >
                       <Trash2 className="w-4 h-4 mr-1" />
-                      Delete
+                      Șterge
                     </Button>
                   )}
                 </div>
@@ -168,9 +168,9 @@ const CategoriesList: React.FC = () => {
               <Eye className="w-12 h-12 mx-auto" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-gray-900">No categories found</h3>
+              <h3 className="text-lg font-medium text-gray-900">Nu s-au găsit categorii</h3>
               <p className="text-gray-600">
-                {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating your first category.'}
+                {searchTerm ? 'Încercați să ajustați termenii de căutare.' : 'Începeți prin crearea primei categorii.'}
               </p>
             </div>
             {!searchTerm && (
@@ -179,7 +179,7 @@ const CategoriesList: React.FC = () => {
                 onClick={() => navigate('/admin/categories/new')}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Create Category
+                Creează Categorie
               </Button>
             )}
           </div>
@@ -190,12 +190,12 @@ const CategoriesList: React.FC = () => {
       <Modal
         isOpen={deleteModalOpen}
         onClose={handleDeleteCancel}
-        title="Delete Category"
+        title="Șterge Categorie"
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete "{categoryToDelete?.name}"? This action cannot be undone.
+            Sunteți sigur că doriți să ștergeți "{categoryToDelete?.name}"? Această acțiune nu poate fi anulată.
           </p>
           
           <div className="flex gap-3">
@@ -204,7 +204,7 @@ const CategoriesList: React.FC = () => {
               onClick={handleDeleteCancel}
               className="flex-1"
             >
-              Cancel
+              Anulează
             </Button>
             <Button
               variant="danger"
@@ -212,7 +212,7 @@ const CategoriesList: React.FC = () => {
               loading={deleteCategoryMutation.isPending}
               className="flex-1"
             >
-              Delete
+              Șterge
             </Button>
           </div>
         </div>

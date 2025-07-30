@@ -48,13 +48,13 @@ const ProductCard = React.memo<{
       
       <div className="space-y-2 text-sm text-gray-600">
         <p>
-          <span className="font-medium">Category:</span> {getCategoryName(product.category_id)}
+          <span className="font-medium">Categorie:</span> {getCategoryName(product.category_id)}
         </p>
         <p>
-          <span className="font-medium">Price:</span> ${product.pret}
+          <span className="font-medium">Preț:</span> ${product.pret}
         </p>
         <p>
-          <span className="font-medium">Quantity:</span> {product.cantitate} {getUnitName(product.unitati_id)}
+          <span className="font-medium">Cantitate:</span> {product.cantitate} {getUnitName(product.unitati_id)}
         </p>
         {product.description && (
           <p className="text-gray-500 text-xs line-clamp-2">
@@ -72,7 +72,7 @@ const ProductCard = React.memo<{
           className="flex-1"
         >
           <Edit className="w-4 h-4 mr-1" />
-          Edit
+          Editează
         </Button>
         <Button
           variant="danger"
@@ -81,7 +81,7 @@ const ProductCard = React.memo<{
           className="flex-1"
         >
           <Trash2 className="w-4 h-4 mr-1" />
-          Delete
+          Șterge
         </Button>
       </div>
     </div>
@@ -129,7 +129,7 @@ const Pagination = React.memo<{
   return (
     <div className="flex justify-between items-center bg-white rounded-lg shadow-sm border border-gray-200 p-4">
       <div className="text-sm text-gray-600">
-        Showing {startIndex + 1} to {Math.min(endIndex, totalProducts)} of {totalProducts} products
+        Afișez {startIndex + 1} până la {Math.min(endIndex, totalProducts)} din {totalProducts} produse
       </div>
       
       <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ const Pagination = React.memo<{
           disabled={!hasPrevPage}
         >
           <ChevronLeft className="w-4 h-4" />
-          Previous
+          Anterior
         </Button>
         
         <div className="flex items-center gap-1">
@@ -163,7 +163,7 @@ const Pagination = React.memo<{
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!hasNextPage}
         >
-          Next
+          Următor
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
@@ -200,18 +200,18 @@ const ProductsList: React.FC = () => {
   // Memoized helper function to get category name by ID
   const getCategoryName = useCallback((categoryId: number) => {
     const category = categories?.find(cat => cat.id === categoryId);
-    return category?.name || 'Unknown Category';
+    return category?.name || 'Categorie Necunoscută';
   }, [categories]);
 
   // Memoized helper function to get unit name by ID
   const getUnitName = useCallback((unitId: number) => {
     const unit = units?.find(unit => unit.id === unitId);
-    return unit?.denumire || 'Unknown Unit';
+    return unit?.denumire || 'Unitate Necunoscută';
   }, [units]);
 
   // Memoized category options for filter dropdown
   const categoryFilterOptions = useMemo(() => [
-    { value: '', label: 'All Categories' },
+    { value: '', label: 'Toate Categoriile' },
     ...(categories?.map(category => ({
       value: category.id.toString(),
       label: category.name,
@@ -300,7 +300,7 @@ const ProductsList: React.FC = () => {
         setDeleteModalOpen(false);
         setProductToDelete(null);
       } catch (error) {
-        handleError(error, `Deleting product: ${productToDelete.nume}`);
+        handleError(error, `Ștergerea produsului: ${productToDelete.nume}`);
       }
     }
   }, [productToDelete, deleteProductMutation, handleError]);
@@ -314,7 +314,7 @@ const ProductsList: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loading text="Loading products..." />
+        <Loading text="Se încarcă produsele..." />
       </div>
     );
   }
@@ -323,8 +323,8 @@ const ProductsList: React.FC = () => {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <Alert variant="error" title="Error loading products">
-          Failed to load products. Please try again.
+        <Alert variant="error" title="Eroare la încărcarea produselor">
+          Nu s-au putut încărca produsele. Vă rugăm să încercați din nou.
         </Alert>
       </div>
     );
@@ -334,10 +334,10 @@ const ProductsList: React.FC = () => {
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Products</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Produse</h1>
         <Button onClick={() => navigate('/admin/products/new')}>
           <Plus className="w-4 h-4 mr-2" />
-          Add Product
+          Adaugă Produs
         </Button>
       </div>
 
@@ -349,7 +349,7 @@ const ProductsList: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               type="text"
-              placeholder="Search products..."
+              placeholder="Caută produse..."
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
@@ -361,7 +361,7 @@ const ProductsList: React.FC = () => {
             value={selectedCategory}
             onChange={handleCategoryChange}
             options={categoryFilterOptions}
-            placeholder="Filter by category"
+            placeholder="Filtrează după categorie"
           />
 
           {/* Page Size */}
@@ -369,12 +369,12 @@ const ProductsList: React.FC = () => {
             value={pageSize.toString()}
             onChange={(value) => handlePageSizeChange(parseInt(value))}
             options={[
-              { value: '5', label: '5 per page' },
-              { value: '10', label: '10 per page' },
-              { value: '20', label: '20 per page' },
-              { value: '50', label: '50 per page' },
+              { value: '5', label: '5 pe pagină' },
+              { value: '10', label: '10 pe pagină' },
+              { value: '20', label: '20 pe pagină' },
+              { value: '50', label: '50 pe pagină' },
             ]}
-            placeholder="Items per page"
+            placeholder="Elemente pe pagină"
           />
         </div>
       </div>
@@ -412,7 +412,7 @@ const ProductsList: React.FC = () => {
       ) : (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">
-            {searchTerm || selectedCategory ? 'No products found matching your filters.' : 'No products found.'}
+            {searchTerm || selectedCategory ? 'Nu s-au găsit produse care să corespundă filtrelor.' : 'Nu s-au găsit produse.'}
           </div>
           {(searchTerm || selectedCategory) && (
             <Button
@@ -423,7 +423,7 @@ const ProductsList: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              Clear filters
+              Șterge filtrele
             </Button>
           )}
         </div>
@@ -433,18 +433,18 @@ const ProductsList: React.FC = () => {
       <Modal
         isOpen={deleteModalOpen}
         onClose={handleDeleteCancel}
-        title="Delete Product"
+        title="Șterge Produs"
       >
         <div className="p-6">
           <p className="text-gray-600 mb-4">
-            Are you sure you want to delete "{productToDelete?.nume}"? This action cannot be undone.
+            Sunteți sigur că doriți să ștergeți "{productToDelete?.nume}"? Această acțiune nu poate fi anulată.
           </p>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={handleDeleteCancel}>
-              Cancel
+              Anulează
             </Button>
             <Button variant="danger" onClick={handleDeleteConfirm}>
-              Delete
+              Șterge
             </Button>
           </div>
         </div>

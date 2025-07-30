@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-01-30
+
+### Added
+- **Romanian Localization**: Complete translation of the application to Romanian
+  - All user interface text translated to Romanian
+
 ## [0.6.0] - 2025-07-30
 
 ### Added

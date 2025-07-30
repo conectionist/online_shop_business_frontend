@@ -345,14 +345,14 @@ const ProductForm: React.FC = () => {
           onClick={() => navigate('/admin/products')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Products
+          Înapoi la Produse
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {isEditing ? 'Edit Product' : 'Create Product'}
+            {isEditing ? 'Editează Produs' : 'Creează Produs'}
           </h1>
           <p className="text-gray-600">
-            {isEditing ? 'Update product information' : 'Add a new product to your catalog'}
+            {isEditing ? 'Actualizează informațiile produsului' : 'Adaugă un produs nou în catalog'}
           </p>
         </div>
       </div>
@@ -363,18 +363,18 @@ const ProductForm: React.FC = () => {
           {/* Name Field */}
           <div>
             <Input
-              label="Product Name"
+              label="Numele Produsului"
               value={formData.nume}
               onChange={(e) => handleInputChange('nume', e.target.value)}
               onBlur={() => handleFieldBlur('nume')}
-              placeholder="Enter product name"
+              placeholder="Introduceți numele produsului"
               error={touched.nume ? errors.nume : ''}
               required
               maxLength={VALIDATION_RULES.nume.maxLength}
             />
             {touched.nume && !errors.nume && (
               <p className="text-sm text-green-600 mt-1">
-                ✓ Valid product name
+                ✓ Numele produsului este valid
               </p>
             )}
           </div>
@@ -383,7 +383,7 @@ const ProductForm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Input
-                label="Price"
+                label="Preț"
                 type="number"
                 step="0.01"
                 min={VALIDATION_RULES.pret.min}
@@ -398,7 +398,7 @@ const ProductForm: React.FC = () => {
             </div>
             <div>
               <Input
-                label="Quantity"
+                label="Cantitate"
                 type="number"
                 min={VALIDATION_RULES.cantitate.min}
                 max={VALIDATION_RULES.cantitate.max}
@@ -416,11 +416,11 @@ const ProductForm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category <span className="text-red-500">*</span>
+                Categorie <span className="text-red-500">*</span>
               </label>
               {isLoadingCategories ? (
                 <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-                  Loading categories...
+                  Se încarcă categoriile...
                 </div>
               ) : (
                 <div>
@@ -429,7 +429,7 @@ const ProductForm: React.FC = () => {
                     value={formData.category_id?.toString()}
                     onChange={(value) => handleInputChange('category_id', parseInt(value))}
                     onBlur={() => handleFieldBlur('category_id')}
-                    placeholder="Select a category"
+                    placeholder="Selectează o categorie"
                   />
                   {touched.category_id && errors.category_id && (
                     <p className="text-sm text-red-600 mt-1 flex items-center">

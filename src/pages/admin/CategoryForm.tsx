@@ -78,11 +78,11 @@ const CategoryForm: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Category name is required';
+      newErrors.name = 'Numele categoriei este obligatoriu';
     }
 
     if (formData.name.length > 100) {
-      newErrors.name = 'Category name must be less than 100 characters';
+      newErrors.name = 'Numele categoriei trebuie să aibă mai puțin de 100 de caractere';
     }
 
     setErrors(newErrors);
@@ -132,11 +132,11 @@ const CategoryForm: React.FC = () => {
       
       if (isFriendlyError) {
         // For friendly errors, show the specific message in the form
-        const errorMessage = error?.response?.data?.detail || 'This item already exists. Please use a different name.';
+        const errorMessage = error?.response?.data?.detail || 'Acest element există deja. Vă rugăm să folosiți un nume diferit.';
         setErrors(prev => ({ ...prev, submit: errorMessage }));
       } else {
         // For other errors, use the error handler
-        handleError(error, `Saving category: ${isEditing ? 'update' : 'create'}`);
+        handleError(error, `Salvarea categoriei: ${isEditing ? 'actualizare' : 'creare'}`);
       }
     }
   };
@@ -153,7 +153,7 @@ const CategoryForm: React.FC = () => {
   if (isEditing && isLoadingCategory) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loading text="Loading category..." />
+        <Loading text="Se încarcă categoria..." />
       </div>
     );
   }
@@ -168,14 +168,14 @@ const CategoryForm: React.FC = () => {
           onClick={() => navigate('/admin/categories')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Categories
+          Înapoi la Categorii
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {isEditing ? 'Edit Category' : 'Create Category'}
+            {isEditing ? 'Editează Categorie' : 'Creează Categorie'}
           </h1>
           <p className="text-gray-600">
-            {isEditing ? 'Update category information' : 'Add a new category to your shop'}
+            {isEditing ? 'Actualizează informațiile categoriei' : 'Adaugă o categorie nouă în magazin'}
           </p>
         </div>
       </div>
@@ -186,10 +186,10 @@ const CategoryForm: React.FC = () => {
           {/* Name Field */}
           <div>
             <Input
-              label="Category Name"
+              label="Numele Categoriei"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Enter category name"
+              placeholder="Introduceți numele categoriei"
               error={errors.name}
               required
             />
@@ -198,7 +198,7 @@ const CategoryForm: React.FC = () => {
           {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category Image
+              Imaginea Categoriei
             </label>
             
             {imagePreview ? (
@@ -206,7 +206,7 @@ const CategoryForm: React.FC = () => {
                 <div className="relative inline-block">
                   <Image
                     src={imagePreview}
-                    alt="Category preview"
+                    alt="Previzualizare categorie"
                     className="w-32 h-32 object-cover rounded-lg"
                   />
                   <button
@@ -218,14 +218,14 @@ const CategoryForm: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-sm text-gray-500">
-                  Click the X to remove the image
+                  Apăsați X pentru a elimina imaginea
                 </p>
               </div>
             ) : (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-600 mb-2">
-                  Upload a category image (optional)
+                  Încărcați o imagine pentru categorie (opțional)
                 </p>
                 <input
                   type="file"
@@ -238,7 +238,7 @@ const CategoryForm: React.FC = () => {
                   htmlFor="image-upload"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
                 >
-                  Choose Image
+                  Alegeți Imaginea
                 </label>
               </div>
             )}
@@ -248,8 +248,8 @@ const CategoryForm: React.FC = () => {
           {(createCategoryMutation.error || updateCategoryMutation.error || errors.submit) && (
             <Alert
               type="error"
-              title="Error"
-              message={errors.submit || "Failed to save category. Please try again."}
+              title="Eroare"
+              message={errors.submit || "Nu s-a putut salva categoria. Vă rugăm să încercați din nou."}
             />
           )}
 
@@ -269,14 +269,14 @@ const CategoryForm: React.FC = () => {
               variant="outline"
               onClick={() => navigate('/admin/categories')}
             >
-              Cancel
+              Anulează
             </Button>
             <Button
               type="submit"
               variant="primary"
               loading={createCategoryMutation.isPending || updateCategoryMutation.isPending}
             >
-              {isEditing ? 'Update Category' : 'Create Category'}
+              {isEditing ? 'Actualizează Categoria' : 'Creează Categoria'}
             </Button>
           </div>
         </form>

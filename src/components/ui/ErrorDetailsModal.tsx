@@ -27,17 +27,17 @@ const ErrorDetailsModal: React.FC<ErrorDetailsModalProps> = ({
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
 
-  const errorReport = `Error Report
+  const errorReport = `Raport de Eroare
 ================
 
-Title: ${error.title}
-Message: ${error.message}
+Titlu: ${error.title}
+Mesaj: ${error.message}
 Timestamp: ${error.timestamp}
-User Action: ${error.userAction}
+Acțiunea Utilizatorului: ${error.userAction}
 URL: ${error.url}
-${error.technicalDetails ? `Technical Details: ${error.technicalDetails}` : ''}
+${error.technicalDetails ? `Detalii Tehnice: ${error.technicalDetails}` : ''}
 
-Please include this information when reporting the issue.`;
+Vă rugăm să includeți această informație când raportați problema.`;
 
   const handleCopy = async () => {
     try {
@@ -45,13 +45,13 @@ Please include this information when reporting the issue.`;
       setCopied(true);
       showToast({
         type: 'success',
-        title: 'Copied!',
-        message: 'Error report copied to clipboard',
+        title: 'Copiat!',
+        message: 'Raportul de eroare a fost copiat în clipboard',
         duration: 3000,
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
+      console.error('Nu s-a putut copia în clipboard:', err);
       // Fallback for older browsers or when clipboard API fails
       const textArea = document.createElement('textarea');
       textArea.value = errorReport;
@@ -62,8 +62,8 @@ Please include this information when reporting the issue.`;
       setCopied(true);
       showToast({
         type: 'success',
-        title: 'Copied!',
-        message: 'Error report copied to clipboard',
+        title: 'Copiat!',
+        message: 'Raportul de eroare a fost copiat în clipboard',
         duration: 3000,
       });
       setTimeout(() => setCopied(false), 2000);
@@ -74,7 +74,7 @@ Please include this information when reporting the issue.`;
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Error Details"
+      title="Detalii Eroare"
       size="lg"
     >
       <div className="space-y-4">
@@ -89,7 +89,7 @@ Please include this information when reporting the issue.`;
 
         {/* Technical Details */}
         <div>
-          <h4 className="text-sm font-medium text-gray-900 mb-2">Error Report for Developers</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-2">Raport de Eroare pentru Dezvoltatori</h4>
           <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
             <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
               {errorReport}
@@ -100,7 +100,7 @@ Please include this information when reporting the issue.`;
         {/* Copy Button */}
         <div className="flex justify-between items-center">
           <p className="text-sm text-gray-600">
-            Copy this information to send to the development team
+            Copiați această informație pentru a o trimite echipei de dezvoltare
           </p>
           <Button
             variant="outline"
@@ -109,7 +109,7 @@ Please include this information when reporting the issue.`;
             icon={copied ? Check : Copy}
             iconPosition="left"
           >
-            {copied ? 'Copied!' : 'Copy Error Report'}
+            {copied ? 'Copiat!' : 'Copiază Raportul de Eroare'}
           </Button>
         </div>
 
@@ -120,14 +120,14 @@ Please include this information when reporting the issue.`;
             onClick={onClose}
             className="flex-1"
           >
-            Close
+            Închide
           </Button>
           <Button
             variant="primary"
             onClick={() => window.location.reload()}
             className="flex-1"
           >
-            Reload Page
+            Reîncarcă Pagina
           </Button>
         </div>
       </div>

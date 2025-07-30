@@ -6,7 +6,7 @@ export interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
-  title = 'Online Shop Business',
+  title = 'Afacere Online',
   onMenuClick 
 }) => {
   return (
@@ -21,13 +21,13 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
             <a href="/" className="text-gray-700 hover:text-gray-900">
-              Home
+              Acasă
             </a>
             <a href="/products" className="text-gray-700 hover:text-gray-900">
-              Products
+              Produse
             </a>
             <a href="/lists" className="text-gray-700 hover:text-gray-900">
-              Lists
+              Liste
             </a>
           </nav>
 
