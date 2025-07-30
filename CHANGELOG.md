@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-07-30
+
+### Added
+- **Enhanced Form Validation**: Comprehensive validation system for product forms
+  - Real-time validation feedback as users type
+  - Enhanced error styling with visual indicators and icons
+  - Image validation (file size, type, format restrictions)
+  - Character counters and limits for text fields
+  - Success indicators for valid fields
+
 ## [0.3.0] - 2025-07-30
 
 ### Added

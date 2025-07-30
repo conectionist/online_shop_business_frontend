@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
@@ -14,6 +14,162 @@ import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
 import Modal from '@/components/ui/Modal';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+
+// Memoized product card component for better performance
+const ProductCard = React.memo<{
+  product: Product;
+  getCategoryName: (categoryId: number) => string;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+}>(({ product, getCategoryName, onEdit, onDelete }) => (
+  <Card className="overflow-hidden">
+    {/* Product Image */}
+    <div className="aspect-square bg-gray-100 relative">
+      {product.image_versions?.thumbnail ? (
+        <Image
+          src={getProductImageUrl(product, 'thumbnail')}
+          alt={product.nume}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <Eye className="w-8 h-8" />
+        </div>
+      )}
+    </div>
+
+    {/* Product Info */}
+    <div className="p-4">
+      <h3 className="font-semibold text-lg text-gray-900 mb-2">
+        {product.nume}
+      </h3>
+      
+      <div className="space-y-2 text-sm text-gray-600">
+        <p>
+          <span className="font-medium">Category:</span> {getCategoryName(product.category_id)}
+        </p>
+        <p>
+          <span className="font-medium">Price:</span> ${product.pret}
+        </p>
+        <p>
+          <span className="font-medium">Stock:</span> {product.cantitate}
+        </p>
+        {product.description && (
+          <p className="text-gray-500 text-xs line-clamp-2">
+            {product.description}
+          </p>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2 mt-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onEdit(product)}
+          className="flex-1"
+        >
+          <Edit className="w-4 h-4 mr-1" />
+          Edit
+        </Button>
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={() => onDelete(product)}
+          className="flex-1"
+        >
+          <Trash2 className="w-4 h-4 mr-1" />
+          Delete
+        </Button>
+      </div>
+    </div>
+  </Card>
+));
+
+ProductCard.displayName = 'ProductCard';
+
+// Memoized pagination component
+const Pagination = React.memo<{
+  currentPage: number;
+  totalPages: number;
+  totalProducts: number;
+  startIndex: number;
+  endIndex: number;
+  onPageChange: (page: number) => void;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}>(({ currentPage, totalPages, totalProducts, startIndex, endIndex, onPageChange, hasNextPage, hasPrevPage }) => {
+  const getPageNumbers = useCallback(() => {
+    const pages = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else if (currentPage <= 3) {
+      for (let i = 1; i <= maxVisible; i++) {
+        pages.push(i);
+      }
+    } else if (currentPage >= totalPages - 2) {
+      for (let i = totalPages - maxVisible + 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
+  }, [currentPage, totalPages]);
+
+  return (
+    <div className="flex justify-between items-center bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="text-sm text-gray-600">
+        Showing {startIndex + 1} to {Math.min(endIndex, totalProducts)} of {totalProducts} products
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={!hasPrevPage}
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Previous
+        </Button>
+        
+        <div className="flex items-center gap-1">
+          {getPageNumbers().map(pageNum => (
+            <Button
+              key={pageNum}
+              variant={currentPage === pageNum ? "default" : "outline"}
+              size="sm"
+              onClick={() => onPageChange(pageNum)}
+              className="w-8 h-8 p-0"
+            >
+              {pageNum}
+            </Button>
+          ))}
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={!hasNextPage}
+        >
+          Next
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+});
+
+Pagination.displayName = 'Pagination';
 
 const ProductsList: React.FC = () => {
   const navigate = useNavigate();
@@ -36,22 +192,22 @@ const ProductsList: React.FC = () => {
   const deleteProductMutation = useDeleteProduct();
   const { handleError } = useErrorHandler();
 
-  // Helper function to get category name by ID
-  const getCategoryName = (categoryId: number) => {
+  // Memoized helper function to get category name by ID
+  const getCategoryName = useCallback((categoryId: number) => {
     const category = categories?.find(cat => cat.id === categoryId);
     return category?.name || 'Unknown Category';
-  };
+  }, [categories]);
 
-  // Prepare category options for filter dropdown
-  const categoryFilterOptions = [
+  // Memoized category options for filter dropdown
+  const categoryFilterOptions = useMemo(() => [
     { value: '', label: 'All Categories' },
     ...(categories?.map(category => ({
       value: category.id.toString(),
       label: category.name,
     })) || [])
-  ];
+  ], [categories]);
 
-  // Filter products based on search term and category (client-side)
+  // Memoized filtered products for better performance
   const filteredProducts = useMemo(() => {
     if (!products) return products;
     
@@ -76,45 +232,57 @@ const ProductsList: React.FC = () => {
     return filtered;
   }, [products, searchTerm, selectedCategory]);
 
-  // Calculate pagination for filtered products
-  const totalProducts = filteredProducts?.length || 0;
-  const totalPages = Math.ceil(totalProducts / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedProducts = filteredProducts?.slice(startIndex, endIndex) || [];
-  
-  const hasNextPage = currentPage < totalPages;
-  const hasPrevPage = currentPage > 1;
+  // Memoized pagination calculations
+  const paginationData = useMemo(() => {
+    const totalProducts = filteredProducts?.length || 0;
+    const totalPages = Math.ceil(totalProducts / pageSize);
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedProducts = filteredProducts?.slice(startIndex, endIndex) || [];
+    const hasNextPage = currentPage < totalPages;
+    const hasPrevPage = currentPage > 1;
 
-  // Handle category filter change
-  const handleCategoryChange = (value: string) => {
+    return {
+      totalProducts,
+      totalPages,
+      startIndex,
+      endIndex,
+      paginatedProducts,
+      hasNextPage,
+      hasPrevPage
+    };
+  }, [filteredProducts, currentPage, pageSize]);
+
+  // Memoized event handlers
+  const handleCategoryChange = useCallback((value: string) => {
     setSelectedCategory(value);
     setCurrentPage(1); // Reset to first page when filter changes
-  };
+  }, []);
 
-  // Handle search change
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
     setCurrentPage(1); // Reset to first page when search changes
-  };
+  }, []);
 
-  // Handle page change
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = useCallback((newPage: number) => {
     setCurrentPage(newPage);
-  };
+  }, []);
 
-  // Handle page size change
-  const handlePageSizeChange = (newPageSize: number) => {
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
     setPageSize(newPageSize);
     setCurrentPage(1); // Reset to first page
-  };
+  }, []);
 
-  const handleDeleteClick = (product: Product) => {
+  const handleDeleteClick = useCallback((product: Product) => {
     setProductToDelete(product);
     setDeleteModalOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleEditClick = useCallback((product: Product) => {
+    navigate(`/admin/products/${product.id}/edit`);
+  }, [navigate]);
+
+  const handleDeleteConfirm = useCallback(async () => {
     if (productToDelete) {
       try {
         await deleteProductMutation.mutateAsync({ id: productToDelete.id });
@@ -124,13 +292,14 @@ const ProductsList: React.FC = () => {
         handleError(error, `Deleting product: ${productToDelete.nume}`);
       }
     }
-  };
+  }, [productToDelete, deleteProductMutation, handleError]);
 
-  const handleDeleteCancel = () => {
+  const handleDeleteCancel = useCallback(() => {
     setDeleteModalOpen(false);
     setProductToDelete(null);
-  };
+  }, []);
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -139,6 +308,7 @@ const ProductsList: React.FC = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -199,131 +369,32 @@ const ProductsList: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      {paginatedProducts && paginatedProducts.length > 0 ? (
+      {paginationData.paginatedProducts && paginationData.paginatedProducts.length > 0 ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
-            {paginatedProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden">
-                {/* Product Image */}
-                <div className="aspect-square bg-gray-100 relative">
-                  {product.image_versions?.thumbnail ? (
-                    <Image
-                      src={getProductImageUrl(product, 'thumbnail')}
-                      alt={product.nume}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <Eye className="w-8 h-8" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                    {product.nume}
-                  </h3>
-                  
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <p>
-                      <span className="font-medium">Category:</span> {getCategoryName(product.category_id)}
-                    </p>
-                    <p>
-                      <span className="font-medium">Price:</span> ${product.pret}
-                    </p>
-                    <p>
-                      <span className="font-medium">Stock:</span> {product.cantitate}
-                    </p>
-                    {product.description && (
-                      <p className="text-gray-500 text-xs line-clamp-2">
-                        {product.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/admin/products/${product.id}/edit`)}
-                      className="flex-1"
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => handleDeleteClick(product)}
-                      className="flex-1"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+            {paginationData.paginatedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                getCategoryName={getCategoryName}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+              />
             ))}
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-between items-center bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, totalProducts)} of {totalProducts} products
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={!hasPrevPage}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Previous
-                </Button>
-                
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={!hasNextPage}
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+          {paginationData.totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={paginationData.totalPages}
+              totalProducts={paginationData.totalProducts}
+              startIndex={paginationData.startIndex}
+              endIndex={paginationData.endIndex}
+              onPageChange={handlePageChange}
+              hasNextPage={paginationData.hasNextPage}
+              hasPrevPage={paginationData.hasPrevPage}
+            />
           )}
         </>
       ) : (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
 import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductCreate, ProductUpdate } from '@/types/api';
@@ -22,6 +22,68 @@ const hasRealImage = (product: any): boolean => {
     !product.image_versions.thumbnail.includes('placeholder'));
 };
 
+// Validation rules
+const VALIDATION_RULES = {
+  nume: {
+    required: true,
+    minLength: 2,
+    maxLength: 100,
+    pattern: /^[a-zA-Z0-9\s\-_.,()]+$/
+  },
+  pret: {
+    required: true,
+    min: 0.01,
+    max: 999999.99
+  },
+  cantitate: {
+    required: true,
+    min: 0,
+    max: 999999
+  },
+  description: {
+    maxLength: 1500
+  },
+  category_id: {
+    required: true,
+    min: 1
+  },
+  unitati_id: {
+    required: true,
+    min: 1
+  }
+};
+
+// Validation messages
+const VALIDATION_MESSAGES = {
+  nume: {
+    required: 'Product name is required',
+    minLength: 'Product name must be at least 2 characters',
+    maxLength: 'Product name cannot exceed 100 characters',
+    pattern: 'Product name contains invalid characters'
+  },
+  pret: {
+    required: 'Price is required',
+    min: 'Price must be greater than 0',
+    max: 'Price cannot exceed 999,999.99'
+  },
+  cantitate: {
+    required: 'Quantity is required',
+    min: 'Quantity must be 0 or greater',
+    max: 'Quantity cannot exceed 999,999'
+  },
+  description: {
+    maxLength: 'Description cannot exceed 500 characters'
+  },
+  category_id: {
+    required: 'Category is required',
+    min: 'Please select a valid category'
+  },
+  unitati_id: {
+    required: 'Unit is required',
+    min: 'Please select a valid unit'
+  }
+};
+
 const ProductForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -40,6 +102,7 @@ const ProductForm: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // Fetch product data if editing
   const { data: product, isLoading: isLoadingProduct } = useProduct(Number(id));
@@ -71,11 +134,104 @@ const ProductForm: React.FC = () => {
     }
   }, [product, isEditing]);
 
+  // Validate a single field
+  const validateField = (field: string, value: any): string => {
+    const rules = VALIDATION_RULES[field as keyof typeof VALIDATION_RULES];
+    const messages = VALIDATION_MESSAGES[field as keyof typeof VALIDATION_MESSAGES];
+    
+    if (!rules) return '';
+
+    // Required validation
+    if (rules.required && (!value || (typeof value === 'string' && !value.trim()))) {
+      return messages.required;
+    }
+
+    // Skip other validations if not required and empty
+    if (!rules.required && (!value || (typeof value === 'string' && !value.trim()))) {
+      return '';
+    }
+
+    // String validations
+    if (typeof value === 'string') {
+      if (rules.minLength && value.length < rules.minLength) {
+        return messages.minLength;
+      }
+      if (rules.maxLength && value.length > rules.maxLength) {
+        return messages.maxLength;
+      }
+      if (rules.pattern && !rules.pattern.test(value)) {
+        return messages.pattern;
+      }
+    }
+
+    // Number validations
+    if (typeof value === 'number') {
+      if (rules.min !== undefined && value < rules.min) {
+        return messages.min;
+      }
+      if (rules.max !== undefined && value > rules.max) {
+        return messages.max;
+      }
+    }
+
+    return '';
+  };
+
+  // Validate entire form
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    Object.keys(VALIDATION_RULES).forEach(field => {
+      const value = formData[field as keyof ProductCreate];
+      const error = validateField(field, value);
+      if (error) {
+        newErrors[field] = error;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle field blur (mark as touched and validate)
+  const handleFieldBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const value = formData[field as keyof ProductCreate];
+    const error = validateField(field, value);
+    setErrors(prev => ({ ...prev, [field]: error }));
+  };
+
+  // Handle input changes with real-time validation
+  const handleInputChange = (field: string, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Real-time validation for touched fields
+    if (touched[field]) {
+      const error = validateField(field, value);
+      setErrors(prev => ({ ...prev, [field]: error }));
+    }
+  };
+
   // Handle file selection
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, image: 'Image size must be less than 5MB' }));
+        return;
+      }
+
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setErrors(prev => ({ ...prev, image: 'Please select a valid image file (JPG, PNG, WebP)' }));
+        return;
+      }
+
       setImageFile(file);
+      setErrors(prev => ({ ...prev, image: '' }));
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target?.result as string);
@@ -88,35 +244,22 @@ const ProductForm: React.FC = () => {
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
-  };
-
-  // Validate form
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.nume.trim()) {
-      newErrors.nume = 'Product name is required';
-    }
-
-    if (formData.cantitate < 0) {
-      newErrors.cantitate = 'Quantity must be 0 or greater';
-    }
-
-    if (formData.pret <= 0) {
-      newErrors.pret = 'Price must be greater than 0';
-    }
-
-    if (formData.unitati_id <= 0) {
-      newErrors.unitati_id = 'Unit is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(prev => ({ ...prev, image: '' }));
   };
 
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Mark all fields as touched
+    const allFields = Object.keys(VALIDATION_RULES);
+    setTouched(prev => {
+      const newTouched = { ...prev };
+      allFields.forEach(field => {
+        newTouched[field] = true;
+      });
+      return newTouched;
+    });
 
     if (!validateForm()) {
       return;
@@ -167,15 +310,6 @@ const ProductForm: React.FC = () => {
     }
   };
 
-  // Handle input changes
-  const handleInputChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
   // Prepare category options for dropdown
   const categoryOptions = categories?.map((category: any) => ({
     value: category.id.toString(),
@@ -221,10 +355,17 @@ const ProductForm: React.FC = () => {
               label="Product Name"
               value={formData.nume}
               onChange={(e) => handleInputChange('nume', e.target.value)}
+              onBlur={() => handleFieldBlur('nume')}
               placeholder="Enter product name"
-              error={errors.nume}
+              error={touched.nume ? errors.nume : ''}
               required
+              maxLength={VALIDATION_RULES.nume.maxLength}
             />
+            {touched.nume && !errors.nume && (
+              <p className="text-sm text-green-600 mt-1">
+                ✓ Valid product name
+              </p>
+            )}
           </div>
 
           {/* Price and Quantity Row */}
@@ -234,11 +375,13 @@ const ProductForm: React.FC = () => {
                 label="Price"
                 type="number"
                 step="0.01"
-                min="0"
+                min={VALIDATION_RULES.pret.min}
+                max={VALIDATION_RULES.pret.max}
                 value={formData.pret}
                 onChange={(e) => handleInputChange('pret', parseFloat(e.target.value) || 0)}
+                onBlur={() => handleFieldBlur('pret')}
                 placeholder="0.00"
-                error={errors.pret}
+                error={touched.pret ? errors.pret : ''}
                 required
               />
             </div>
@@ -246,11 +389,13 @@ const ProductForm: React.FC = () => {
               <Input
                 label="Quantity"
                 type="number"
-                min="0"
+                min={VALIDATION_RULES.cantitate.min}
+                max={VALIDATION_RULES.cantitate.max}
                 value={formData.cantitate}
                 onChange={(e) => handleInputChange('cantitate', parseInt(e.target.value) || 0)}
+                onBlur={() => handleFieldBlur('cantitate')}
                 placeholder="0"
-                error={errors.cantitate}
+                error={touched.cantitate ? errors.cantitate : ''}
                 required
               />
             </div>
@@ -260,30 +405,40 @@ const ProductForm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
+                Category <span className="text-red-500">*</span>
               </label>
               {isLoadingCategories ? (
                 <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
                   Loading categories...
                 </div>
               ) : (
-                <Select
-                  options={categoryOptions}
-                  value={formData.category_id?.toString()}
-                  onChange={(value) => handleInputChange('category_id', parseInt(value))}
-                  placeholder="Select a category"
-                />
+                <div>
+                  <Select
+                    options={categoryOptions}
+                    value={formData.category_id?.toString()}
+                    onChange={(value) => handleInputChange('category_id', parseInt(value))}
+                    onBlur={() => handleFieldBlur('category_id')}
+                    placeholder="Select a category"
+                  />
+                  {touched.category_id && errors.category_id && (
+                    <p className="text-sm text-red-600 mt-1 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.category_id}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
             <div>
               <Input
                 label="Unit ID"
                 type="number"
-                min="1"
+                min={VALIDATION_RULES.unitati_id.min}
                 value={formData.unitati_id}
                 onChange={(e) => handleInputChange('unitati_id', parseInt(e.target.value) || 1)}
+                onBlur={() => handleFieldBlur('unitati_id')}
                 placeholder="1"
-                error={errors.unitati_id}
+                error={touched.unitati_id ? errors.unitati_id : ''}
                 required
               />
             </div>
@@ -292,21 +447,38 @@ const ProductForm: React.FC = () => {
           {/* Description Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
+              Description <span className="text-gray-500">(optional)</span>
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
+              onBlur={() => handleFieldBlur('description')}
               placeholder="Enter product description (optional)"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                touched.description && errors.description 
+                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                  : 'border-gray-300'
+              }`}
               rows={4}
+              maxLength={VALIDATION_RULES.description.maxLength}
             />
+            <div className="flex justify-between items-center mt-1">
+              {touched.description && errors.description && (
+                <p className="text-sm text-red-600 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.description}
+                </p>
+              )}
+              <p className="text-sm text-gray-500 ml-auto">
+                {formData.description.length}/{VALIDATION_RULES.description.maxLength} characters
+              </p>
+            </div>
           </div>
 
           {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Image
+              Product Image <span className="text-gray-500">(optional)</span>
             </label>
             
             {imagePreview ? (
@@ -320,7 +492,7 @@ const ProductForm: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -330,10 +502,17 @@ const ProductForm: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                errors.image ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+              }`}>
+                <Upload className={`w-8 h-8 mx-auto mb-2 ${
+                  errors.image ? 'text-red-400' : 'text-gray-400'
+                }`} />
                 <p className="text-sm text-gray-600 mb-2">
                   Upload a product image (optional)
+                </p>
+                <p className="text-xs text-gray-500 mb-3">
+                  Supported formats: JPG, PNG, WebP (max 5MB)
                 </p>
                 <input
                   type="file"
@@ -344,10 +523,16 @@ const ProductForm: React.FC = () => {
                 />
                 <label
                   htmlFor="image-upload"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   Choose Image
                 </label>
+                {errors.image && (
+                  <p className="text-sm text-red-600 mt-2 flex items-center justify-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.image}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -355,10 +540,11 @@ const ProductForm: React.FC = () => {
           {/* Error Display */}
           {(createProductMutation.error || updateProductMutation.error || errors.submit) && (
             <Alert
-              type="error"
+              variant="error"
               title="Error"
-              message={errors.submit || "Failed to save product. Please try again."}
-            />
+            >
+              {errors.submit || "Failed to save product. Please try again."}
+            </Alert>
           )}
 
           {/* Form Actions */}
