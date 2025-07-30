@@ -77,18 +77,19 @@ const AdminDashboard: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="opacity-60 cursor-not-allowed">
-            <div className="p-6">
-              <div className="flex items-center space-x-3">
-                <CreditCard className="h-8 w-8 text-emerald-600" />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Metode de Plată</h3>
-                  <p className="text-gray-600 text-sm">Configurează opțiunile de plată</p>
-                  <p className="text-xs text-gray-500 mt-1">În curând</p>
+          <Link to="/admin/payment-methods" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <CreditCard className="h-8 w-8 text-emerald-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Metode de Plată</h3>
+                    <p className="text-gray-600 text-sm">Configurează opțiunile de plată</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
           <Link to="/admin/delivery-types" className="block">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
