@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
 import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import { useUnits } from '@/hooks/useUnits';
 import { ProductCreate, ProductUpdate } from '@/types/api';
 import { productService } from '@/services/products';
 import { Button } from '@/components/ui/Button';
@@ -115,6 +116,9 @@ const ProductForm: React.FC = () => {
   
   // Fetch categories for dropdown
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
+  
+  // Fetch units for dropdown
+  const { data: units, isLoading: isLoadingUnits } = useUnits();
 
   // Load product data when editing
   useEffect(() => {
@@ -133,6 +137,13 @@ const ProductForm: React.FC = () => {
       }
     }
   }, [product, isEditing]);
+
+  // Set default unit when units are loaded (for new products)
+  useEffect(() => {
+    if (!isEditing && units && units.length > 0 && formData.unitati_id === 0) {
+      setFormData((prev: ProductCreate) => ({ ...prev, unitati_id: units[0].id }));
+    }
+  }, [units, isEditing, formData.unitati_id]);
 
   // Validate a single field
   const validateField = (field: string, value: any): string => {
@@ -430,17 +441,35 @@ const ProductForm: React.FC = () => {
               )}
             </div>
             <div>
-              <Input
-                label="Unit ID"
-                type="number"
-                min={VALIDATION_RULES.unitati_id.min}
-                value={formData.unitati_id}
-                onChange={(e) => handleInputChange('unitati_id', parseInt(e.target.value) || 1)}
-                onBlur={() => handleFieldBlur('unitati_id')}
-                placeholder="1"
-                error={touched.unitati_id ? errors.unitati_id : ''}
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Unit <span className="text-red-500">*</span>
+              </label>
+              {isLoadingUnits ? (
+                <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                  Loading units...
+                </div>
+              ) : (
+                <div>
+                  <Select
+                    options={units?.map(unit => ({
+                      value: unit.id.toString(),
+                      label: unit.denumire
+                    })) || []}
+                    value={formData.unitati_id?.toString()}
+                    onChange={(value) => {
+                      handleInputChange('unitati_id', parseInt(value) || 1);
+                      handleFieldBlur('unitati_id');
+                    }}
+                    placeholder="Select a unit"
+                  />
+                  {touched.unitati_id && errors.unitati_id && (
+                    <p className="text-sm text-red-600 mt-1 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.unitati_id}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

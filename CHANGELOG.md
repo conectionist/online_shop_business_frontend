@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-07-30
+
+### Added
+- **Units Management**: Complete units management system
+  - Create, edit, and delete measurement units (kg, l, buc, pachet, etc.)
+  - Units list with search functionality
+  - Form validation and error handling
+  - Integration with product forms (dropdown selection instead of ID input)
+  - Navigation card in admin dashboard
+
 ## [0.4.0] - 2025-07-30
 
 ### Added

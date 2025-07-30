@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FolderOpen, Package, List } from 'lucide-react';
+import { FolderOpen, Package, List, Ruler } from 'lucide-react';
 import Card from '@/components/ui/Card';
 
 const AdminDashboard: React.FC = () => {
@@ -36,6 +36,20 @@ const AdminDashboard: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Products</h3>
                   <p className="text-gray-600 text-sm">Manage your product catalog</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </Link>
+
+        <Link to="/admin/units" className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="p-6">
+              <div className="flex items-center space-x-3">
+                <Ruler className="h-8 w-8 text-orange-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Units</h3>
+                  <p className="text-gray-600 text-sm">Manage measurement units</p>
                 </div>
               </div>
             </div>

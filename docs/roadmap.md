@@ -163,20 +163,26 @@ This roadmap outlines the complete development plan for the online shop business
   - Create primary image selection
   - Handle multiple image uploads
 
+##### **⏳ Baby Step 3.2.4: Multiple Images Management** - PENDING
+- [ ] Extend to handle multiple images
+- [ ] Image reordering interface
+- [ ] Primary image selection
+- [ ] Image gallery display
+
 - [x] **Products API Integration**
   - Create products service functions
   - Setup products queries and mutations
   - Handle complex image operations
   - Implement bulk operations
 
-#### 3.3 Units Management
-- [ ] **Units CRUD**
+#### 3.3 Units Management ✅
+- [x] **Units CRUD**
   - Create units list page
   - Create unit form (create/edit)
   - Implement unit deletion
   - Add unit validation
 
-- [ ] **Units API Integration**
+- [x] **Units API Integration**
   - Create units service functions
   - Setup units queries and mutations
 
