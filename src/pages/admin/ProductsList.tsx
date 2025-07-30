@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { Product } from '@/types/api';
@@ -21,6 +21,10 @@ const ProductsList: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch all products
   const { data: products, isLoading, error } = useProducts();
@@ -47,7 +51,7 @@ const ProductsList: React.FC = () => {
     })) || [])
   ];
 
-  // Filter products based on search term and category
+  // Filter products based on search term and category (client-side)
   const filteredProducts = useMemo(() => {
     if (!products) return products;
     
@@ -71,6 +75,39 @@ const ProductsList: React.FC = () => {
     
     return filtered;
   }, [products, searchTerm, selectedCategory]);
+
+  // Calculate pagination for filtered products
+  const totalProducts = filteredProducts?.length || 0;
+  const totalPages = Math.ceil(totalProducts / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedProducts = filteredProducts?.slice(startIndex, endIndex) || [];
+  
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
+
+  // Handle category filter change
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  // Handle search change
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page
+  };
 
   const handleDeleteClick = (product: Product) => {
     setProductToDelete(product);
@@ -104,69 +141,71 @@ const ProductsList: React.FC = () => {
 
   if (error) {
     return (
-      <Alert
-        type="error"
-        title="Error loading products"
-        message="Failed to load products. Please try again."
-      />
+      <div className="max-w-4xl mx-auto p-6">
+        <Alert variant="error" title="Error loading products">
+          Failed to load products. Please try again.
+        </Alert>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-600">Manage your product catalog</p>
-        </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => navigate('/admin/products/new')}
-        >
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Products</h1>
+        <Button onClick={() => navigate('/admin/products/new')}>
           <Plus className="w-4 h-4 mr-2" />
           Add Product
         </Button>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 max-w-md">
-          <Input
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            leftIcon={<Search className="w-4 h-4" />}
-          />
-        </div>
-        <div className="w-full sm:w-48">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Filter by Category
-          </label>
-          {isLoadingCategories ? (
-            <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 text-sm">
-              Loading categories...
-            </div>
-          ) : (
-            <Select
-              options={categoryFilterOptions}
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              placeholder="All Categories"
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-10"
             />
-          )}
+          </div>
+
+          {/* Category Filter */}
+          <Select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            options={categoryFilterOptions}
+            placeholder="Filter by category"
+          />
+
+          {/* Page Size */}
+          <Select
+            value={pageSize.toString()}
+            onChange={(value) => handlePageSizeChange(parseInt(value))}
+            options={[
+              { value: '5', label: '5 per page' },
+              { value: '10', label: '10 per page' },
+              { value: '20', label: '20 per page' },
+              { value: '50', label: '50 per page' },
+            ]}
+            placeholder="Items per page"
+          />
         </div>
       </div>
 
       {/* Products Grid */}
-      {filteredProducts && filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <Card key={product.id} className="hover:shadow-lg transition-shadow">
-              <div className="space-y-4">
+      {paginatedProducts && paginatedProducts.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+            {paginatedProducts.map((product) => (
+              <Card key={product.id} className="overflow-hidden">
                 {/* Product Image */}
-                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                <div className="aspect-square bg-gray-100 relative">
                   {product.image_versions?.thumbnail ? (
                     <Image
                       src={getProductImageUrl(product, 'thumbnail')}
@@ -181,75 +220,127 @@ const ProductsList: React.FC = () => {
                 </div>
 
                 {/* Product Info */}
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg text-gray-900">
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg text-gray-900 mb-2">
                     {product.nume}
                   </h3>
-                  {product.description && (
-                    <p className="text-gray-600 text-sm line-clamp-2">
-                      {product.description}
+                  
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p>
+                      <span className="font-medium">Category:</span> {getCategoryName(product.category_id)}
                     </p>
-                  )}
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-green-600">
-                        ${product.pret}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        Stock: {product.cantitate}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Category: {getCategoryName(product.category_id)}
-                    </div>
+                    <p>
+                      <span className="font-medium">Price:</span> ${product.pret}
+                    </p>
+                    <p>
+                      <span className="font-medium">Stock:</span> {product.cantitate}
+                    </p>
+                    {product.description && (
+                      <p className="text-gray-500 text-xs line-clamp-2">
+                        {product.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/products/${product.id}/edit`)}
+                      className="flex-1"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDeleteClick(product)}
+                      className="flex-1"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
+              </Card>
+            ))}
+          </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-gray-200">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/admin/products/${product.id}/edit`)}
-                    className="flex-1"
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteClick(product)}
-                    className="text-red-600 hover:text-red-700 hover:border-red-300"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="text-sm text-gray-600">
+                Showing {startIndex + 1} to {Math.min(endIndex, totalProducts)} of {totalProducts} products
               </div>
-            </Card>
-          ))}
-        </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!hasPrevPage}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!hasNextPage}
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <Eye className="w-12 h-12 mx-auto" />
+          <div className="text-gray-500 mb-4">
+            {searchTerm || selectedCategory ? 'No products found matching your filters.' : 'No products found.'}
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm || selectedCategory ? 'No products found' : 'No products yet'}
-          </h3>
-          <p className="text-gray-600 mb-6">
-            {searchTerm || selectedCategory
-              ? 'Try adjusting your search terms or category filter'
-              : 'Get started by adding your first product'
-            }
-          </p>
-          {!searchTerm && !selectedCategory && (
+          {(searchTerm || selectedCategory) && (
             <Button
-              variant="primary"
-              onClick={() => navigate('/admin/products/new')}
+              variant="outline"
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedCategory('');
+                setCurrentPage(1);
+              }}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Product
+              Clear filters
             </Button>
           )}
         </div>
@@ -261,21 +352,16 @@ const ProductsList: React.FC = () => {
         onClose={handleDeleteCancel}
         title="Delete Product"
       >
-        <div className="space-y-4">
-          <p className="text-gray-600">
+        <div className="p-6">
+          <p className="text-gray-600 mb-4">
             Are you sure you want to delete "{productToDelete?.nume}"? This action cannot be undone.
           </p>
-          <div className="flex gap-3 justify-end">
+          <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={handleDeleteCancel}>
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleDeleteConfirm}
-              loading={deleteProductMutation.isPending}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete Product
+            <Button variant="danger" onClick={handleDeleteConfirm}>
+              Delete
             </Button>
           </div>
         </div>

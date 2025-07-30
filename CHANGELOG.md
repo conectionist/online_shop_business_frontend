@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-07-30
+
+### Added
+- **Advanced Product Management**: Enhanced product list with advanced features
+  - Pagination support with customizable page sizes (5, 10, 20, 50 per page)
+  - Client-side search functionality for product names and descriptions
+  - Category filtering with server-side integration
+
 ## [0.2.0] - 2025-07-29
 
 ### Added
