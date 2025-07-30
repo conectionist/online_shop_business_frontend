@@ -64,18 +64,19 @@ const AdminDashboard: React.FC = () => {
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Setări</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="opacity-60 cursor-not-allowed">
-            <div className="p-6">
-              <div className="flex items-center space-x-3">
-                <Building2 className="h-8 w-8 text-indigo-600" />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Detalii Afacere</h3>
-                  <p className="text-gray-600 text-sm">Gestionează informațiile companiei</p>
-                  <p className="text-xs text-gray-500 mt-1">În curând</p>
+          <Link to="/admin/business-details" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <Building2 className="h-8 w-8 text-indigo-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Detalii Afacere</h3>
+                    <p className="text-gray-600 text-sm">Gestionează informațiile companiei</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
           <Link to="/admin/payment-methods" className="block">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">

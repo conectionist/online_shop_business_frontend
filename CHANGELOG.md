@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-01-30
+
+### Added
+- **Business Details Management**: Complete CRUD functionality for business details
+  - Business details list page with search functionality
+  - Create and edit business details forms with validation
+  - Delete business details with confirmation modal
+
 ## [0.10.0] - 2025-01-30
 
 ### Added
