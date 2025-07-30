@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import { useUnits } from '@/hooks/useUnits';
 import { Product } from '@/types/api';
 import { getProductImageUrl } from '@/services/api';
 import { Button } from '@/components/ui/Button';
@@ -19,9 +20,10 @@ import { useErrorHandler } from '@/hooks/useErrorHandler';
 const ProductCard = React.memo<{
   product: Product;
   getCategoryName: (categoryId: number) => string;
+  getUnitName: (unitId: number) => string;
   onEdit: (product: Product) => void;
   onDelete: (product: Product) => void;
-}>(({ product, getCategoryName, onEdit, onDelete }) => (
+}>(({ product, getCategoryName, getUnitName, onEdit, onDelete }) => (
   <Card className="overflow-hidden">
     {/* Product Image */}
     <div className="aspect-square bg-gray-100 relative">
@@ -52,7 +54,7 @@ const ProductCard = React.memo<{
           <span className="font-medium">Price:</span> ${product.pret}
         </p>
         <p>
-          <span className="font-medium">Stock:</span> {product.cantitate}
+          <span className="font-medium">Quantity:</span> {product.cantitate} {getUnitName(product.unitati_id)}
         </p>
         {product.description && (
           <p className="text-gray-500 text-xs line-clamp-2">
@@ -188,6 +190,9 @@ const ProductsList: React.FC = () => {
   // Fetch categories for display and filtering
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
   
+  // Fetch units for display
+  const { data: units, isLoading: isLoadingUnits } = useUnits();
+  
   // Delete product mutation
   const deleteProductMutation = useDeleteProduct();
   const { handleError } = useErrorHandler();
@@ -197,6 +202,12 @@ const ProductsList: React.FC = () => {
     const category = categories?.find(cat => cat.id === categoryId);
     return category?.name || 'Unknown Category';
   }, [categories]);
+
+  // Memoized helper function to get unit name by ID
+  const getUnitName = useCallback((unitId: number) => {
+    const unit = units?.find(unit => unit.id === unitId);
+    return unit?.denumire || 'Unknown Unit';
+  }, [units]);
 
   // Memoized category options for filter dropdown
   const categoryFilterOptions = useMemo(() => [
@@ -377,6 +388,7 @@ const ProductsList: React.FC = () => {
                 key={product.id}
                 product={product}
                 getCategoryName={getCategoryName}
+                getUnitName={getUnitName}
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
               />
