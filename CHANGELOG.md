@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-07-30
+
+### Added
+- **Dashboard Reorganization**: Complete restructure of admin dashboard
+  - Organized into two main sections: Content and Settings
+  - Content section: Categories, Products, Lists (coming soon)
+  - Settings section: Business Details, Payment Methods, Delivery Methods, Delivery Schedules, Units, Operations (coming soon)
+  - Visual distinction between implemented and upcoming features
+  - Clickable cards for implemented features, non-clickable with "Coming soon" labels for upcoming features
+  - Color-coded icons for easy navigation
+
 ## [0.5.0] - 2025-07-30
 
 ### Added
