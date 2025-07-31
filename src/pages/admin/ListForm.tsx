@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Save, Loader2, Eye, EyeOff, Truck, CreditCard } from 'lucide-react';
-import { useList } from '@/hooks/useLists';
+import { ArrowLeft, Save, Loader2, Eye, EyeOff, Truck, CreditCard, Package } from 'lucide-react';
+import { useList, useListProducts } from '@/hooks/useLists';
 import { useCreateList, useUpdateList } from '@/hooks/useLists';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
+import { useCategories } from '@/hooks/useCategories';
+import { useUnits } from '@/hooks/useUnits';
 import { ListCreate, ListUpdate } from '@/types/api';
+import { getImageUrl, getProductImageUrl } from '@/services/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -42,6 +45,13 @@ const ListForm: React.FC = () => {
   
   // Fetch delivery types for preview
   const { data: deliveryTypes, isLoading: isLoadingDeliveryTypes } = useDeliveryTypes();
+
+  // Fetch list products for preview (only when editing)
+  const { data: listProducts, isLoading: isLoadingListProducts } = useListProducts(listId);
+
+  // Fetch categories and units for product display
+  const { data: categories } = useCategories();
+  const { data: units } = useUnits();
 
   // Form mutations
   const createListMutation = useCreateList();
@@ -127,6 +137,15 @@ const ListForm: React.FC = () => {
   const getListTitle = (date: string, introMessage?: string) => {
     const dateFormatted = formatDateForTitle(date);
     return introMessage ? `Lista ${dateFormatted} - ${introMessage}` : `Lista ${dateFormatted}`;
+  };
+
+  // Helper functions for product display
+  const getCategoryName = (categoryId: number) => {
+    return categories?.find(cat => cat.id === categoryId)?.name || `Categorie ${categoryId}`;
+  };
+
+  const getUnitName = (unitId: number) => {
+    return units?.find(unit => unit.id === unitId)?.denumire || `Unitate ${unitId}`;
   };
 
   // Loading states
@@ -355,10 +374,104 @@ const ListForm: React.FC = () => {
 
             {/* Products Section */}
             <div className="mb-6">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <p className="text-gray-500 mb-2">Produse vor fi afișate aici</p>
-                <p className="text-sm text-gray-400">Produsele vor fi adăugate în secțiunea de gestionare a listei</p>
-              </div>
+              {isEditing && isLoadingListProducts ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <p className="text-gray-500 mb-2">Se încarcă produsele...</p>
+                </div>
+              ) : isEditing && listProducts && listProducts.length > 0 ? (
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Produse în Listă</h3>
+                  {(() => {
+                    // Group products by category
+                    const productsByCategory = listProducts.reduce((acc: any, product: any) => {
+                      const categoryName = getCategoryName(product.category_id);
+                      if (!acc[categoryName]) {
+                        acc[categoryName] = [];
+                      }
+                      acc[categoryName].push(product);
+                      return acc;
+                    }, {});
+
+                    return Object.entries(productsByCategory).map(([categoryName, products]: [string, any]) => (
+                      <div key={categoryName} className="space-y-3">
+                        <h4 className="font-medium text-gray-800 border-b border-gray-200 pb-2">
+                          {categoryName}
+                        </h4>
+                        <div className="space-y-3">
+                          {products.map((product: any) => (
+                            <div key={product.id} className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-start space-x-4">
+                                {/* Product Image */}
+                                <div className="flex-shrink-0">
+                                  {(() => {
+                                    if (product.images && product.images.length > 0) {
+                                      // Use the same approach as ProductsList - construct the image URL manually
+                                      const imagePath = product.images[0].image_versions?.thumbnail;
+                                      const imageUrl = imagePath ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${imagePath}` : null;
+                                      console.log('Generated image URL for', product.nume, ':', imageUrl);
+                                    }
+                                    return null;
+                                  })()}
+                                  {product.images && product.images.length > 0 ? (
+                                    <img
+                                      src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${product.images[0].image_versions?.thumbnail}`}
+                                      alt={product.nume}
+                                      className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                                      onError={(e) => {
+                                        console.log('Image failed to load for:', product.nume);
+                                        console.log('Image URL was:', e.target.src);
+                                        // Fallback to package icon if image fails to load
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        target.nextElementSibling?.classList.remove('hidden');
+                                      }}
+                                      onLoad={() => {
+                                        console.log('Image loaded successfully for:', product.nume);
+                                      }}
+                                    />
+                                  ) : null}
+                                  {/* Fallback icon - hidden by default, shown if image fails or doesn't exist */}
+                                  <div className={`w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center ${product.images && product.images.length > 0 ? 'hidden' : ''}`}>
+                                    <Package className="w-6 h-6 text-gray-400" />
+                                  </div>
+                                </div>
+                                
+                                {/* Product Details */}
+                                <div className="flex-1 min-w-0">
+                                  <h5 className="font-medium text-gray-900 truncate">{product.nume}</h5>
+                                  {product.description && (
+                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
+                                  )}
+                                  <div className="mt-3 space-y-1">
+                                    <p className="text-sm text-gray-600">
+                                      Preț: {product.pret} RON / {getUnitName(product.unitati_id)}
+                                    </p>
+                                    <p className="text-sm font-medium text-green-600">
+                                      Stoc: {product.stoc_produs} {getUnitName(product.unitati_id)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <p className="text-gray-500 mb-2">
+                    {isEditing ? 'Nu există produse în această listă' : 'Produse vor fi afișate aici'}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {isEditing 
+                      ? 'Adaugă produse în secțiunea de gestionare a listei'
+                      : 'Produsele vor fi adăugate în secțiunea de gestionare a listei'
+                    }
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Additional Details */}

@@ -24,6 +24,7 @@ import BusinessDetailsList from './pages/admin/BusinessDetailsList'
 import BusinessDetailsForm from './pages/admin/BusinessDetailsForm'
 import ListsList from './pages/admin/ListsList'
 import ListForm from './pages/admin/ListForm'
+import ListProducts from './pages/admin/ListProducts'
 import CustomerDashboard from './pages/customer/Dashboard'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
@@ -66,6 +67,7 @@ function App() {
           <Route path="lists" element={<ListsList />} />
           <Route path="lists/new" element={<ListForm />} />
           <Route path="lists/:id/edit" element={<ListForm />} />
+          <Route path="lists/:id/products" element={<ListProducts />} />
           {/* Future admin routes will go here */}
         </Route>
 

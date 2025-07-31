@@ -7,7 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.12.0] - 2025-01-30
+## [0.13.0] - 2025-01-31
+
+### Added
+- **List Products Management**: Complete product management within lists
+  - Dedicated page for managing products within specific lists
+  - Product search and category filtering functionality
+  - Add products to lists with stock level management
+  - Remove products from lists with confirmation
+  - Product statistics cards showing total products and categories
+  - Real-time product display in list preview with images
+  - Mobile-first product grouping by categories
+  - Product image thumbnails with fallback icons
+
+### Changed
+- **List Preview Enhancement**: Improved product display in list forms
+  - Products now grouped by categories for better organization
+  - One product per line for mobile-first design
+  - Product images with proper thumbnail display
+  - Enhanced visual hierarchy with category headers
+  - Improved loading states and empty states
+
+## [0.12.0] - 2025-01-31
 
 ### Added
 - **Lists Management**: Complete CRUD functionality for product lists

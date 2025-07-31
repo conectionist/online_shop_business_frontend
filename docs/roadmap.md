@@ -256,20 +256,20 @@ This roadmap outlines the complete development plan for the online shop business
   - Handle list status changes
   - Implement list validation
 
-#### 5.2 List Products Management
-- [ ] **Product Assignment**
+#### 5.2 List Products Management ✅
+- [x] **Product Assignment**
   - Create product selection interface
   - Implement product search and filtering
   - Add stock level management per product
   - Create bulk product operations
 
-- [ ] **Stock Management**
+- [x] **Stock Management**
   - Create stock level input components
   - Implement stock validation
   - Add stock overview display
   - Create stock alerts
 
-- [ ] **List Products API Integration**
+- [x] **List Products API Integration**
   - Create list products service functions
   - Setup list products queries and mutations
   - Handle stock level updates

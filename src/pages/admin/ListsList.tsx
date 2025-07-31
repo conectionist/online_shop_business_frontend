@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye, Calendar, MessageSquare, Phone } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Calendar, MessageSquare, Phone, Package } from 'lucide-react';
 import { useLists } from '@/hooks/useLists';
 import { useDeleteList } from '@/hooks/useLists';
 import { List } from '@/types/api';
@@ -175,6 +175,14 @@ const ListsList: React.FC = () => {
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Editează
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/admin/lists/${list.id}/products`)}
+                    >
+                      <Package className="w-4 h-4 mr-1" />
+                      Produse
                     </Button>
                   </div>
                   <Button
