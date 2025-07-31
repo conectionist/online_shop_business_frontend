@@ -18,7 +18,8 @@ const PaymentMethodForm: React.FC = () => {
 
   // Form state
   const [formData, setFormData] = useState<PaymentMethodCreate>({
-    denumire: '',
+    name: '',
+    description: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -34,7 +35,8 @@ const PaymentMethodForm: React.FC = () => {
   useEffect(() => {
     if (paymentMethod && isEditing) {
       setFormData({
-        denumire: paymentMethod.denumire,
+        name: paymentMethod.name,
+        description: paymentMethod.description,
       });
     }
   }, [paymentMethod, isEditing]);
@@ -43,12 +45,20 @@ const PaymentMethodForm: React.FC = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.denumire.trim()) {
-      newErrors.denumire = 'Denumirea metodei de plată este obligatorie';
+    if (!formData.name.trim()) {
+      newErrors.name = 'Numele este obligatoriu';
     }
 
-    if (formData.denumire.length > 100) {
-      newErrors.denumire = 'Denumirea metodei de plată trebuie să aibă mai puțin de 100 de caractere';
+    if (formData.name.length > 20) {
+      newErrors.name = 'Numele trebuie să aibă mai puțin de 20 de caractere';
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = 'Descrierea metodei de plată este obligatorie';
+    }
+
+    if (formData.description.length > 100) {
+      newErrors.description = 'Descrierea metodei de plată trebuie să aibă mai puțin de 100 de caractere';
     }
 
     setErrors(newErrors);
@@ -132,18 +142,33 @@ const PaymentMethodForm: React.FC = () => {
       {/* Form */}
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Name Field */}
+          {/* Internal Name Field */}
           <div>
             <Input
-              label="Denumirea Metodei de Plată"
-              value={formData.denumire}
-              onChange={(e) => handleInputChange('denumire', e.target.value)}
-              placeholder="Ex: Cash, Card, Transfer Bancar, PayPal"
-              error={errors.denumire}
+              label="Nume"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Ex: cash, card, transfer, paypal"
+              error={errors.name}
               required
             />
             <p className="text-sm text-gray-500 mt-1">
-              Exemple: "Cash", "Card", "Transfer Bancar", "PayPal", "Revolut"
+              Numele pentru identificare programatică (max 20 caractere, lowercase recomandat)
+            </p>
+          </div>
+
+          {/* Description Field */}
+          <div>
+            <Input
+              label="Descriere Afișată"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Ex: Cash, Card, Transfer Bancar, PayPal"
+              error={errors.description}
+              required
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              Descrierea afișată clienților (max 100 caractere)
             </p>
           </div>
 

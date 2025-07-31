@@ -27,7 +27,7 @@ const PaymentMethodsList: React.FC = () => {
     
     const searchLower = searchTerm.toLowerCase();
     return paymentMethods.filter(method => 
-      method.denumire.toLowerCase().includes(searchLower)
+      method.name.toLowerCase().includes(searchLower)
     );
   }, [paymentMethods, searchTerm]);
 
@@ -113,7 +113,7 @@ const PaymentMethodsList: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <CreditCard className="h-5 w-5 text-green-600" />
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {method.denumire}
+                      {method.name}
                     </h3>
                   </div>
                 </div>
@@ -177,7 +177,7 @@ const PaymentMethodsList: React.FC = () => {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Sunteți sigur că doriți să ștergeți "{methodToDelete?.denumire}"? Această acțiune nu poate fi anulată.
+            Sunteți sigur că doriți să ștergeți "{methodToDelete?.name}"? Această acțiune nu poate fi anulată.
           </p>
           <p className="text-sm text-red-600">
             Avertisment: Aceasta va șterge definitiv metoda de plată. Asigurați-vă că nicio listă nu folosește această metodă de plată.

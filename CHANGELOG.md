@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-01-30
+
+### Added
+- **Lists Management**: Complete CRUD functionality for product lists
+  - Lists overview page with search functionality
+  - Create and edit list forms with live preview
+  - Delete lists with confirmation modal
+  - List status management (published/unpublished)
+
+### Changed
+- **Payment Methods API**: Updated to new backend structure
+  - Changed from `denumire` to `name` and `description` fields
+  - Updated forms to include both internal name and display description
+  - Updated display logic to show appropriate fields in different contexts
+  - Improved validation with separate rules for name (20 chars) and description (100 chars)
+
 ## [0.11.0] - 2025-01-30
 
 ### Added

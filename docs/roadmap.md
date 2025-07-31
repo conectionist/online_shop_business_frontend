@@ -236,21 +236,21 @@ This roadmap outlines the complete development plan for the online shop business
 ### Phase 5: Lists Management
 **Goal**: Build the core list management functionality
 
-#### 5.1 Lists CRUD
-- [ ] **Lists Management**
+#### 5.1 Lists CRUD ✅
+- [x] **Lists Management**
   - Create lists overview page
   - Create list form (create/edit)
   - Implement list deletion
   - Add list status management (published/unpublished)
   - Create list duplication functionality
 
-- [ ] **List Configuration**
+- [x] **List Configuration**
   - Implement list date management
   - Create WhatsApp number configuration
   - Add introduction message management
   - Create additional details management
 
-- [ ] **Lists API Integration**
+- [x] **Lists API Integration**
   - Create lists service functions
   - Setup lists queries and mutations
   - Handle list status changes

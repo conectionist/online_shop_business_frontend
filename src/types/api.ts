@@ -152,15 +152,18 @@ export interface DeliveryTypeUpdate {
 // Payment Method Types
 export interface PaymentMethod {
   id: number;
-  denumire: string;
+  name: string;
+  description: string;
 }
 
 export interface PaymentMethodCreate {
-  denumire: string;
+  name: string;
+  description: string;
 }
 
 export interface PaymentMethodUpdate {
-  denumire?: string;
+  name?: string;
+  description?: string;
 }
 
 // Delivery Schedule Types
