@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Save, Loader2, Eye, EyeOff, Truck, CreditCard, Package } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, EyeOff, Clock, Truck, CreditCard, Package } from 'lucide-react';
 import { useList, useListProducts } from '@/hooks/useLists';
 import { useCreateList, useUpdateList } from '@/hooks/useLists';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
@@ -380,7 +380,6 @@ const ListForm: React.FC = () => {
                 </div>
               ) : isEditing && listProducts && listProducts.length > 0 ? (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Produse în Listă</h3>
                   {(() => {
                     // Group products by category
                     const productsByCategory = listProducts.reduce((acc: any, product: any) => {
@@ -394,7 +393,7 @@ const ListForm: React.FC = () => {
 
                     return Object.entries(productsByCategory).map(([categoryName, products]: [string, any]) => (
                       <div key={categoryName} className="space-y-3">
-                        <h4 className="font-medium text-gray-800 border-b border-gray-200 pb-2">
+                        <h4 className="text-lg font-semibold text-gray-900 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 text-center">
                           {categoryName}
                         </h4>
                         <div className="space-y-3">
@@ -403,30 +402,16 @@ const ListForm: React.FC = () => {
                               <div className="flex items-start space-x-4">
                                 {/* Product Image */}
                                 <div className="flex-shrink-0">
-                                  {(() => {
-                                    if (product.images && product.images.length > 0) {
-                                      // Use the same approach as ProductsList - construct the image URL manually
-                                      const imagePath = product.images[0].image_versions?.thumbnail;
-                                      const imageUrl = imagePath ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${imagePath}` : null;
-                                      console.log('Generated image URL for', product.nume, ':', imageUrl);
-                                    }
-                                    return null;
-                                  })()}
                                   {product.images && product.images.length > 0 ? (
                                     <img
                                       src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${product.images[0].image_versions?.thumbnail}`}
                                       alt={product.nume}
                                       className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                                       onError={(e) => {
-                                        console.log('Image failed to load for:', product.nume);
-                                        console.log('Image URL was:', e.target.src);
                                         // Fallback to package icon if image fails to load
                                         const target = e.target as HTMLImageElement;
                                         target.style.display = 'none';
                                         target.nextElementSibling?.classList.remove('hidden');
-                                      }}
-                                      onLoad={() => {
-                                        console.log('Image loaded successfully for:', product.nume);
                                       }}
                                     />
                                   ) : null}
@@ -489,7 +474,7 @@ const ListForm: React.FC = () => {
               {/* Delivery Schedule */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
-                  <Truck className="h-6 w-6 text-blue-600 mt-0.5" />
+                  <Clock className="h-6 w-6 text-blue-600 mt-0.5" />
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 mb-2">Orar Livrări</h4>
                     <div className="text-sm text-gray-600 whitespace-pre-line">

@@ -184,15 +184,14 @@ const ListsList: React.FC = () => {
                       <Package className="w-4 h-4 mr-1" />
                       Produse
                     </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDeleteClick(list)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDeleteClick(list)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Șterge
-                  </Button>
                 </div>
               </div>
             </Card>

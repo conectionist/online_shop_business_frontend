@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2025-01-31
+
+### Changed
+- **UI/UX Improvements**: Enhanced list management interface
+  - Fixed icon consistency: Delivery schedules now use clock icon (matches admin dashboard)
+  - Removed redundant "Produse în Listă" heading from list preview
+  - Enhanced category titles with prominent styling and center alignment
+  - Improved delete button design: icon-only with even spacing
+  - Cleaned up debug console logs from image loading functionality
+  - Better button spacing in lists overview for consistent layout
+
 ## [0.13.0] - 2025-01-31
 
 ### Added
