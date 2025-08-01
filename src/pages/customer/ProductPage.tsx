@@ -151,13 +151,13 @@ const ProductPage: React.FC = () => {
               {/* Price Section */}
               <div className="space-y-2">
                 <div className="flex items-baseline space-x-3">
-                  <span className="text-4xl font-bold text-gray-900">
+                  <span className="text-2xl font-bold text-gray-900">
                     {product.pret}
                   </span>
-                  <span className="text-xl text-gray-500 font-medium">
+                  <span className="text-2xl text-gray-600">
                     RON
                   </span>
-                  <span className="text-lg text-gray-400">
+                  <span className="text-2xl text-gray-600">
                     / {getUnitName(product.unitati_id)}
                   </span>
                 </div>
@@ -188,31 +188,33 @@ const ProductPage: React.FC = () => {
               <div className="space-y-6 pt-6 border-t border-gray-100">
                 {/* Quantity Selector */}
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Cantitate
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleQuantityChange(quantity - 1)}
-                      disabled={quantity <= 1}
-                      className="w-12 h-12 p-0 rounded-full"
-                    >
-                      <Minus className="w-5 h-5" />
-                    </Button>
-                    <span className="text-2xl font-bold text-gray-900 w-16 text-center">
-                      {quantity}
-                    </span>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleQuantityChange(quantity + 1)}
-                      disabled={quantity >= product.stoc_produs}
-                      className="w-12 h-12 p-0 rounded-full"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
+                  <div className="flex items-center justify-between">
+                    <label className="text-lg font-medium text-gray-700">
+                      Cantitate
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleQuantityChange(quantity - 1)}
+                        disabled={quantity <= 1}
+                        className="w-12 h-12 p-0 rounded-full"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </Button>
+                      <span className="text-2xl font-bold text-gray-900 w-16 text-center">
+                        {quantity}
+                      </span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleQuantityChange(quantity + 1)}
+                        disabled={quantity >= product.stoc_produs}
+                        className="w-12 h-12 p-0 rounded-full"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
