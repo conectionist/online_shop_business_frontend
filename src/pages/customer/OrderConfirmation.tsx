@@ -25,8 +25,8 @@ const OrderConfirmation: React.FC = () => {
     if (storedOrderData) {
       setOrderData(JSON.parse(storedOrderData));
     } else {
-      // If no order data, redirect to dashboard
-      navigate('/customer/dashboard');
+      // If no order data, redirect to home page
+      navigate('/');
     }
   }, [navigate]);
 
@@ -87,7 +87,7 @@ const OrderConfirmation: React.FC = () => {
             <p className="text-gray-600 mb-6">
               Nu s-a găsit nicio comandă pentru afișare.
             </p>
-            <Button variant="primary" onClick={() => navigate('/customer/dashboard')}>
+            <Button variant="primary" onClick={() => navigate('/')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi la Produse
             </Button>
@@ -170,7 +170,7 @@ const OrderConfirmation: React.FC = () => {
         <div className="flex justify-center">
           <Button
             variant="secondary"
-            onClick={() => navigate('/customer/dashboard')}
+            onClick={() => navigate('/')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Înapoi la Produse

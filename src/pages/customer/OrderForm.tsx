@@ -80,7 +80,7 @@ const OrderForm: React.FC = () => {
     
     // Clear cart and navigate to confirmation
     clearCart();
-    navigate('/customer/order-confirmation');
+    navigate('/order-confirmation');
   };
 
   if (items.length === 0) {
@@ -94,7 +94,7 @@ const OrderForm: React.FC = () => {
             <p className="text-gray-600 mb-6">
               Nu poți finaliza o comandă fără produse în coș.
             </p>
-            <Button variant="primary" onClick={() => navigate('/customer/dashboard')}>
+            <Button variant="primary" onClick={() => navigate('/')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi la Produse
             </Button>

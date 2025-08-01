@@ -34,7 +34,7 @@ const CartPage: React.FC = () => {
             <p className="text-gray-600 mb-6">
               Nu ai adăugat încă produse în coș. Navighează la lista de produse pentru a începe să faci cumpărături.
             </p>
-            <Link to="/customer/dashboard">
+            <Link to="/">
               <Button variant="primary">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Înapoi la Produse
@@ -174,13 +174,13 @@ const CartPage: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <Link to="/customer/dashboard" className="flex-1">
+          <Link to="/" className="flex-1">
             <Button variant="secondary" className="w-full">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Continuă cumpărăturile
             </Button>
           </Link>
-          <Link to="/customer/order-form" className="flex-1">
+          <Link to="/order-form" className="flex-1">
             <Button variant="primary" className="w-full">
               Finalizează comanda
             </Button>
