@@ -17,21 +17,13 @@ Unlike traditional online shops where customers can browse and purchase products
 
 ### **Customer Experience Flow**
 
-```
-Customer visits site
-         ↓
-Is there a published list?
-         ↓
-    ┌─────────┐    ┌─────────────┐
-    │   NO    │    │     YES     │
-    └─────────┘    └─────────────┘
-         ↓                ↓
-Show "not available"    Show published list
-message from business   with products, delivery
-settings               options, payment methods
-         ↓                ↓
-Customer cannot buy      Customer can add items
-anything               to cart and place order
+```mermaid
+flowchart TD
+    A[Customer visits site] --> B{Is there a published list?}
+    B -->|NO| C[Show 'not available' message from business settings]
+    B -->|YES| D[Show published list with products, delivery options, payment methods]
+    C --> E[Customer cannot buy anything]
+    D --> F[Customer can add items to cart and place order]
 ```
 
 ## Key Business Rules
@@ -164,16 +156,13 @@ Customer visits site
 
 ### **Data Relationships**
 
-```
-Business Details (Global Settings)
-    ↓
-Lists (Time-based Product Collections)
-    ↓
-List Products (Products with Stock Levels)
-    ↓
-List Delivery Types (Delivery Options per List)
-    ↓
-Cart (Customer Shopping Session)
+```mermaid
+graph TD
+    A[Business Details<br/>Global Settings] --> B[Lists<br/>Time-based Product Collections]
+    B --> C[List Products<br/>Products with Stock Levels]
+    B --> D[List Delivery Types<br/>Delivery Options per List]
+    C --> E[Cart<br/>Customer Shopping Session]
+    D --> E
 ```
 
 ### **Key Entities**
