@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.13.1] - 2025-01-31
+## [0.14.0] - 2025-08-01
+
+### Added
+- **Customer Layout**: Complete customer-facing interface foundation
+  - Customer header with business branding and responsive navigation
+  - Customer footer with business information and contact details
+  - Customer routing structure for essential pages (dashboard, cart)
+
+## [0.13.1] - 2025-07-31
 
 ### Changed
 - **UI/UX Improvements**: Enhanced list management interface
@@ -18,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cleaned up debug console logs from image loading functionality
   - Better button spacing in lists overview for consistent layout
 
-## [0.13.0] - 2025-01-31
+## [0.13.0] - 2025-07-31
 
 ### Added
 - **List Products Management**: Complete product management within lists
@@ -39,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced visual hierarchy with category headers
   - Improved loading states and empty states
 
-## [0.12.0] - 2025-01-31
+## [0.12.0] - 2025-07-31
 
 ### Added
 - **Lists Management**: Complete CRUD functionality for product lists
@@ -55,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated display logic to show appropriate fields in different contexts
   - Improved validation with separate rules for name (20 chars) and description (100 chars)
 
-## [0.11.0] - 2025-01-30
+## [0.11.0] - 2025-07-30
 
 ### Added
 - **Business Details Management**: Complete CRUD functionality for business details
@@ -63,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Create and edit business details forms with validation
   - Delete business details with confirmation modal
 
-## [0.10.0] - 2025-01-30
+## [0.10.0] - 2025-07-30
 
 ### Added
 - **Payment Methods Management**: Complete CRUD functionality for payment methods
@@ -71,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Create and edit payment method forms with validation
   - Delete payment methods with confirmation modal
 
-## [0.9.0] - 2025-01-30
+## [0.9.0] - 2025-07-30
 
 ### Added
 - **Delivery Types Management**: Complete CRUD functionality for delivery types
@@ -80,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Delete delivery types with confirmation modal
   - Updated admin dashboard with clickable delivery types card
 
-## [0.8.0] - 2025-01-30
+## [0.8.0] - 2025-07-30
 
 ### Added
 - **Delivery Schedules Management**: Complete CRUD functionality for delivery schedules
@@ -88,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Create and edit delivery schedule forms with multi-line textarea support
   - Delete delivery schedules with confirmation modal
 
-## [0.7.0] - 2025-01-30
+## [0.7.0] - 2025-07-30
 
 ### Added
 - **Romanian Localization**: Complete translation of the application to Romanian

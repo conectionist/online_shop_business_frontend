@@ -75,6 +75,7 @@ function App() {
           <Route path="/customer" element={<CustomerLayout />}>
             <Route index element={<Navigate to="/customer/dashboard" replace />} />
             <Route path="dashboard" element={<CustomerDashboard />} />
+            <Route path="cart" element={<div>Cart Page - Coming Soon</div>} />
             {/* Future customer routes will go here */}
           </Route>
 

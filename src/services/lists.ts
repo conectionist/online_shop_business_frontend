@@ -32,6 +32,19 @@ export const listService = {
     return response.data;
   },
 
+  // Get the published list (for customers)
+  getPublishedList: async (): Promise<List | null> => {
+    try {
+      const response = await apiClient.get('/liste');
+      const lists = response.data;
+      const publishedList = lists.find((list: List) => list.is_published && !list.is_deleted);
+      return publishedList || null;
+    } catch (error) {
+      console.error('Error fetching published list:', error);
+      return null;
+    }
+  },
+
   // Get a single list by ID
   getList: async (id: number): Promise<List> => {
     const response = await apiClient.get(`/liste/${id}`);

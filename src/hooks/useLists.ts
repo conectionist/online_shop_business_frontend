@@ -12,6 +12,15 @@ export const useLists = (filters?: ListFilters) => {
   });
 };
 
+// Hook to get the published list (for customers)
+export const usePublishedList = () => {
+  return useQuery({
+    queryKey: [...queryKeys.lists.list({}), 'published'],
+    queryFn: () => listService.getPublishedList(),
+    staleTime: 2 * 60 * 1000, // 2 minutes - shorter cache for customer-facing data
+  });
+};
+
 // Hook to get a single list
 export const useList = (id: number) => {
   return useQuery({

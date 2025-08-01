@@ -310,14 +310,14 @@ This roadmap outlines the complete development plan for the online shop business
 ### Phase 7: Customer Interface
 **Goal**: Build the customer-facing interface
 
-#### 7.1 Customer Layout
-- [ ] **Customer Layout Components**
+#### 7.1 Customer Layout ✅
+- [x] **Customer Layout Components**
   - Create customer header component
   - Create customer navigation
   - Create customer footer
   - Implement mobile-responsive design
 
-- [ ] **Customer Routing**
+- [x] **Customer Routing**
   - Setup customer route structure
   - Create customer page components
   - Implement customer navigation
