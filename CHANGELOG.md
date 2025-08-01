@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Customer Order Flow**: Fixed routing issues in cart and order pages
+  - Fixed cart page links to use correct routes (`/order-form` instead of `/customer/order-form`)
+  - Fixed order form navigation to use correct confirmation route (`/order-confirmation`)
+  - Fixed all customer dashboard links to use home page (`/`) instead of non-existent `/customer/dashboard`
+  - Resolved issue where "Finalizează comanda" was redirecting to main page instead of checkout
+
 ## [0.16.0] - 2025-08-01
 
 ### Added
