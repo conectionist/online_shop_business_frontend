@@ -95,7 +95,7 @@ const WelcomePage: React.FC = () => {
   return (
     <>
       {/* Floating Cart Icon */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-16 right-4 z-50">
         <Link to="/cart">
           <div className="relative bg-white rounded-full shadow-lg border border-gray-200 p-3 hover:shadow-xl transition-shadow">
             <ShoppingCart className="h-6 w-6 text-gray-700" />
@@ -218,8 +218,6 @@ const WelcomePage: React.FC = () => {
         )}
       </div>
 
-
-
       {/* Additional Details */}
       {publishedList.alte_detalii && (
         <div className="mb-6">
@@ -285,6 +283,18 @@ const WelcomePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Cart Action Button */}
+      {getTotalItems() > 0 && (
+        <div className="mt-8 text-center">
+          <Link to="/cart">
+            <Button variant="primary" className="px-8 py-3 text-lg">
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              Vezi Coșul ({getTotalItems()} produse)
+            </Button>
+          </Link>
+        </div>
+      )}
     </div>
     </>
   );
