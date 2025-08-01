@@ -165,8 +165,11 @@ const WelcomePage: React.FC = () => {
                             </div>
                           </div>
                           
-                          {/* Product Details */}
-                          <div className="flex-1 min-w-0">
+                          {/* Product Details - Clickable */}
+                          <Link 
+                            to={`/product/${product.id}`}
+                            className="flex-1 min-w-0 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+                          >
                             <h5 className="font-medium text-gray-900 truncate">{product.nume}</h5>
                             {product.description && (
                               <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
@@ -179,14 +182,18 @@ const WelcomePage: React.FC = () => {
                                 Stoc: {product.stoc_produs} {getUnitName(product.unitati_id)}
                               </p>
                             </div>
-                          </div>
+                          </Link>
 
                           {/* Add to Cart Section */}
                           <div className="flex-shrink-0 flex flex-col items-end space-y-2">
                             <Button
                               variant="primary"
                               size="sm"
-                              onClick={() => addToCart(product)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                addToCart(product);
+                              }}
                               className="px-3 py-1"
                             >
                               <Plus className="w-4 h-4 mr-1" />

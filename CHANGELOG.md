@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2025-08-01
+
+### Added
+- **Product Detail Pages**: Click on any product to view its full details
+  - Larger product images with gallery view for multiple photos
+  - Complete product information and description
+  - Add products to cart directly from detail pages
+
 ### Fixed
 - **Customer Order Flow**: Fixed routing issues in cart and order pages
   - Fixed cart page links to use correct routes (`/order-form` instead of `/customer/order-form`)
