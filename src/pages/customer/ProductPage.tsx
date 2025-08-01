@@ -76,7 +76,7 @@ const ProductPage: React.FC = () => {
   return (
     <>
       {/* Floating Cart Icon */}
-      <div className="fixed top-16 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50">
         <Link to="/cart">
           <div className="relative bg-white rounded-full shadow-lg border border-gray-200 p-3 hover:shadow-xl transition-shadow">
             <ShoppingCart className="h-6 w-6 text-gray-700" />

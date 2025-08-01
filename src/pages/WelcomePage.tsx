@@ -94,19 +94,7 @@ const WelcomePage: React.FC = () => {
   // Show the published list with exact same structure as admin preview
   return (
     <>
-      {/* Floating Cart Icon */}
-      <div className="fixed top-16 right-4 z-50">
-        <Link to="/cart">
-          <div className="relative bg-white rounded-full shadow-lg border border-gray-200 p-3 hover:shadow-xl transition-shadow">
-            <ShoppingCart className="h-6 w-6 text-gray-700" />
-            {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                {getTotalItems()}
-              </span>
-            )}
-          </div>
-        </Link>
-      </div>
+
 
       <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
         {/* Title */}
