@@ -6,7 +6,10 @@ import { useUnits } from '@/hooks/useUnits';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
-import { Clock, Package, Truck, CreditCard } from 'lucide-react';
+import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { useCartStore } from '@/stores/cartStore';
+import { Link } from 'react-router-dom';
 
 const CustomerDashboard: React.FC = () => {
   const { data: businessDetailsArray } = useBusinessDetails();
@@ -23,6 +26,9 @@ const CustomerDashboard: React.FC = () => {
   const { data: deliveryTypes } = useDeliveryTypes();
   const { data: paymentMethods } = usePaymentMethods();
 
+  // Cart store
+  const { addItem, getTotalItems } = useCartStore();
+
   // Helper functions
   const getCategoryName = (categoryId: number) => {
     return categories?.find(c => c.id === categoryId)?.name || 'Categorie necunoscută';
@@ -30,6 +36,18 @@ const CustomerDashboard: React.FC = () => {
 
   const getUnitName = (unitId: number) => {
     return units?.find(u => u.id === unitId)?.denumire || 'unitate';
+  };
+
+  // Cart functions
+  const addToCart = (product: any) => {
+    addItem({
+      id: product.id,
+      nume: product.nume,
+      pret: product.pret,
+      unitati_id: product.unitati_id,
+      unitate_denumire: getUnitName(product.unitati_id),
+      images: product.images
+    });
   };
 
   if (isLoading) {
@@ -147,6 +165,19 @@ const CustomerDashboard: React.FC = () => {
                               </p>
                             </div>
                           </div>
+
+                          {/* Add to Cart Section */}
+                          <div className="flex-shrink-0 flex flex-col items-end space-y-2">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => addToCart(product)}
+                              className="px-3 py-1"
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Adaugă
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -164,6 +195,25 @@ const CustomerDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Cart Summary */}
+      {getTotalItems() > 0 && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <ShoppingCart className="h-5 w-5 text-blue-600" />
+              <span className="font-medium text-blue-900">
+                {getTotalItems()} produse în coș
+              </span>
+            </div>
+            <Link to="/customer/cart">
+              <Button variant="primary" size="sm">
+                Vezi Coșul
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Additional Details */}
       {publishedList.alte_detalii && (

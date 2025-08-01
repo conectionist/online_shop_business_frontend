@@ -2,9 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import { useBusinessDetails } from '@/hooks/useBusinessDetails';
+import { useCartStore } from '@/stores/cartStore';
 
 const CustomerHeader: React.FC = () => {
   const { data: businessDetailsArray } = useBusinessDetails();
+  const { getTotalItems } = useCartStore();
   
   // Get the first business details (assuming there's only one or we want the first one)
   const businessDetails = businessDetailsArray && businessDetailsArray.length > 0 ? businessDetailsArray[0] : null;
@@ -41,9 +43,11 @@ const CustomerHeader: React.FC = () => {
               className="relative p-2 text-gray-700 hover:text-gray-900 transition-colors"
             >
               <ShoppingCart className="h-6 w-6" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                0
-              </span>
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {getTotalItems()}
+                </span>
+              )}
             </Link>
           </div>
         </div>

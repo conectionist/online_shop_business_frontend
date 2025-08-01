@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2025-08-01
+
+### Added
+- **Order Placement System**: Complete order management for unique business model
+  - Order form with customer information collection (name, surname)
+  - Payment method selection with validation
+  - Delivery type selection with dynamic address field for home delivery
+  - Real-time order summary with cart items and totals
+  - Form validation with user-friendly Romanian error messages
+  - Order confirmation page with formatted order display
+  - Copy to clipboard functionality for order text
+  - Direct WhatsApp sharing integration
+  - Success feedback and clear user instructions
+
+### Technical
+- **Cart Integration**: Seamless flow from cart to order placement
+- **Session Storage**: Order data persistence during the order flow
+- **Route Protection**: Automatic redirects for invalid order states
+- **Mobile-First Design**: Responsive order forms and confirmation pages
+- **TypeScript**: Full type safety for order data structures
+
 ## [0.14.0] - 2025-08-01
 
 ### Added
