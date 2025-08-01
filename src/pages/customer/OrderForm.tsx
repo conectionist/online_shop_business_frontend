@@ -113,7 +113,7 @@ const OrderForm: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => navigate('/customer/cart')}
+              onClick={() => navigate('/cart')}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi la Coș

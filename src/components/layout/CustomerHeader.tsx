@@ -17,7 +17,7 @@ const CustomerHeader: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <div className="flex items-center">
-            <Link to="/customer" className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center space-x-3">
               {businessDetails?.logo && (
                 <img 
                   src={businessDetails.logo} 
@@ -39,7 +39,7 @@ const CustomerHeader: React.FC = () => {
           {/* Cart Icon */}
           <div className="flex items-center">
             <Link 
-              to="/customer/cart" 
+              to="/cart" 
               className="relative p-2 text-gray-700 hover:text-gray-900 transition-colors"
             >
               <ShoppingCart className="h-6 w-6" />

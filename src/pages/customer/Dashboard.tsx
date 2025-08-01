@@ -206,7 +206,7 @@ const CustomerDashboard: React.FC = () => {
                 {getTotalItems()} produse în coș
               </span>
             </div>
-            <Link to="/customer/cart">
+            <Link to="/cart">
               <Button variant="primary" size="sm">
                 Vezi Coșul
               </Button>
