@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import AppLayout from './components/layout/AppLayout'
 import AdminLayout from './components/layout/AdminLayout'
-import CustomerLayout from './components/layout/CustomerLayout'
 import WelcomePage from './pages/WelcomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -25,7 +24,6 @@ import BusinessDetailsForm from './pages/admin/BusinessDetailsForm'
 import ListsList from './pages/admin/ListsList'
 import ListForm from './pages/admin/ListForm'
 import ListProducts from './pages/admin/ListProducts'
-import CustomerDashboard from './pages/customer/Dashboard'
 import CartPage from './pages/customer/CartPage'
 import OrderForm from './pages/customer/OrderForm'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
@@ -74,15 +72,10 @@ function App() {
           {/* Future admin routes will go here */}
         </Route>
 
-          {/* Customer routes */}
-          <Route path="/customer" element={<CustomerLayout />}>
-            <Route index element={<Navigate to="/customer/dashboard" replace />} />
-            <Route path="dashboard" element={<CustomerDashboard />} />
-            <Route path="cart" element={<CartPage />} />
-            <Route path="order-form" element={<OrderForm />} />
-            <Route path="order-confirmation" element={<OrderConfirmation />} />
-            {/* Future customer routes will go here */}
-          </Route>
+          {/* Cart and Order routes */}
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/order-form" element={<OrderForm />} />
+          <Route path="/order-confirmation" element={<OrderConfirmation />} />
 
           {/* Catch all - redirect to welcome */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2025-08-01
+
+### Added
+- **Customer Area Migration**: Streamlined user experience by integrating customer interface into home page
+  - Migrated customer dashboard content to home page (WelcomePage)
+  - Removed separate customer area routing and layout
+  - Simplified navigation structure with direct access to published lists
+  - Updated cart and order routes to root level (`/cart`, `/order-form`, `/order-confirmation`)
+
+### Changed
+- **Home Page**: Transformed from development setup page to customer-facing interface
+  - Now shows published list or "not available" message directly
+  - Includes all product display, cart functionality, and business information
+  - Maintains exact same functionality as previous customer dashboard
+
+### Technical
+- **Routing Simplification**: Removed `/customer` routes and CustomerLayout
+- **Import Cleanup**: Removed unused CustomerLayout and CustomerDashboard imports
+- **URL Structure**: Simplified cart and order URLs for better user experience
+- **Navigation Flow**: Streamlined customer journey from home page to order completion
+
 ## [0.15.0] - 2025-08-01
 
 ### Added

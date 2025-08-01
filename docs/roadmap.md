@@ -376,23 +376,14 @@ This roadmap outlines the complete development plan for the online shop business
 ### Phase 8: Advanced Features
 **Goal**: Implement advanced functionality and optimizations
 
-#### 8.1 Search and Filtering
-- [ ] **Advanced Search**
-  - Implement product search
-  - Add category filtering
-  - Create price range filtering
-  - Add availability filtering
+#### 8.1 Customer Area Migration ✅
+- [x] **Home Page Integration**
+  - Migrate customer dashboard to home page
+  - Remove separate customer area routing
+  - Simplify navigation structure
+  - Direct access to published lists
 
-- [ ] **Search API Integration**
-  - Create search service functions
-  - Setup search queries
-  - Implement search suggestions
-  - Add search result highlighting
-
-### Phase 8: Advanced Features
-**Goal**: Implement advanced functionality and optimizations
-
-#### 8.1 Search and Filtering
+#### 8.2 Search and Filtering
 - [ ] **Advanced Search**
   - Implement product search
   - Add category filtering
