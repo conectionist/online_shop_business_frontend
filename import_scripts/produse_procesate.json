@@ -1,0 +1,300 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "nume": "Paine cu secara",
+      "description": "faina alba,faina integrala,faina secara (5%)",
+      "pret": 12,
+      "unitate": "gr",
+      "cantitate": 600,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 2,
+      "nume": "Paine cu faina integrala grau",
+      "description": null,
+      "pret": 13,
+      "unitate": "gr",
+      "cantitate": 500,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 3,
+      "nume": "Paine cu fibre",
+      "description": "50% seminte germinate de in si floarea soarelui,faina intermediara,maia,sare,apa",
+      "pret": 16,
+      "unitate": "gr",
+      "cantitate": 500,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 4,
+      "nume": "Paine cu carbune si seminte prajite",
+      "description": null,
+      "pret": 20,
+      "unitate": "gr",
+      "cantitate": 500,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 5,
+      "nume": "Paine Borodinsky DIN SECARA 100%",
+      "description": "de la congelator-e de vinerea trecuta. (faina secara integrala Agranoland , malț de secara, maia din secara integrala, semințe de in +floarea soarelui, sare, apa).",
+      "pret": 20,
+      "unitate": "gr",
+      "cantitate": 500,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 6,
+      "nume": "Focaccia cu usturoi si ierburi",
+      "description": "faina semola,maia,apa,sare",
+      "pret": 15,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 7,
+      "nume": "Focaccia cu ceapa si masline",
+      "description": "faina semola,maia,apa,sare",
+      "pret": 17,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 8,
+      "nume": "Focaccia cu ton,porumb si suc de rosii",
+      "description": "faina semola,maia,apa,sare",
+      "pret": 20,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 9,
+      "nume": "Paine Toast cu unt si lapte",
+      "description": "faina,lapte,unt,zahar sare,ou,maia(faina+apa)",
+      "pret": 15,
+      "unitate": "gr",
+      "cantitate": 500,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 10,
+      "nume": "Bagheta cu unt si lapte",
+      "description": "faina,lapte,unt,zahar sare,ou,maia(faina+apa)",
+      "pret": 8,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 11,
+      "nume": "Bagheta cu usturoi",
+      "description": null,
+      "pret": 10,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 12,
+      "nume": "Japoneza",
+      "description": null,
+      "pret": 13,
+      "unitate": "gr",
+      "cantitate": 400,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 13,
+      "nume": "Crutoane",
+      "description": null,
+      "pret": 7,
+      "unitate": "gr",
+      "cantitate": 200,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 14,
+      "nume": "Saratele cu unt si branza de burduf",
+      "description": "unt,faina,branza burduf,branza vaci,Smântână,sare, mac",
+      "pret": 25,
+      "unitate": "gr",
+      "cantitate": 250,
+      "category_id": 1,
+      "category_name": "Brutarie"
+    },
+    {
+      "id": 15,
+      "nume": "Mure proaspete de Sorogari",
+      "description": null,
+      "pret": 23,
+      "unitate": "caserola",
+      "cantitate": 500,
+      "category_id": 2,
+      "category_name": "Fructe"
+    },
+    {
+      "id": 16,
+      "nume": "Prajitura Orangette",
+      "description": "blat umed cacao (făină migdale, făină albă, ulei, praf copt, ouă,cacao amidon) jeleu portocale (zeamă portocale, amidon, zahăr) ganaș ciocolată neagră (ciocolată neagră veritabilă, frișcă lichidă, gelatină)",
+      "pret": 35,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 3,
+      "category_name": "Deliciosenii de cofetarie"
+    },
+    {
+      "id": 17,
+      "nume": "Monoportie fistic",
+      "description": "blat pufos pandispan (ouă, zahăr, făină albă, amidon , exact vanilie) Mouse fistic (frișcă lichidă, ciocolată albă, pastă fistic, gelatină) zmeura",
+      "pret": 35,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 3,
+      "category_name": "Deliciosenii de cofetarie"
+    },
+    {
+      "id": 18,
+      "nume": "Amandina fara zahar",
+      "description": "blat pandispan pufos cu cacao însiropat cu sirop fără zahăr cu rom,ganche cu ciocolată neagră veritabilă fără zahăr",
+      "pret": 25,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 3,
+      "category_name": "Deliciosenii de cofetarie"
+    },
+    {
+      "id": 19,
+      "nume": "Placinta cu mere gen McDonald",
+      "description": "Aluat fraged(unt, smântână,ouă, zahăr,sare, făină)cuburi de mere coapte cu scorțișoară",
+      "pret": 15,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category_id": 3,
+      "category_name": "Deliciosenii de cofetarie"
+    },
+    {
+      "id": 20,
+      "nume": "Humus cu 7 arome libaneze",
+      "description": "naut, pasta susan, usturoi, suc lămâie, ulei floarea soarelui, sare, condimente.",
+      "pret": 16,
+      "unitate": "gr",
+      "cantitate": 375,
+      "category_id": 4,
+      "category_name": "Tartinabile Camara cu di tati"
+    },
+    {
+      "id": 21,
+      "nume": "Pasta de fasole cu ierburi si lamaie",
+      "description": "Fasole, ierburi proaspete (oregano, rozmarin, busuioc, cimbrișor), usturoi, sare, ulei de floarea-soarelui, coaja și zeama de lămâie",
+      "pret": 16,
+      "unitate": "gr",
+      "cantitate": 250,
+      "category_id": 4,
+      "category_name": "Tartinabile Camara cu di tati"
+    },
+    {
+      "id": 22,
+      "nume": "Pate de ficat pasare",
+      "description": "ficat de pasăre, ceapă, usturoi, ciuperci champignon, smântână, unt, ierburi și condimente (cimbru, rozmarin, sare, piper, nucșoară).",
+      "pret": 20,
+      "unitate": "gr",
+      "cantitate": 250,
+      "category_id": 4,
+      "category_name": "Tartinabile Camara cu di tati"
+    },
+    {
+      "id": 23,
+      "nume": "Crema de branza caju cu mărar și pătrunjel",
+      "description": null,
+      "pret": 12,
+      "unitate": "gr",
+      "cantitate": 120,
+      "category_id": 5,
+      "category_name": "Tartinabile Andreea"
+    },
+    {
+      "id": 24,
+      "nume": "Crema caju cu Rosii uscate si pesto busuioc",
+      "description": "caju hidratat, Roșii uscate hidratate, busuioc, parmezan, sâmburi de pin, usturoi, zeamă de lămâie, ulei de măsline, sare.",
+      "pret": 22,
+      "unitate": "gr",
+      "cantitate": 200,
+      "category_id": 5,
+      "category_name": "Tartinabile Andreea"
+    },
+    {
+      "id": 25,
+      "nume": "Zacusca cu hribi si trufe",
+      "description": "trufe, hribi, gălbiori, vinete, ardei kapia, ardei grași, ceapă, morcov, piper,foi dafin,suc roșii, ulei,sare",
+      "pret": 45,
+      "unitate": "borcanul",
+      "cantitate": 314,
+      "category_id": 5,
+      "category_name": "Tartinabile Andreea"
+    },
+    {
+      "id": 26,
+      "nume": "Salata vinete",
+      "description": "vinete coapte, maioneză de casă (ouă, ulei, muștar, zeamă de lămâie,sare)",
+      "pret": 18,
+      "unitate": "gr",
+      "cantitate": 250,
+      "category_id": 5,
+      "category_name": "Tartinabile Andreea"
+    },
+    {
+      "id": 27,
+      "nume": "Bere fara alcool cu cicoare",
+      "description": null,
+      "pret": 25,
+      "unitate": "l",
+      "cantitate": 1,
+      "category_id": 6,
+      "category_name": "Bere Artizanala Beer House"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Brutarie"
+    },
+    {
+      "id": 2,
+      "name": "Fructe"
+    },
+    {
+      "id": 3,
+      "name": "Deliciosenii de cofetarie"
+    },
+    {
+      "id": 4,
+      "name": "Tartinabile Camara cu di tati"
+    },
+    {
+      "id": 5,
+      "name": "Tartinabile Andreea"
+    },
+    {
+      "id": 6,
+      "name": "Bere Artizanala Beer House"
+    }
+  ]
+}
