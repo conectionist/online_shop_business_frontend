@@ -1,4 +1,5 @@
 import { apiClient, createFormData } from '@/services/api';
+import { authService } from '@/services/authService';
 import { Category } from '@/types/api';
 
 // Types for category operations
@@ -21,7 +22,7 @@ export interface CategoryFilters {
 
 // Category service functions
 export const categoryService = {
-  // Get all categories with optional filters
+  // Get all categories with optional filters (PUBLIC - no auth required)
   getCategories: async (filters?: CategoryFilters): Promise<Category[]> => {
     const params = new URLSearchParams();
     
@@ -39,62 +40,66 @@ export const categoryService = {
     return response.data;
   },
 
-  // Get a single category by ID
+  // Get a single category by ID (PUBLIC - no auth required)
   getCategory: async (id: number): Promise<Category> => {
     const response = await apiClient.get(`/categories/${id}`);
     return response.data;
   },
 
-  // Create a new category
+  // Create a new category (PROTECTED - requires auth)
   createCategory: async (data: CreateCategoryData): Promise<Category> => {
-    const formData = createFormData(data);
-    const response = await apiClient.post('/categories', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    return authService.makeAuthenticatedRequest(async () => {
+      const formData = createFormData(data);
+      const response = await apiClient.post('/categories', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
     });
-    return response.data;
   },
 
-  // Update an existing category
+  // Update an existing category (PROTECTED - requires auth)
   updateCategory: async (data: UpdateCategoryData): Promise<Category> => {
-    const { id, ...categoryData } = data;
-    
-    const formData = new FormData();
-    if (categoryData.name) {
-      formData.append('name', categoryData.name);
-    }
-    if (categoryData.clear_image) {
-      formData.append('clear_image', 'true');
-    }
-    
-    const response = await apiClient.patch(`/categories/${id}`, formData, {
-      headers: {
-        'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
-      },
+    return authService.makeAuthenticatedRequest(async () => {
+      const { id, ...categoryData } = data;
+      
+      const formData = new FormData();
+      if (categoryData.name) {
+        formData.append('name', categoryData.name);
+      }
+      if (categoryData.clear_image) {
+        formData.append('clear_image', 'true');
+      }
+      
+      const response = await apiClient.patch(`/categories/${id}`, formData, {
+        headers: {
+          'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
+        },
+      });
+      return response.data;
     });
-    return response.data;
   },
 
-  // Delete a category (soft delete)
+  // Delete a category (PROTECTED - requires auth)
   deleteCategory: async (id: number): Promise<void> => {
-    await apiClient.delete(`/categories/${id}`);
+    return authService.makeAuthenticatedRequest(async () => {
+      await apiClient.delete(`/categories/${id}`);
+    });
   },
 
-  // Upload category image
+  // Upload category image (PROTECTED - requires auth)
   uploadCategoryImage: async (id: number, image: File): Promise<Category> => {
-    const formData = new FormData();
-    formData.append('file', image);
-    
-    try {
+    return authService.makeAuthenticatedRequest(async () => {
+      const formData = new FormData();
+      formData.append('file', image);
+      
       const response = await apiClient.post(`/categories/${id}/image`, formData, {
         headers: {
           'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
         },
       });
       return response.data;
-    } catch (error: any) {
-      throw error;
-    }
+    });
   },
 }; 

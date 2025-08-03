@@ -1,35 +1,42 @@
 import { apiClient } from './api';
+import { authService } from '@/services/authService';
 import { PaymentMethod, PaymentMethodCreate, PaymentMethodUpdate } from '@/types/api';
 
 const BASE_URL = '/modalitati-plata';
 
 export const paymentMethodService = {
-  // Get all payment methods
+  // Get all payment methods (PUBLIC - no auth required)
   async getAll(): Promise<PaymentMethod[]> {
     const response = await apiClient.get<PaymentMethod[]>(BASE_URL);
     return response.data;
   },
 
-  // Get payment method by ID
+  // Get payment method by ID (PUBLIC - no auth required)
   async getById(id: number): Promise<PaymentMethod> {
     const response = await apiClient.get<PaymentMethod>(`${BASE_URL}/${id}`);
     return response.data;
   },
 
-  // Create new payment method
+  // Create new payment method (PROTECTED - requires auth)
   async create(data: PaymentMethodCreate): Promise<PaymentMethod> {
-    const response = await apiClient.post<PaymentMethod>(BASE_URL, data);
-    return response.data;
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.post<PaymentMethod>(BASE_URL, data);
+      return response.data;
+    });
   },
 
-  // Update payment method
+  // Update payment method (PROTECTED - requires auth)
   async update(id: number, data: PaymentMethodUpdate): Promise<PaymentMethod> {
-    const response = await apiClient.put<PaymentMethod>(`${BASE_URL}/${id}`, data);
-    return response.data;
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.put<PaymentMethod>(`${BASE_URL}/${id}`, data);
+      return response.data;
+    });
   },
 
-  // Delete payment method
+  // Delete payment method (PROTECTED - requires auth)
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`${BASE_URL}/${id}`);
+    return authService.makeAuthenticatedRequest(async () => {
+      await apiClient.delete(`${BASE_URL}/${id}`);
+    });
   }
 }; 
