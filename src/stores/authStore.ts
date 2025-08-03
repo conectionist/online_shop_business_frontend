@@ -20,6 +20,7 @@ export interface AuthActions {
   logout: () => void;
   setLoading: (loading: boolean) => void;
   updateUser: (user: User) => void;
+  updateToken: (token: string) => void;
 }
 
 export type AuthStore = AuthState & AuthActions;
@@ -43,7 +44,7 @@ export const useAuthStore = create<AuthStore>()(
         });
         
         // Store token in localStorage for API requests
-        localStorage.setItem('auth_token', token);
+        localStorage.setItem('access_token', token);
       },
 
       logout: () => {
@@ -55,7 +56,7 @@ export const useAuthStore = create<AuthStore>()(
         });
         
         // Remove token from localStorage
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem('access_token');
       },
 
       setLoading: (loading: boolean) => {
@@ -64,6 +65,12 @@ export const useAuthStore = create<AuthStore>()(
 
       updateUser: (user: User) => {
         set({ user });
+      },
+
+      updateToken: (token: string) => {
+        set({ token });
+        // Update token in localStorage for API requests
+        localStorage.setItem('access_token', token);
       },
     }),
     {
