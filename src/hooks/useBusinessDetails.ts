@@ -6,7 +6,7 @@ import { queryKeys } from '@/lib/queryKeys';
 export const useBusinessDetails = () => {
   return useQuery({
     queryKey: queryKeys.business.details(),
-    queryFn: businessDetailsService.getAll,
+    queryFn: businessDetailsService.get,
   });
 };
 
