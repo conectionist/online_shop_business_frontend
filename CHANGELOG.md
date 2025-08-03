@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2025-08-03
+
+### Added
+- **Complete Authentication System**: Enterprise-grade JWT-based authentication
+  - Secure login/logout functionality with token management
+  - Automatic token refresh with seamless user experience
+  - Route protection for admin areas with authentication guards
+  - API endpoint security for all protected operations
+  - Beautiful loading states and user feedback throughout
+  - Romanian language support for all authentication messages
+  - User avatar and personalized greetings in admin interface
+  - Comprehensive error handling with clear Romanian messages
+  - Session management with proper cleanup on logout
+
+### Security
+- **JWT Token Authentication**: Secure token-based authentication system
+  - Access tokens with automatic refresh mechanism
+  - Refresh tokens for seamless session management
+  - Token validation and expiration handling
+  - Secure storage in localStorage with proper cleanup
+  - Automatic logout on authentication failures
+
+### User Experience
+- **Enhanced Admin Interface**: Improved user experience for administrators
+  - Smooth animations and transitions throughout the application
+  - Loading spinners and success indicators for all operations
+  - Form validation with real-time feedback
+  - Disabled states during operations to prevent double-submission
+  - Visual feedback for all authentication states (loading, success, error)
+
+### Technical
+- **Authentication Service**: Centralized authentication management
+  - `authService.ts` with login, logout, and token refresh methods
+  - `ProtectedRoute` component for route-level security
+  - Enhanced `authStore` with token management capabilities
+  - API client interceptors for automatic token attachment
+  - Comprehensive test coverage with 50+ authentication scenarios
+
+### API Integration
+- **Protected Endpoints**: All mutable operations now require authentication
+  - Categories: Create, update, delete operations protected
+  - Products: Create, update, delete operations protected
+  - Units: Create, update, delete operations protected
+  - Delivery Types: Create, update, delete operations protected
+  - Delivery Schedules: Create, update, delete operations protected
+  - Payment Methods: Create, update, delete operations protected
+  - Business Details: Create, update, delete operations protected
+  - Lists: Create, update, delete operations protected
+  - Read operations remain public for customer access
+
 ## [0.17.0] - 2025-08-01
 
 ### Added
