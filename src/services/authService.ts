@@ -106,11 +106,46 @@ class AuthService {
     return localStorage.getItem('refresh_token');
   }
 
+  // Check if token is about to expire (within 5 minutes)
+  isTokenExpiringSoon(): boolean {
+    const token = this.getAccessToken();
+    if (!token) return false;
+
+    try {
+      // Decode JWT token (without verification for expiration check)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expirationTime = payload.exp * 1000; // Convert to milliseconds
+      const currentTime = Date.now();
+      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+      return (expirationTime - currentTime) < fiveMinutes;
+    } catch (error) {
+      console.error('Error checking token expiration:', error);
+      return false;
+    }
+  }
+
+  // Proactively refresh token if it's expiring soon
+  async refreshTokenIfNeeded(): Promise<void> {
+    if (this.isTokenExpiringSoon()) {
+      try {
+        await this.refreshAccessToken();
+        console.log('Token refreshed proactively');
+      } catch (error) {
+        console.error('Failed to refresh token proactively:', error);
+        // Don't logout here, let the next request handle it
+      }
+    }
+  }
+
   // Helper method to make authenticated requests with automatic token refresh
   async makeAuthenticatedRequest<T>(
     requestFn: () => Promise<T>
   ): Promise<T> {
     try {
+      // Check if token needs refresh before making request
+      await this.refreshTokenIfNeeded();
+      
       return await requestFn();
     } catch (error: any) {
       // If we get a 401, try to refresh the token and retry once

@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiError } from '@/types/api';
+import { authService } from './authService';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -34,7 +35,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and token refresh
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Check if response is HTML instead of JSON (indicates wrong endpoint)
@@ -51,12 +52,34 @@ apiClient.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      localStorage.removeItem('access_token');
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized errors with automatic token refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Try to refresh the access token
+        await authService.refreshAccessToken();
+        
+        // Update the original request with the new token
+        const newToken = authService.getAccessToken();
+        if (newToken && originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        }
+        
+        // Retry the original request with the new token
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // If refresh fails, logout and redirect to login
+        authService.logout();
+        window.location.href = '/login';
+        return Promise.reject(new Error('Authentication failed - please log in again'));
+      }
     }
+
+    // For other errors, just reject normally
     return Promise.reject(error);
   }
 );
