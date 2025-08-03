@@ -22,7 +22,8 @@ import_scripts/
 
 1. **Docker** and **Docker Compose** installed
 2. **Backend API** running and accessible
-3. **Product data** in `produse_procesate.json`
+3. **Admin credentials** configured
+4. **Product data** in `produse_procesate.json`
 
 ### 1. Configure Environment
 
@@ -31,16 +32,14 @@ Copy the environment configuration:
 cp env.config .env
 ```
 
-Edit `.env` to match your backend URL:
+Edit `.env` to match your backend URL and admin credentials:
 ```bash
-# If your backend is running locally
+# API Configuration
 API_BASE_URL=http://localhost:8001/api/v1
 
-# If your backend is running in Docker
-API_BASE_URL=http://backend:8001/api/v1
-
-# If your backend is on a different host
-API_BASE_URL=http://your-backend-host:8001/api/v1
+# Authentication Configuration
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=adminpass123
 ```
 
 ### 2. Run the Import

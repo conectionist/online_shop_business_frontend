@@ -6,7 +6,8 @@ This script imports products from `produse_procesate.json` into your backend API
 
 1. **Python 3.7+** installed
 2. **Backend API** running and accessible
-3. **Dependencies** installed
+3. **Admin credentials** configured (username/password)
+4. **Dependencies** installed
 
 ## Installation
 
@@ -24,9 +25,15 @@ Before running the script, make sure to:
    API_BASE_URL = "http://localhost:8001/api/v1"  # Change this to your backend URL
    ```
 
-2. **Ensure your backend is running** and accessible at the configured URL
+2. **Configure admin credentials** (default: admin/adminpass123):
+   ```python
+   ADMIN_USERNAME = "admin"  # Change to your admin username
+   ADMIN_PASSWORD = "adminpass123"  # Change to your admin password
+   ```
 
-3. **Verify the JSON file** `produse_procesate.json` exists in the same directory
+3. **Ensure your backend is running** and accessible at the configured URL
+
+4. **Verify the JSON file** `produse_procesate.json` exists in the same directory
 
 ## Usage
 
@@ -38,19 +45,24 @@ python import_products.py
 
 ## What the script does
 
-1. **Reads** `produse_procesate.json`
-2. **Checks existing categories** and creates new ones if needed
-3. **Checks existing units** and creates new ones if needed  
-4. **Creates products** with proper category and unit associations
-5. **Logs progress** with timestamps
+1. **Logs in** to get authentication token
+2. **Reads** `produse_procesate.json`
+3. **Checks existing categories** and creates new ones if needed
+4. **Checks existing units** and creates new ones if needed  
+5. **Creates products** with proper category and unit associations
+6. **Creates a list** with all imported products
+7. **Logs progress** with timestamps
 
 ## Expected Output
 
 ```
 === Product Import Script ===
 API Base URL: http://localhost:8001/api/v1
+Admin Username: admin
 
 [14:30:15] Starting product import...
+[14:30:15] Logging in to get authentication token...
+[14:30:15] Login successful!
 [14:30:15] Checking existing categories...
 [14:30:16] Created category: Brutarie (ID: 1)
 [14:30:16] Created category: Fructe (ID: 2)
@@ -68,7 +80,13 @@ API Base URL: http://localhost:8001/api/v1
 [14:30:18] Created product: Pâine cu secara (ID: 1)
 [14:30:18] Created product: Pâine cu faina integrala grâu (ID: 2)
 ...
-[14:30:25] Import completed! 27/27 products created successfully.
+[14:30:25] Product import completed! 27/27 products created successfully.
+[14:30:25] Creating list with all imported products...
+[14:30:25] Created list: Toate produsele importate (ID: 1)
+[14:30:26] Added product 1 to list 1 with quantity 600
+[14:30:26] Added product 2 to list 1 with quantity 500
+...
+[14:30:28] List creation completed! 27/27 products added to list.
 
 === Import Complete ===
 ```
@@ -78,12 +96,13 @@ API Base URL: http://localhost:8001/api/v1
 ### Common Issues
 
 1. **Connection Error**: Make sure your backend API is running
-2. **Authentication Error**: The script doesn't handle authentication - ensure your API doesn't require auth for these endpoints
+2. **Authentication Error**: Check that admin credentials are correct and API authentication is working
 3. **JSON Parse Error**: Check that `produse_procesate.json` is valid JSON
 4. **Duplicate Categories/Units**: The script handles duplicates gracefully by checking existing entities first
 
 ### Error Messages
 
+- `Error logging in`: Authentication failed (check credentials)
 - `Error fetching categories`: API endpoint not accessible
 - `Error creating category`: Category creation failed (check API logs)
 - `Warning: Category 'X' not found`: Category mapping issue
