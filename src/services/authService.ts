@@ -32,14 +32,22 @@ class AuthService {
     try {
       const response = await apiClient.post<AuthResponse>(`${this.baseURL}/login`, credentials);
       
-      const { access_token, refresh_token, user } = response.data;
+      const { access_token, refresh_token, admin } = response.data;
       
       // Store tokens in localStorage
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
       
+      // Transform admin data to user format for our auth store
+      const userData = {
+        id: admin.id,
+        email: admin.username, // Use username as email for now
+        name: admin.username,  // Use username as name for display
+        role: 'admin' as const
+      };
+      
       // Update auth store
-      useAuthStore.getState().login(access_token, user);
+      useAuthStore.getState().login(access_token, userData);
       
       return response.data;
     } catch (error) {

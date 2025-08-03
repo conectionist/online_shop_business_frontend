@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import AppLayout from './components/layout/AppLayout'
 import AdminLayout from './components/layout/AdminLayout'
+import ProtectedRoute from './components/ProtectedRoute'
 import WelcomePage from './pages/WelcomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -41,37 +42,41 @@ function App() {
           <Route path="/" element={<WelcomePage />} />
           <Route path="/login" element={<LoginPage />} />
 
-                  {/* Admin routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="categories" element={<CategoriesList />} />
-          <Route path="categories/new" element={<CategoryForm />} />
-          <Route path="categories/:id/edit" element={<CategoryForm />} />
-          <Route path="products" element={<ProductsList />} />
-          <Route path="products/new" element={<ProductForm />} />
-          <Route path="products/:id/edit" element={<ProductForm />} />
-          <Route path="units" element={<UnitsList />} />
-          <Route path="units/new" element={<UnitForm />} />
-          <Route path="units/:id/edit" element={<UnitForm />} />
-          <Route path="delivery-schedules" element={<DeliverySchedulesList />} />
-          <Route path="delivery-schedules/new" element={<DeliveryScheduleForm />} />
-          <Route path="delivery-schedules/:id/edit" element={<DeliveryScheduleForm />} />
-          <Route path="delivery-types" element={<DeliveryTypesList />} />
-          <Route path="delivery-types/new" element={<DeliveryTypeForm />} />
-          <Route path="delivery-types/:id/edit" element={<DeliveryTypeForm />} />
-          <Route path="payment-methods" element={<PaymentMethodsList />} />
-          <Route path="payment-methods/new" element={<PaymentMethodForm />} />
-          <Route path="payment-methods/:id/edit" element={<PaymentMethodForm />} />
-          <Route path="business-details" element={<BusinessDetailsList />} />
-          <Route path="business-details/new" element={<BusinessDetailsForm />} />
-          <Route path="business-details/:id/edit" element={<BusinessDetailsForm />} />
-          <Route path="lists" element={<ListsList />} />
-          <Route path="lists/new" element={<ListForm />} />
-          <Route path="lists/:id/edit" element={<ListForm />} />
-          <Route path="lists/:id/products" element={<ListProducts />} />
-          {/* Future admin routes will go here */}
-        </Route>
+          {/* Protected admin routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="categories" element={<CategoriesList />} />
+            <Route path="categories/new" element={<CategoryForm />} />
+            <Route path="categories/:id/edit" element={<CategoryForm />} />
+            <Route path="products" element={<ProductsList />} />
+            <Route path="products/new" element={<ProductForm />} />
+            <Route path="products/:id/edit" element={<ProductForm />} />
+            <Route path="units" element={<UnitsList />} />
+            <Route path="units/new" element={<UnitForm />} />
+            <Route path="units/:id/edit" element={<UnitForm />} />
+            <Route path="delivery-schedules" element={<DeliverySchedulesList />} />
+            <Route path="delivery-schedules/new" element={<DeliveryScheduleForm />} />
+            <Route path="delivery-schedules/:id/edit" element={<DeliveryScheduleForm />} />
+            <Route path="delivery-types" element={<DeliveryTypesList />} />
+            <Route path="delivery-types/new" element={<DeliveryTypeForm />} />
+            <Route path="delivery-types/:id/edit" element={<DeliveryTypeForm />} />
+            <Route path="payment-methods" element={<PaymentMethodsList />} />
+            <Route path="payment-methods/new" element={<PaymentMethodForm />} />
+            <Route path="payment-methods/:id/edit" element={<PaymentMethodForm />} />
+            <Route path="business-details" element={<BusinessDetailsList />} />
+            <Route path="business-details/new" element={<BusinessDetailsForm />} />
+            <Route path="business-details/:id/edit" element={<BusinessDetailsForm />} />
+            <Route path="lists" element={<ListsList />} />
+            <Route path="lists/new" element={<ListForm />} />
+            <Route path="lists/:id/edit" element={<ListForm />} />
+            <Route path="lists/:id/products" element={<ListProducts />} />
+            {/* Future admin routes will go here */}
+          </Route>
 
           {/* Cart and Order routes */}
           <Route path="/cart" element={<CartPage />} />

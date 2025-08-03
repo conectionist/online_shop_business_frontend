@@ -39,7 +39,50 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      await authService.login(formData);
+      // Use a direct fetch call to avoid the API client interceptor for login
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          response: {
+            status: response.status,
+            data: errorData
+          }
+        };
+      }
+
+      const data = await response.json();
+      
+      console.log('Raw login response:', data);
+      
+      // Store tokens and update auth store manually since we bypassed the auth service
+      const { access_token, refresh_token, admin } = data;
+      
+      console.log('Login successful:', { access_token, refresh_token, admin });
+      
+      // Store tokens in localStorage
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
+      
+      // Transform admin data to user format for our auth store
+      const userData = {
+        id: admin.id,
+        email: admin.username, // Use username as email for now
+        name: admin.username,  // Use username as name for display
+        role: 'admin' as const
+      };
+      
+      // Update auth store with user data
+      useAuthStore.getState().login(access_token, userData);
+      
+      console.log('Auth store updated, current state:', useAuthStore.getState());
       
       // Redirect to admin dashboard on successful login
       navigate('/admin/dashboard');
