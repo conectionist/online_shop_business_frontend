@@ -127,45 +127,91 @@ const Pagination = React.memo<{
   }, [currentPage, totalPages]);
 
   return (
-    <div className="flex justify-between items-center bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <div className="text-sm text-gray-600">
-        Afișez {startIndex + 1} până la {Math.min(endIndex, totalProducts)} din {totalProducts} produse
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={!hasPrevPage}
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Anterior
-        </Button>
-        
-        <div className="flex items-center gap-1">
-          {getPageNumbers().map(pageNum => (
-            <Button
-              key={pageNum}
-              variant={currentPage === pageNum ? "default" : "outline"}
-              size="sm"
-              onClick={() => onPageChange(pageNum)}
-              className="w-8 h-8 p-0"
-            >
-              {pageNum}
-            </Button>
-          ))}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      {/* Mobile: Stacked layout */}
+      <div className="md:hidden space-y-3">
+        <div className="text-sm text-gray-600 text-center">
+          Afișez {startIndex + 1} până la {Math.min(endIndex, totalProducts)} din {totalProducts} produse
         </div>
         
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={!hasNextPage}
-        >
-          Următor
-          <ChevronRight className="w-4 h-4" />
-        </Button>
+        <div className="flex justify-center items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={!hasPrevPage}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Anterior</span>
+          </Button>
+          
+          <div className="flex items-center gap-1">
+            {getPageNumbers().map(pageNum => (
+              <Button
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPageChange(pageNum)}
+                className="w-8 h-8 p-0"
+              >
+                {pageNum}
+              </Button>
+            ))}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={!hasNextPage}
+          >
+            <span className="hidden sm:inline">Următor</span>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      
+      {/* Desktop: Side-by-side layout */}
+      <div className="hidden md:flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          Afișez {startIndex + 1} până la {Math.min(endIndex, totalProducts)} din {totalProducts} produse
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={!hasPrevPage}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Anterior
+          </Button>
+          
+          <div className="flex items-center gap-1">
+            {getPageNumbers().map(pageNum => (
+              <Button
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPageChange(pageNum)}
+                className="w-8 h-8 p-0"
+              >
+                {pageNum}
+              </Button>
+            ))}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={!hasNextPage}
+          >
+            Următor
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
