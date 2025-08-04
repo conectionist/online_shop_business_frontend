@@ -218,7 +218,6 @@ const CustomerDashboard: React.FC = () => {
       {/* Additional Details */}
       {publishedList.alte_detalii && (
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Detalii Suplimentare</h3>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-blue-800 text-sm">{publishedList.alte_detalii}</p>
           </div>
