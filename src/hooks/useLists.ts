@@ -164,6 +164,25 @@ export const useAddProductToList = () => {
   });
 };
 
+// Hook to add multiple products to list in batch
+export const useAddProductsToList = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ listId, productIds }: { listId: number; productIds: number[] }) => 
+      listService.addProductsToList(listId, productIds),
+    onSuccess: (_, { listId }) => {
+      // Invalidate list products
+      queryClient.invalidateQueries({ 
+        queryKey: [...queryKeys.lists.detail(listId), 'products'] 
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to add products to list:', error);
+    },
+  });
+};
+
 // Hook to remove product from list
 export const useRemoveProductFromList = () => {
   const queryClient = useQueryClient();

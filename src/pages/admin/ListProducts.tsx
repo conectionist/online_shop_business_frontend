@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Search, Package, Trash2, Edit } from 'lucide-react';
 import { useList } from '@/hooks/useLists';
-import { useListProducts, useAddProductToList, useRemoveProductFromList } from '@/hooks/useLists';
+import { useListProducts, useAddProductToList, useAddProductsToList, useRemoveProductFromList } from '@/hooks/useLists';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -24,8 +24,7 @@ const ListProducts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
-  const [stockLevel, setStockLevel] = useState<number>(1);
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [productToRemove, setProductToRemove] = useState<ListProduct | null>(null);
 
   // Queries
@@ -37,6 +36,7 @@ const ListProducts: React.FC = () => {
 
   // Mutations
   const addProductMutation = useAddProductToList();
+  const addProductsMutation = useAddProductsToList();
   const removeProductMutation = useRemoveProductFromList();
 
   // Filter available products (products not already in the list)
@@ -61,23 +61,38 @@ const ListProducts: React.FC = () => {
     });
   }, [availableProducts, searchTerm, categoryFilter]);
 
-  // Handle add product
-  const handleAddProduct = async () => {
-    if (!selectedProduct) return;
+  // Handle add products in batch
+  const handleAddProducts = async () => {
+    if (selectedProducts.size === 0) return;
     
     try {
-      await addProductMutation.mutateAsync({
+      const productIds = Array.from(selectedProducts);
+      const result = await addProductsMutation.mutateAsync({
         listId,
-        productId: selectedProduct,
-        stock: stockLevel
+        productIds
       });
       
       setShowAddProductModal(false);
-      setSelectedProduct(null);
-      setStockLevel(1);
+      setSelectedProducts(new Set());
+      
+      // Show success message with count
+      console.log(`Successfully added ${result.length} products to the list`);
     } catch (error) {
-      console.error('Failed to add product:', error);
+      console.error('Failed to add products:', error);
     }
+  };
+
+  // Toggle product selection
+  const toggleProductSelection = (productId: number) => {
+    setSelectedProducts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
   };
 
   // Handle remove product
@@ -301,11 +316,11 @@ const ListProducts: React.FC = () => {
                 <div
                   key={product.id}
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                    selectedProduct === product.id
+                    selectedProducts.has(product.id)
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
-                  onClick={() => setSelectedProduct(product.id)}
+                  onClick={() => toggleProductSelection(product.id)}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -317,7 +332,7 @@ const ListProducts: React.FC = () => {
                         {product.pret} RON / {getUnitName(product.unitati_id)}
                       </p>
                     </div>
-                    {selectedProduct === product.id && (
+                    {selectedProducts.has(product.id) && (
                       <div className="text-blue-600">
                         <Package className="w-5 h-5" />
                       </div>
@@ -332,19 +347,12 @@ const ListProducts: React.FC = () => {
             )}
           </div>
 
-          {/* Stock Level Input */}
-          {selectedProduct && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Stoc Disponibil
-              </label>
-              <Input
-                type="number"
-                min="1"
-                value={stockLevel}
-                onChange={(e) => setStockLevel(parseInt(e.target.value) || 1)}
-                placeholder="Introduceți stocul disponibil"
-              />
+          {/* Selection Summary */}
+          {selectedProducts.size > 0 && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                {selectedProducts.size} produs{selectedProducts.size === 1 ? '' : 'e'} selectat{selectedProducts.size === 1 ? '' : 'e'}
+              </p>
             </div>
           )}
 
@@ -354,18 +362,17 @@ const ListProducts: React.FC = () => {
               variant="outline"
               onClick={() => {
                 setShowAddProductModal(false);
-                setSelectedProduct(null);
-                setStockLevel(1);
+                setSelectedProducts(new Set());
               }}
             >
               Anulează
             </Button>
             <Button
-              onClick={handleAddProduct}
-              disabled={!selectedProduct || addProductMutation.isPending}
-              loading={addProductMutation.isPending}
+              onClick={handleAddProducts}
+              disabled={selectedProducts.size === 0 || addProductsMutation.isPending}
+              loading={addProductsMutation.isPending}
             >
-              Adaugă Produs
+              Adaugă {selectedProducts.size > 0 ? `(${selectedProducts.size})` : ''} Produs{selectedProducts.size === 1 ? '' : 'e'}
             </Button>
           </div>
         </div>

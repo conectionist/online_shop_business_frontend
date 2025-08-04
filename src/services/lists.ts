@@ -98,6 +98,14 @@ export const listService = {
     });
   },
 
+  // Add multiple products to a list in batch (PROTECTED - requires auth)
+  addProductsToList: async (listId: number, productIds: number[]): Promise<any[]> => {
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.patch(`/liste/${listId}/products`, productIds);
+      return response.data;
+    });
+  },
+
   // Remove a product from a list (PROTECTED - requires auth)
   removeProductFromList: async (listId: number, productId: number): Promise<void> => {
     return authService.makeAuthenticatedRequest(async () => {
