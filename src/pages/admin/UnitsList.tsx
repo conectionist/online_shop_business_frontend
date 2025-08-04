@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { useUnits, useDeleteUnit } from '@/hooks/useUnits';
 import { Unit } from '@/types/api';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
+import AdminPageHeader from '@/components/layout/AdminPageHeader';
 
 const UnitsList: React.FC = () => {
   const navigate = useNavigate();
@@ -77,11 +78,18 @@ const UnitsList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Unități</h1>
-          <p className="text-gray-600">Gestionează unitățile de măsură pentru produse</p>
-        </div>
+      <AdminPageHeader 
+        title="Unități" 
+        subtitle="Gestionează unitățile de măsură pentru produse"
+        searchBox={
+          <Input
+            placeholder="Caută unități..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leftIcon={<Search className="w-4 h-4" />}
+          />
+        }
+      >
         <Button
           variant="primary"
           size="md"
@@ -90,17 +98,7 @@ const UnitsList: React.FC = () => {
           <Plus className="w-4 h-4 mr-2" />
           Adaugă Unitate
         </Button>
-      </div>
-
-      {/* Search */}
-      <div className="max-w-md">
-        <Input
-          placeholder="Caută unități..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          leftIcon={<Search className="w-4 h-4" />}
-        />
-      </div>
+      </AdminPageHeader>
 
       {/* Units Grid */}
       {filteredUnits && filteredUnits.length > 0 ? (

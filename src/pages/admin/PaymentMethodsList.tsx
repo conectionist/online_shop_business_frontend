@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, CreditCard } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, CreditCard, ArrowLeft } from 'lucide-react';
 import { usePaymentMethods, useDeletePaymentMethod } from '@/hooks/usePaymentMethods';
 import { PaymentMethod } from '@/types/api';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
+import AdminPageHeader from '@/components/layout/AdminPageHeader';
 
 const PaymentMethodsList: React.FC = () => {
   const navigate = useNavigate();
@@ -77,11 +78,18 @@ const PaymentMethodsList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Metode de Plată</h1>
-          <p className="text-gray-600">Gestionează metodele de plată pentru clienți</p>
-        </div>
+      <AdminPageHeader 
+        title="Metode de Plată" 
+        subtitle="Gestionează metodele de plată pentru clienți"
+        searchBox={
+          <Input
+            placeholder="Caută metode de plată..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leftIcon={<Search className="w-4 h-4" />}
+          />
+        }
+      >
         <Button
           variant="primary"
           size="md"
@@ -90,17 +98,7 @@ const PaymentMethodsList: React.FC = () => {
           <Plus className="w-4 h-4 mr-2" />
           Adaugă Metodă de Plată
         </Button>
-      </div>
-
-      {/* Search */}
-      <div className="max-w-md">
-        <Input
-          placeholder="Caută metode de plată..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          leftIcon={<Search className="w-4 h-4" />}
-        />
-      </div>
+      </AdminPageHeader>
 
       {/* Payment Methods Grid */}
       {filteredPaymentMethods && filteredPaymentMethods.length > 0 ? (

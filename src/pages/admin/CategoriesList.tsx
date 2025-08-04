@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, ArrowLeft } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { useDeleteCategory } from '@/hooks/useCategories';
 import { Category } from '@/types/api';
@@ -12,6 +12,7 @@ import Modal from '@/components/ui/Modal';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
 import Image from '@/components/ui/Image';
+import AdminPageHeader from '@/components/layout/AdminPageHeader';
 
 const CategoriesList: React.FC = () => {
   const navigate = useNavigate();
@@ -80,11 +81,18 @@ const CategoriesList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categorii</h1>
-          <p className="text-gray-600">Gestionează categoriile de produse</p>
-        </div>
+      <AdminPageHeader 
+        title="Categorii" 
+        subtitle="Gestionează categoriile de produse"
+        searchBox={
+          <Input
+            placeholder="Caută categorii..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leftIcon={<Search className="w-4 h-4" />}
+          />
+        }
+      >
         <Button
           variant="primary"
           size="md"
@@ -93,17 +101,7 @@ const CategoriesList: React.FC = () => {
           <Plus className="w-4 h-4 mr-2" />
           Adaugă Categorie
         </Button>
-      </div>
-
-      {/* Search */}
-      <div className="max-w-md">
-        <Input
-          placeholder="Caută categorii..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          leftIcon={<Search className="w-4 h-4" />}
-        />
-      </div>
+      </AdminPageHeader>
 
       {/* Categories Grid */}
       {filteredCategories && filteredCategories.length > 0 ? (

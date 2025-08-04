@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -15,6 +15,7 @@ import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
 import Modal from '@/components/ui/Modal';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import AdminPageHeader from '@/components/layout/AdminPageHeader';
 
 // Memoized product card component for better performance
 const ProductCard = React.memo<{
@@ -379,18 +380,10 @@ const ProductsList: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Produse</h1>
-        <Button onClick={() => navigate('/admin/products/new')}>
-          <Plus className="w-4 h-4 mr-2" />
-          Adaugă Produs
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
+      <AdminPageHeader 
+        title="Produse" 
+        subtitle="Gestionează produsele disponibile în magazin"
+        searchBox={
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
@@ -401,29 +394,39 @@ const ProductsList: React.FC = () => {
               className="pl-10"
             />
           </div>
+        }
+        filters={
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Category Filter */}
+              <Select
+                value={selectedCategory}
+                onChange={handleCategoryChange}
+                options={categoryFilterOptions}
+                placeholder="Filtrează după categorie"
+              />
 
-          {/* Category Filter */}
-          <Select
-            value={selectedCategory}
-            onChange={handleCategoryChange}
-            options={categoryFilterOptions}
-            placeholder="Filtrează după categorie"
-          />
-
-          {/* Page Size */}
-          <Select
-            value={pageSize.toString()}
-            onChange={(value) => handlePageSizeChange(parseInt(value))}
-            options={[
-              { value: '5', label: '5 pe pagină' },
-              { value: '10', label: '10 pe pagină' },
-              { value: '20', label: '20 pe pagină' },
-              { value: '50', label: '50 pe pagină' },
-            ]}
-            placeholder="Elemente pe pagină"
-          />
-        </div>
-      </div>
+              {/* Page Size */}
+              <Select
+                value={pageSize.toString()}
+                onChange={(value) => handlePageSizeChange(parseInt(value))}
+                options={[
+                  { value: '5', label: '5 pe pagină' },
+                  { value: '10', label: '10 pe pagină' },
+                  { value: '20', label: '20 pe pagină' },
+                  { value: '50', label: '50 pe pagină' },
+                ]}
+                placeholder="Elemente pe pagină"
+              />
+            </div>
+          </div>
+        }
+      >
+        <Button onClick={() => navigate('/admin/products/new')}>
+          <Plus className="w-4 h-4 mr-2" />
+          Adaugă Produs
+        </Button>
+      </AdminPageHeader>
 
       {/* Products Grid */}
       {paginationData.paginatedProducts && paginationData.paginatedProducts.length > 0 ? (

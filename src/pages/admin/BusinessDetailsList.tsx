@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Building2, Plus, Search, Edit, Trash2, MapPin, Phone, FileText } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Building2, Plus, Search, Edit, Trash2, MapPin, Phone, FileText, ArrowLeft } from 'lucide-react';
 import { useBusinessDetails, useDeleteBusinessDetails } from '@/hooks/useBusinessDetails';
 import { BusinessDetails } from '@/types/api';
 import Card from '@/components/ui/Card';
@@ -11,8 +11,10 @@ import Alert from '@/components/ui/Alert';
 import Modal from '@/components/ui/Modal';
 import ErrorDetailsModal from '@/components/ui/ErrorDetailsModal';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import AdminPageHeader from '@/components/layout/AdminPageHeader';
 
 export default function BusinessDetailsList() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [businessDetailsToDelete, setBusinessDetailsToDelete] = useState<BusinessDetails | null>(null);
@@ -80,26 +82,29 @@ export default function BusinessDetailsList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Detalii Business</h1>
+      <AdminPageHeader 
+        title="Detalii Business" 
+        subtitle="Gestionează informațiile despre business"
+        searchBox={
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Caută în detalii business..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        }
+      >
         <Link to="/admin/business-details/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Adaugă Detalii
           </Button>
         </Link>
-      </div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          type="text"
-          placeholder="Caută în detalii business..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      </AdminPageHeader>
 
       {filteredBusinessDetails.length === 0 ? (
         <Card>

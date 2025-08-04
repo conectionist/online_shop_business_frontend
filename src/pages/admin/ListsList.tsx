@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye, Calendar, MessageSquare, Phone, Package } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Calendar, MessageSquare, Phone, Package, ArrowLeft } from 'lucide-react';
 import { useLists } from '@/hooks/useLists';
 import { useDeleteList } from '@/hooks/useLists';
 import { List } from '@/types/api';
@@ -10,6 +10,7 @@ import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
+import AdminPageHeader from '@/components/layout/AdminPageHeader';
 
 const ListsList: React.FC = () => {
   const navigate = useNavigate();
@@ -89,11 +90,19 @@ const ListsList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Liste de Produse</h1>
-          <p className="text-gray-600">Gestionează listele de produse disponibile</p>
-        </div>
+      <AdminPageHeader 
+        title="Liste de Produse" 
+        subtitle="Gestionează listele de produse disponibile"
+        searchBox={
+          <Input
+            type="text"
+            placeholder="Caută în liste..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            icon={<Search className="w-4 h-4" />}
+          />
+        }
+      >
         <Button
           variant="primary"
           size="md"
@@ -102,18 +111,7 @@ const ListsList: React.FC = () => {
           <Plus className="w-4 h-4 mr-2" />
           Adaugă Listă
         </Button>
-      </div>
-
-      {/* Search */}
-      <div className="max-w-md">
-        <Input
-          type="text"
-          placeholder="Caută în liste..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          icon={<Search className="w-4 h-4" />}
-        />
-      </div>
+      </AdminPageHeader>
 
       {/* Lists Grid */}
       {filteredLists && filteredLists.length > 0 ? (

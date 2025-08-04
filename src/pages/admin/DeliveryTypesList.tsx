@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Truck } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Truck, ArrowLeft } from 'lucide-react';
 import { useDeliveryTypes, useDeleteDeliveryType } from '@/hooks/useDeliveryTypes';
 import { DeliveryType } from '@/types/api';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
+import AdminPageHeader from '@/components/layout/AdminPageHeader';
 
 const DeliveryTypesList: React.FC = () => {
   const navigate = useNavigate();
@@ -77,11 +78,18 @@ const DeliveryTypesList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tipuri de Livrare</h1>
-          <p className="text-gray-600">Gestionează tipurile de livrare pentru clienți</p>
-        </div>
+      <AdminPageHeader 
+        title="Tipuri de Livrare" 
+        subtitle="Gestionează tipurile de livrare pentru clienți"
+        searchBox={
+          <Input
+            placeholder="Caută tipuri de livrare..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leftIcon={<Search className="w-4 h-4" />}
+          />
+        }
+      >
         <Button
           variant="primary"
           size="md"
@@ -90,17 +98,7 @@ const DeliveryTypesList: React.FC = () => {
           <Plus className="w-4 h-4 mr-2" />
           Adaugă Tip de Livrare
         </Button>
-      </div>
-
-      {/* Search */}
-      <div className="max-w-md">
-        <Input
-          placeholder="Caută tipuri de livrare..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          leftIcon={<Search className="w-4 h-4" />}
-        />
-      </div>
+      </AdminPageHeader>
 
       {/* Delivery Types Grid */}
       {filteredDeliveryTypes && filteredDeliveryTypes.length > 0 ? (
