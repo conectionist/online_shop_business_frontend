@@ -51,7 +51,7 @@ const ProductCard = React.memo<{
           <span className="font-medium">Categorie:</span> {getCategoryName(product.category_id)}
         </p>
         <p>
-          <span className="font-medium">Preț:</span> ${product.pret}
+          <span className="font-medium">Preț:</span> {product.pret} RON
         </p>
         <p>
           <span className="font-medium">Cantitate:</span> {product.cantitate} {getUnitName(product.unitati_id)}
