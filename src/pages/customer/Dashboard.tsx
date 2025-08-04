@@ -128,7 +128,7 @@ const CustomerDashboard: React.FC = () => {
                   <div className="space-y-3">
                     {products.map((product: any) => (
                       <div key={product.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-start space-x-4">
+                        <div className="flex space-x-4">
                           {/* Product Image */}
                           <div className="flex-shrink-0">
                             {product.images && product.images.length > 0 ? (
@@ -150,33 +150,45 @@ const CustomerDashboard: React.FC = () => {
                             </div>
                           </div>
                           
-                          {/* Product Details */}
-                          <div className="flex-1 min-w-0">
-                            <h5 className="font-medium text-gray-900 truncate">{product.nume}</h5>
-                            {product.description && (
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
-                            )}
-                            <div className="mt-3 space-y-1">
-                              <p className="text-sm text-gray-600">
-                                Preț: {product.pret} RON / {getUnitName(product.unitati_id)}
-                              </p>
-                              <p className="text-sm font-medium text-green-600">
-                                Stoc: {product.stoc_produs} {getUnitName(product.unitati_id)}
-                              </p>
+                          {/* Content Area - 3 Layers */}
+                          <div className="flex-1 min-w-0 flex flex-col">
+                            {/* Layer 1: Title - Full width */}
+                            <div className="mb-2">
+                              <h5 className="font-medium text-gray-900">{product.nume}</h5>
                             </div>
-                          </div>
-
-                          {/* Add to Cart Section */}
-                          <div className="flex-shrink-0 flex flex-col items-end space-y-2">
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => addToCart(product)}
-                              className="px-3 py-1"
-                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              Adaugă
-                            </Button>
+                            
+                            {/* Layer 2: Description - Full width */}
+                            {product.description && (
+                              <div className="mb-3">
+                                <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+                              </div>
+                            )}
+                            
+                            {/* Layer 3: Price/Stock and Button - Split layout */}
+                            <div className="flex justify-between items-end">
+                              {/* Left side: Price and Stock */}
+                              <div className="space-y-1">
+                                <p className="text-sm text-gray-600">
+                                  Preț: {product.pret} RON / {getUnitName(product.unitati_id)}
+                                </p>
+                                <p className="text-sm font-medium text-green-600">
+                                  Stoc: {product.stoc_produs} {getUnitName(product.unitati_id)}
+                                </p>
+                              </div>
+                              
+                              {/* Right side: Button */}
+                              <div className="flex-shrink-0">
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => addToCart(product)}
+                                  className="px-3 py-1"
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Adaugă
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
