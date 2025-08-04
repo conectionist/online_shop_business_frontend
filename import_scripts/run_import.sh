@@ -85,6 +85,10 @@ main() {
     check_files
     setup_env
     
+    # Clean up any existing containers
+    print_status "Cleaning up any existing containers..."
+    docker compose down --remove-orphans 2>/dev/null || true
+    
     echo
     print_status "Starting product import..."
     echo

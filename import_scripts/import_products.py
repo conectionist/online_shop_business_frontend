@@ -3,17 +3,20 @@
 Script to import products from produse_procesate.json into the backend API.
 This script will:
 1. Login to get authentication token
-2. Create categories (if they don't exist)
-3. Create units (if they don't exist)
-4. Create products with the given data
-5. Create a list with all imported products
+2. Get all existing categories, units, and products from the server
+3. Create only categories that don't already exist (extracted from products)
+4. Create only units that don't already exist
+5. Create only products that don't already exist
+6. Update existing products that have different information in the JSON
+7. Log detailed information about what was created, updated, or skipped
 """
 
 import json
 import requests
 import time
 import os
-from typing import Dict, List, Optional
+import sys
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
 # Configuration
@@ -23,6 +26,9 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "adminpass123")
 HEADERS = {
     "accept": "application/json"
 }
+
+# Add process ID to logs to identify duplicate runs
+PROCESS_ID = os.getpid()
 
 @dataclass
 class Category:
@@ -59,11 +65,19 @@ class ProductImporter:
         # Cache for created entities
         self.categories_cache: Dict[str, int] = {}
         self.units_cache: Dict[str, int] = {}
+        self.products_cache: Dict[str, Dict] = {}
+        
+        # Statistics tracking
+        self.stats = {
+            'categories': {'created': 0, 'updated': 0, 'skipped': 0},
+            'units': {'created': 0, 'updated': 0, 'skipped': 0},
+            'products': {'created': 0, 'updated': 0, 'skipped': 0}
+        }
         
     def log(self, message: str):
-        """Print timestamped log message"""
+        """Print timestamped log message with process ID"""
         timestamp = time.strftime("%H:%M:%S")
-        print(f"[{timestamp}] {message}")
+        print(f"[{timestamp}] [PID:{PROCESS_ID}] {message}")
     
     def login(self) -> bool:
         """Login to get access token"""
@@ -122,6 +136,19 @@ class ProductImporter:
             self.log(f"Error fetching units: {e}")
             return {}
     
+    def get_existing_products(self) -> Dict[str, Dict]:
+        """Get existing products from the API"""
+        try:
+            response = self.session.get(f"{self.api_base_url}/products/")
+            response.raise_for_status()
+            products = response.json()
+            
+            # Create a mapping of product name to product data
+            return {prod["nume"]: prod for prod in products}
+        except requests.exceptions.RequestException as e:
+            self.log(f"Error fetching products: {e}")
+            return {}
+    
     def create_category(self, name: str) -> Optional[int]:
         """Create a category and return its ID"""
         try:
@@ -129,10 +156,11 @@ class ProductImporter:
             response = self.session.post(f"{self.api_base_url}/categories/", data=data)
             response.raise_for_status()
             category = response.json()
-            self.log(f"Created category: {name} (ID: {category['id']})")
+            self.log(f"✅ CREATED category: {name} (ID: {category['id']})")
+            self.stats['categories']['created'] += 1
             return category["id"]
         except requests.exceptions.RequestException as e:
-            self.log(f"Error creating category '{name}': {e}")
+            self.log(f"❌ Error creating category '{name}': {e}")
             return None
     
     def create_unit(self, denumire: str) -> Optional[int]:
@@ -144,10 +172,11 @@ class ProductImporter:
             })
             response.raise_for_status()
             unit = response.json()
-            self.log(f"Created unit: {denumire} (ID: {unit['id']})")
+            self.log(f"✅ CREATED unit: {denumire} (ID: {unit['id']})")
+            self.stats['units']['created'] += 1
             return unit["id"]
         except requests.exceptions.RequestException as e:
-            self.log(f"Error creating unit '{denumire}': {e}")
+            self.log(f"❌ Error creating unit '{denumire}': {e}")
             return None
     
     def create_product(self, product: Product) -> bool:
@@ -165,29 +194,76 @@ class ProductImporter:
             if product.description:
                 files.append(("description", (None, product.description, "text/plain")))
             
-            self.log(f"Sending product data: {dict([(k, v[1]) for k, v in files])}")
-            self.log(f"Session headers: {dict(self.session.headers)}")
             response = self.session.post(f"{self.api_base_url}/products/", files=files)
             response.raise_for_status()
             created_product = response.json()
-            self.log(f"Created product: {product.nume} (ID: {created_product['id']})")
+            self.log(f"✅ CREATED product: {product.nume} (ID: {created_product['id']})")
+            self.stats['products']['created'] += 1
             return True
         except requests.exceptions.RequestException as e:
-            self.log(f"Error creating product '{product.nume}': {e}")
+            self.log(f"❌ Error creating product '{product.nume}': {e}")
             if hasattr(e, 'response') and e.response is not None:
                 self.log(f"Response status: {e.response.status_code}")
                 self.log(f"Response body: {e.response.text}")
             return False
     
-    def ensure_categories_exist(self, categories: List[Category]) -> Dict[str, int]:
-        """Ensure all categories exist, create if they don't"""
-        self.log("Checking existing categories...")
+    def update_product(self, product_id: int, product: Product) -> bool:
+        """Update a product via PATCH"""
+        try:
+            # Prepare data for PATCH request
+            data = {
+                "cantitate": product.cantitate,
+                "pret": product.pret,
+                "unitati_id": product.unitati_id,
+                "category_id": product.category_id
+            }
+            
+            if product.description is not None:
+                data["description"] = product.description
+            
+            response = self.session.patch(f"{self.api_base_url}/products/{product_id}", json=data)
+            response.raise_for_status()
+            self.log(f"🔄 UPDATED product: {product.nume} (ID: {product_id})")
+            self.stats['products']['updated'] += 1
+            return True
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Error updating product '{product.nume}' (ID: {product_id}): {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                self.log(f"Response status: {e.response.status_code}")
+                self.log(f"Response body: {e.response.text}")
+            return False
+    
+    def products_are_equal(self, existing_product: Dict, new_product: Product) -> bool:
+        """Compare existing product with new product data"""
+        return (
+            existing_product["cantitate"] == new_product.cantitate and
+            existing_product["pret"] == new_product.pret and
+            existing_product["unitati_id"] == new_product.unitati_id and
+            existing_product["category_id"] == new_product.category_id and
+            existing_product.get("description") == new_product.description
+        )
+    
+    def extract_categories_from_products(self, products_data: List[Dict]) -> List[Category]:
+        """Extract unique categories from products data"""
+        category_names = set()
+        for product in products_data:
+            # Handle both current structure (category_name) and future structure (category)
+            category_name = product.get("category") or product.get("category_name")
+            if category_name:
+                category_names.add(category_name)
+        
+        return [Category(name=name) for name in category_names]
+    
+    def process_categories(self, categories: List[Category]) -> Dict[str, int]:
+        """Process categories: create only those that don't exist"""
+        self.log("=== Processing Categories ===")
         existing_categories = self.get_existing_categories()
         
         for category in categories:
             if category.name in existing_categories:
                 category.id = existing_categories[category.name]
-                self.log(f"Category already exists: {category.name} (ID: {category.id})")
+                self.log(f"⏭️  SKIPPED category: {category.name} (ID: {category.id}) - already exists")
+                self.stats['categories']['skipped'] += 1
             else:
                 category.id = self.create_category(category.name)
                 if category.id:
@@ -195,21 +271,60 @@ class ProductImporter:
         
         return existing_categories
     
-    def ensure_units_exist(self, units: List[Unit]) -> Dict[str, int]:
-        """Ensure all units exist, create if they don't"""
-        self.log("Checking existing units...")
+    def process_units(self, units: List[Unit]) -> Dict[str, int]:
+        """Process units: create only those that don't exist"""
+        self.log("=== Processing Units ===")
         existing_units = self.get_existing_units()
         
         for unit in units:
             if unit.denumire in existing_units:
                 unit.id = existing_units[unit.denumire]
-                self.log(f"Unit already exists: {unit.denumire} (ID: {unit.id})")
+                self.log(f"⏭️  SKIPPED unit: {unit.denumire} (ID: {unit.id}) - already exists")
+                self.stats['units']['skipped'] += 1
             else:
                 unit.id = self.create_unit(unit.denumire)
                 if unit.id:
                     existing_units[unit.denumire] = unit.id
         
         return existing_units
+    
+    def process_products(self, products: List[Product]) -> List[Dict]:
+        """Process products: create new ones, update existing ones, skip unchanged ones"""
+        self.log("=== Processing Products ===")
+        existing_products = self.get_existing_products()
+        processed_products = []
+        
+        for product in products:
+            if product.nume in existing_products:
+                existing_product = existing_products[product.nume]
+                
+                if self.products_are_equal(existing_product, product):
+                    self.log(f"⏭️  SKIPPED product: {product.nume} (ID: {existing_product['id']}) - no changes")
+                    self.stats['products']['skipped'] += 1
+                    processed_products.append({
+                        "id": existing_product["id"],
+                        "name": product.nume,
+                        "cantitate": product.cantitate
+                    })
+                else:
+                    # Update the product
+                    if self.update_product(existing_product["id"], product):
+                        processed_products.append({
+                            "id": existing_product["id"],
+                            "name": product.nume,
+                            "cantitate": product.cantitate
+                        })
+            else:
+                # Create new product
+                if self.create_product(product):
+                    # We need to get the created product ID
+                    # For now, we'll use the name as reference and get it later
+                    processed_products.append({
+                        "name": product.nume,
+                        "cantitate": product.cantitate
+                    })
+        
+        return processed_products
     
     def create_list(self, list_data: ProductList) -> Optional[int]:
         """Create a list and return its ID"""
@@ -257,6 +372,18 @@ class ProductImporter:
                 self.log(f"Response body: {e.response.text}")
             return False
     
+    def print_summary(self):
+        """Print summary of all operations"""
+        self.log("=== IMPORT SUMMARY ===")
+        
+        for entity_type, stats in self.stats.items():
+            self.log(f"{entity_type.title()}:")
+            self.log(f"  ✅ Created: {stats['created']}")
+            self.log(f"  🔄 Updated: {stats['updated']}")
+            self.log(f"  ⏭️  Skipped: {stats['skipped']}")
+            self.log(f"  📊 Total processed: {stats['created'] + stats['updated'] + stats['skipped']}")
+            self.log("")
+    
     def import_products(self, json_file_path: str):
         """Main import function"""
         self.log("Starting product import...")
@@ -277,16 +404,11 @@ class ProductImporter:
             self.log(f"Error: Invalid JSON in {json_file_path}: {e}")
             return
         
-        # Extract categories and units from products
-        categories = []
+        # Extract categories from products (no longer from separate categories array)
+        categories = self.extract_categories_from_products(data["products"])
+        
+        # Extract unique units from products
         units = []
-        products = []
-        
-        # Process categories
-        for cat_data in data["categories"]:
-            categories.append(Category(name=cat_data["name"]))
-        
-        # Process products and extract unique units
         unit_names = set()
         for prod_data in data["products"]:
             unit_names.add(prod_data["unitate"])
@@ -294,36 +416,28 @@ class ProductImporter:
         for unit_name in unit_names:
             units.append(Unit(denumire=unit_name))
         
-        # Ensure categories and units exist
-        categories_map = self.ensure_categories_exist(categories)
-        units_map = self.ensure_units_exist(units)
+        # Process categories and units
+        categories_map = self.process_categories(categories)
+        units_map = self.process_units(units)
         
-        # Debug: Log the mappings
-        self.log(f"Category mappings: {categories_map}")
-        self.log(f"Unit mappings: {units_map}")
-        
-        # Create products
-        self.log("Creating products...")
-        success_count = 0
-        total_count = len(data["products"])
-        created_products = []  # Store created product IDs
-        
+        # Process products
+        product_objects = []
         for prod_data in data["products"]:
+            # Get category name (handle both current and future structure)
+            category_name = prod_data.get("category") or prod_data.get("category_name")
+            if not category_name:
+                self.log(f"Warning: No category found for product '{prod_data['nume']}'")
+                continue
+            
             # Map category name to ID
-            category_name = prod_data["category_name"]
             category_id = categories_map.get(category_name)
-            
-            # Map unit name to ID
-            unit_name = prod_data["unitate"]
-            unit_id = units_map.get(unit_name)
-            
-            # Debug: Log the mapping for this product
-            self.log(f"Product '{prod_data['nume']}': category '{category_name}' -> ID {category_id}, unit '{unit_name}' -> ID {unit_id}")
-            
             if not category_id:
                 self.log(f"Warning: Category '{category_name}' not found for product '{prod_data['nume']}'")
                 continue
             
+            # Map unit name to ID
+            unit_name = prod_data["unitate"]
+            unit_id = units_map.get(unit_name)
             if not unit_id:
                 self.log(f"Warning: Unit '{unit_name}' not found for product '{prod_data['nume']}'")
                 continue
@@ -336,27 +450,25 @@ class ProductImporter:
                 category_id=category_id,
                 unitati_id=unit_id
             )
-            
-            if self.create_product(product):
-                success_count += 1
-                # Store the product ID for later use (we'll need to get it from the response)
-                # For now, we'll use the original ID from the JSON as a reference
-                created_products.append({
-                    "original_id": prod_data["id"],
-                    "name": prod_data["nume"],
-                    "cantitate": prod_data["cantitate"]
-                })
+            product_objects.append(product)
         
-        self.log(f"Product import completed! {success_count}/{total_count} products created successfully.")
+        # Process all products
+        processed_products = self.process_products(product_objects)
+        
+        # Print summary
+        self.print_summary()
         
         # Create a list with all products
-        if created_products:
-            self.log("Creating list with all imported products...")
+        if processed_products:
+            self.log("Creating list with all processed products...")
+            
+            # Get introduction message from JSON if available
+            introduction_message = data.get("mesaj_introducere", f"Listă cu toate produsele procesate din {json_file_path}. Total: {len(processed_products)} produse.")
             
             # Create the list
             list_data = ProductList(
                 nume="Toate produsele importate",
-                description=f"Listă cu toate produsele importate din {json_file_path}. Total: {len(created_products)} produse."
+                description=introduction_message
             )
             
             list_id = self.create_list(list_data)
@@ -373,26 +485,26 @@ class ProductImporter:
                     
                     # Add products to the list
                     added_count = 0
-                    for product_info in created_products:
-                        product_id = products_map.get(product_info["name"])
+                    for product_info in processed_products:
+                        product_id = product_info.get("id") or products_map.get(product_info["name"])
                         if product_id:
                             if self.add_product_to_list(list_id, product_id, product_info["cantitate"]):
                                 added_count += 1
                         else:
                             self.log(f"Warning: Could not find product '{product_info['name']}' in API")
                     
-                    self.log(f"List creation completed! {added_count}/{len(created_products)} products added to list.")
+                    self.log(f"List creation completed! {added_count}/{len(processed_products)} products added to list.")
                     
                 except requests.exceptions.RequestException as e:
                     self.log(f"Error fetching products for list creation: {e}")
             else:
                 self.log("Failed to create list.")
         else:
-            self.log("No products were created, skipping list creation.")
+            self.log("No products were processed, skipping list creation.")
 
 def main():
     """Main function"""
-    print("=== Product Import Script ===")
+    print(f"=== Product Import Script (PID: {PROCESS_ID}) ===")
     print(f"API Base URL: {API_BASE_URL}")
     print(f"Admin Username: {ADMIN_USERNAME}")
     print()
@@ -403,7 +515,7 @@ def main():
     # Import products
     importer.import_products("produse_procesate.json")
     
-    print("\n=== Import Complete ===")
+    print(f"\n=== Import Complete (PID: {PROCESS_ID}) ===")
 
 if __name__ == "__main__":
     main() 

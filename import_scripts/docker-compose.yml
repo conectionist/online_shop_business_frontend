@@ -10,6 +10,7 @@ services:
     network_mode: host
     depends_on:
       - backend-health-check
+    restart: "no"
 
   backend-health-check:
     image: curlimages/curl:latest
