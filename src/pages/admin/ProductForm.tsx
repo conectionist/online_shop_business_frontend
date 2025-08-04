@@ -29,7 +29,7 @@ const VALIDATION_RULES = {
     required: true,
     minLength: 2,
     maxLength: 100,
-    pattern: /^[a-zA-Z0-9\s\-_.,()]+$/
+    pattern: /^[a-zA-ZăâîșțĂÂÎȘȚ0-9\s\-_.,()]+$/
   },
   pret: {
     required: true,
@@ -317,7 +317,17 @@ const ProductForm: React.FC = () => {
       // Navigate back to products list
       navigate('/admin/products');
     } catch (error) {
-      handleError(error, `Saving product: ${isEditing ? 'update' : 'create'}`);
+      // Check if this is a friendly error (409 conflict or 400 duplicate)
+      const isFriendlyError = error?.response?.status === 409 || error?.response?.status === 400;
+      
+      if (isFriendlyError) {
+        // For friendly errors, show the specific message in the form
+        const errorMessage = 'Acest produs există deja. Vă rugăm să folosiți un nume diferit.';
+        setErrors(prev => ({ ...prev, submit: errorMessage }));
+      } else {
+        // For other errors, use the error handler
+        handleError(error, `Saving product: ${isEditing ? 'update' : 'create'}`);
+      }
     }
   };
 
@@ -368,7 +378,7 @@ const ProductForm: React.FC = () => {
               onChange={(e) => handleInputChange('nume', e.target.value)}
               onBlur={() => handleFieldBlur('nume')}
               placeholder="Introduceți numele produsului"
-              error={touched.nume ? errors.nume : ''}
+              error={touched.nume && typeof errors.nume === 'string' ? errors.nume : ''}
               required
               maxLength={VALIDATION_RULES.nume.maxLength}
             />
@@ -392,7 +402,7 @@ const ProductForm: React.FC = () => {
                 onChange={(e) => handleInputChange('pret', parseFloat(e.target.value) || 0)}
                 onBlur={() => handleFieldBlur('pret')}
                 placeholder="0.00"
-                error={touched.pret ? errors.pret : ''}
+                error={touched.pret && typeof errors.pret === 'string' ? errors.pret : ''}
                 required
               />
             </div>
@@ -406,7 +416,7 @@ const ProductForm: React.FC = () => {
                 onChange={(e) => handleInputChange('cantitate', parseInt(e.target.value) || 0)}
                 onBlur={() => handleFieldBlur('cantitate')}
                 placeholder="0"
-                error={touched.cantitate ? errors.cantitate : ''}
+                error={touched.cantitate && typeof errors.cantitate === 'string' ? errors.cantitate : ''}
                 required
               />
             </div>
@@ -569,11 +579,15 @@ const ProductForm: React.FC = () => {
           {/* Error Display */}
           {(createProductMutation.error || updateProductMutation.error || errors.submit) && (
             <Alert
-              variant="error"
-              title="Error"
-            >
-              {errors.submit || "Failed to save product. Please try again."}
-            </Alert>
+              type="error"
+              title="Eroare"
+              message={
+                (typeof errors.submit === 'string' ? errors.submit : '') || 
+                (typeof createProductMutation.error?.message === 'string' ? createProductMutation.error.message : '') ||
+                (typeof updateProductMutation.error?.message === 'string' ? updateProductMutation.error.message : '') ||
+                "Nu s-a putut salva produsul. Vă rugăm să încercați din nou."
+              }
+            />
           )}
 
           {/* Form Actions */}
