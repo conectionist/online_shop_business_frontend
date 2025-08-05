@@ -57,31 +57,31 @@ const VALIDATION_RULES = {
 // Validation messages
 const VALIDATION_MESSAGES = {
   nume: {
-    required: 'Product name is required',
-    minLength: 'Product name must be at least 2 characters',
-    maxLength: 'Product name cannot exceed 100 characters',
-    pattern: 'Product name contains invalid characters'
+    required: 'Numele produsului este obligatoriu',
+    minLength: 'Numele produsului trebuie să aibă cel puțin 2 caractere',
+    maxLength: 'Numele produsului nu poate depăși 100 de caractere',
+    pattern: 'Numele produsului conține caractere invalide'
   },
   pret: {
-    required: 'Price is required',
-    min: 'Price must be greater than 0',
-    max: 'Price cannot exceed 999,999.99'
+    required: 'Prețul este obligatoriu',
+    min: 'Prețul trebuie să fie mai mare decât 0',
+    max: 'Prețul nu poate depăși 999.999,99'
   },
   cantitate: {
-    required: 'Quantity is required',
-    min: 'Quantity must be 0 or greater',
-    max: 'Quantity cannot exceed 999,999'
+    required: 'Cantitatea este obligatorie',
+    min: 'Cantitatea trebuie să fie 0 sau mai mare',
+    max: 'Cantitatea nu poate depăși 999.999'
   },
   description: {
-    maxLength: 'Description cannot exceed 500 characters'
+    maxLength: 'Descrierea nu poate depăși 500 de caractere'
   },
   category_id: {
-    required: 'Category is required',
-    min: 'Please select a valid category'
+    required: 'Categoria este obligatorie',
+    min: 'Vă rugăm să selectați o categorie validă'
   },
   unitati_id: {
-    required: 'Unit is required',
-    min: 'Please select a valid unit'
+    required: 'Unitatea este obligatorie',
+    min: 'Vă rugăm să selectați o unitate validă'
   }
 };
 
@@ -486,13 +486,13 @@ const ProductForm: React.FC = () => {
           {/* Description Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description <span className="text-gray-500">(optional)</span>
+                              Descriere <span className="text-gray-500">(opțional)</span>
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               onBlur={() => handleFieldBlur('description')}
-              placeholder="Enter product description (optional)"
+                              placeholder="Introduceți descrierea produsului (opțional)"
               className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 touched.description && errors.description 
                   ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
@@ -509,7 +509,7 @@ const ProductForm: React.FC = () => {
                 </p>
               )}
               <p className="text-sm text-gray-500 ml-auto">
-                {formData.description.length}/{VALIDATION_RULES.description.maxLength} characters
+                {formData.description.length}/{VALIDATION_RULES.description.maxLength}
               </p>
             </div>
           </div>
@@ -517,7 +517,7 @@ const ProductForm: React.FC = () => {
           {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Image <span className="text-gray-500">(optional)</span>
+                              Imaginea Produsului <span className="text-gray-500">(opțional)</span>
             </label>
             
             {imagePreview ? (
@@ -525,7 +525,7 @@ const ProductForm: React.FC = () => {
                 <div className="relative inline-block">
                   <Image
                     src={imagePreview}
-                    alt="Product preview"
+                    alt="Previzualizare produs"
                     className="w-32 h-32 object-cover rounded-lg"
                   />
                   <button
@@ -548,10 +548,10 @@ const ProductForm: React.FC = () => {
                   errors.image ? 'text-red-400' : 'text-gray-400'
                 }`} />
                 <p className="text-sm text-gray-600 mb-2">
-                  Upload a product image (optional)
+                  Încarcă o imagine pentru produs (opțional)
                 </p>
                 <p className="text-xs text-gray-500 mb-3">
-                  Supported formats: JPG, PNG, WebP (max 5MB)
+                  Formate acceptate: JPG, PNG, WebP (max 5MB)
                 </p>
                 <input
                   type="file"
@@ -564,7 +564,7 @@ const ProductForm: React.FC = () => {
                   htmlFor="image-upload"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
                 >
-                  Choose Image
+                  Alege Imaginea
                 </label>
                 {errors.image && (
                   <p className="text-sm text-red-600 mt-2 flex items-center justify-center">
@@ -597,14 +597,14 @@ const ProductForm: React.FC = () => {
               variant="outline"
               onClick={() => navigate('/admin/products')}
             >
-              Cancel
+                              Anulează
             </Button>
             <Button
               type="submit"
               variant="primary"
               loading={createProductMutation.isPending || updateProductMutation.isPending || uploadProductImageMutation.isPending}
             >
-              {isEditing ? 'Update Product' : 'Create Product'}
+                              {isEditing ? 'Actualizează Produsul' : 'Creează Produsul'}
             </Button>
           </div>
         </form>

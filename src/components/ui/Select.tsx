@@ -21,7 +21,7 @@ const Select: React.FC<SelectProps> = ({
   options,
   value,
   onChange,
-  placeholder = 'Select an option',
+  placeholder = 'Selectează o opțiune',
   disabled = false,
   className = '',
   size = 'md'

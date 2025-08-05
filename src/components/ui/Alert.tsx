@@ -78,7 +78,7 @@ const Alert: React.FC<AlertProps> = ({
             <button
               onClick={onDismiss}
               className={`inline-flex rounded-md p-1.5 ${styles.dismiss} transition-colors`}
-              aria-label="Dismiss alert"
+              aria-label="Închide alerta"
             >
               <X className="h-4 w-4" />
             </button>
