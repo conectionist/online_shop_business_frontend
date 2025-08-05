@@ -111,9 +111,9 @@ const CategoriesList: React.FC = () => {
               <div className="space-y-4">
                 {/* Category Image */}
                 <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                  {category.image_versions?.thumbnail ? (
+                  {category.image_versions?.medium ? (
                     <Image
-                      src={getCategoryImageUrl(category, 'thumbnail')}
+                      src={getCategoryImageUrl(category, 'medium')}
                       alt={category.name}
                       className="w-full h-full object-cover"
                     />

@@ -28,9 +28,9 @@ const ProductCard = React.memo<{
   <Card className="overflow-hidden">
     {/* Product Image */}
     <div className="aspect-square bg-gray-100 relative">
-      {product.image_versions?.thumbnail ? (
+      {product.image_versions?.medium ? (
         <Image
-          src={getProductImageUrl(product, 'thumbnail')}
+          src={getProductImageUrl(product, 'medium')}
           alt={product.nume}
           className="w-full h-full object-cover"
         />
