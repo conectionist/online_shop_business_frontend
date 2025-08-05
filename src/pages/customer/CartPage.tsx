@@ -81,7 +81,8 @@ const CartPage: React.FC = () => {
           <div className="space-y-4">
             {items.map((item) => (
               <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-start space-x-4">
+                {/* Product Info Section */}
+                <div className="flex items-start space-x-4 mb-4">
                   {/* Product Image */}
                   <div className="flex-shrink-0">
                     {item.images && item.images.length > 0 ? (
@@ -104,48 +105,50 @@ const CartPage: React.FC = () => {
 
                   {/* Product Details */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">
+                    <h3 className="font-medium text-gray-900">
                       {item.nume}
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      {item.pret} RON / {item.unitate_denumire}
+                      Preț unitar: {item.pret} RON
                     </p>
                     <p className="text-sm font-medium text-green-600 mt-1">
-                      Total: {item.pret * item.quantity} RON
+                      Preț total: {item.pret * item.quantity} RON
                     </p>
                   </div>
+                </div>
 
+                {/* Controls Section - Bottom */}
+                <div className="flex items-center justify-center pt-3 border-t border-gray-100 space-x-4">
+                  {/* Delete Button */}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => removeItem(item.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                  
                   {/* Quantity Controls */}
-                  <div className="flex-shrink-0 flex flex-col items-end space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                        className="w-8 h-8 p-0"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="text-sm font-medium w-8 text-center">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                        className="w-8 h-8 p-0"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    
+                  <div className="flex items-center space-x-2">
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => removeItem(item.id)}
-                      className="text-red-600 hover:text-red-700"
+                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                      className="w-8 h-8 p-0"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm font-medium w-8 text-center">
+                      {item.quantity}
+                    </span>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                      className="w-8 h-8 p-0"
+                    >
+                      <Plus className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>

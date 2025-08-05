@@ -292,7 +292,7 @@ const ListForm: React.FC = () => {
               type="text"
               placeholder="Ex: Produse proaspete disponibile astăzi!"
               {...register('mesaj_introducere', {
-                maxLength: { value: 45, message: 'Mesajul nu poate depăși 45 de caractere' }
+                maxLength: { value: 100, message: 'Mesajul nu poate depăși 100 de caractere' }
               })}
               error={errors.mesaj_introducere?.message}
             />
