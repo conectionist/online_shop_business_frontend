@@ -217,7 +217,7 @@ const OrderForm: React.FC = () => {
               </div>
 
               {/* Address field - only show if home delivery is selected */}
-              {selectedDeliveryType && selectedDeliveryType.denumire.toLowerCase().includes('livrare') && (
+              {selectedDeliveryType && (selectedDeliveryType.denumire.toLowerCase().includes('livrare') || selectedDeliveryType.denumire.toLowerCase().includes('curier')) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
                     <MapPin className="w-4 h-4 mr-1" />
@@ -225,7 +225,7 @@ const OrderForm: React.FC = () => {
                   </label>
                   <Input
                     {...register('address', { 
-                      required: selectedDeliveryType.denumire.toLowerCase().includes('livrare') 
+                      required: (selectedDeliveryType.denumire.toLowerCase().includes('livrare') || selectedDeliveryType.denumire.toLowerCase().includes('curier'))
                         ? 'Adresa este obligatorie pentru livrare' 
                         : false 
                     })}
