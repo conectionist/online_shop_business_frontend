@@ -169,11 +169,11 @@ const CustomerDashboard: React.FC = () => {
                               {/* Left side: Price and Stock */}
                               <div className="space-y-1">
                                 <p className="text-sm text-gray-600">
-                                  Preț: {product.pret} RON / {getUnitName(product.unitati_id)}
+                                  Preț: {product.pret} RON
                                 </p>
-                                {/* <p className="text-sm font-medium text-green-600">
-                                  Stoc: {product.stoc_produs} {getUnitName(product.unitati_id)}
-                                </p> */}
+                                <p className="text-sm text-gray-600">
+                                  Cantitate: {product.cantitate} {getUnitName(product.unitati_id)}
+                                </p>
                               </div>
                               
                               {/* Right side: Button */}
