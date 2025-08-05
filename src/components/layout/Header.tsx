@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { authService } from '@/services/authService';
+import { getAppName } from '@/utils/appConfig';
 
 export interface HeaderProps {
   title?: string;
@@ -9,7 +10,7 @@ export interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
-  title = 'Afacere Online',
+  title = getAppName(),
   onMenuClick 
 }) => {
   const navigate = useNavigate();

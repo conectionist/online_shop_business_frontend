@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import { useBusinessDetails } from '@/hooks/useBusinessDetails';
 import { useCartStore } from '@/stores/cartStore';
+import { getAppName } from '@/utils/appConfig';
 
 const CustomerHeader: React.FC = () => {
   const { data: businessDetailsArray } = useBusinessDetails();
@@ -27,7 +28,7 @@ const CustomerHeader: React.FC = () => {
               )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {businessDetails?.nume || 'Magazin Online'}
+                  {businessDetails?.nume || getAppName()}
                 </h1>
                 <p className="text-xs text-gray-500 hidden sm:block">
                   {businessDetails?.description || 'Produse proaspete'}
