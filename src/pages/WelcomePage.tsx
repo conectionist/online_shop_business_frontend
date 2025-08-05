@@ -162,73 +162,89 @@ const WelcomePage: React.FC = () => {
               }, {});
 
               return Object.entries(productsByCategory).map(([categoryName, products]: [string, any]) => (
-                <div key={categoryName} className="space-y-3">
-                  <h4 className="text-lg font-semibold text-gray-900 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 text-center">
-                    {categoryName}
-                  </h4>
-                  <div className="space-y-3">
+                <div key={categoryName} className="space-y-4">
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl px-6 py-4 text-center">
+                    <h4 className="text-lg font-bold text-amber-800">
+                      {categoryName}
+                    </h4>
+                    <div className="w-12 h-0.5 bg-amber-400 mx-auto mt-2 rounded-full"></div>
+                  </div>
+                  <div className="space-y-4">
                     {products.map((product: any) => (
-                      <div key={product.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex space-x-4">
-                          {/* Product Image */}
-                          <div className="flex-shrink-0">
-                            {product.images && product.images.length > 0 ? (
-                              <img
-                                src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${product.images[0].image_versions?.thumbnail}`}
-                                alt={product.nume}
-                                className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                                onError={(e) => {
-                                  // Fallback to package icon if image fails to load
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  target.nextElementSibling?.classList.remove('hidden');
-                                }}
-                              />
-                            ) : null}
-                            {/* Fallback icon - hidden by default, shown if image fails or doesn't exist */}
-                            <div className={`w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center ${product.images && product.images.length > 0 ? 'hidden' : ''}`}>
-                              <Package className="w-6 h-6 text-gray-400" />
-                            </div>
-                          </div>
-                          
-                          {/* Content Area - 3 Layers */}
-                          <div className="flex-1 min-w-0 flex flex-col">
-                            {/* Layer 1: Title - Full width */}
-                            <div className="mb-2">
-                              <Link 
-                                to={`/product/${product.id}`}
-                                className="hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors block"
-                              >
-                                <h5 className="font-medium text-gray-900">{product.nume}</h5>
-                              </Link>
+                      <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden group">
+                        <div className="p-6">
+                          <div className="flex space-x-4">
+                            {/* Product Image - Enhanced */}
+                            <div className="flex-shrink-0">
+                              {product.images && product.images.length > 0 ? (
+                                <div className="relative">
+                                  <img
+                                    src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${product.images[0].image_versions?.thumbnail}`}
+                                    alt={product.nume}
+                                    className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-xl border-2 border-amber-100 shadow-sm group-hover:border-amber-200 transition-colors duration-300"
+                                    onError={(e) => {
+                                      // Fallback to package icon if image fails to load
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      target.nextElementSibling?.classList.remove('hidden');
+                                    }}
+                                  />
+                                  {/* Subtle overlay on hover */}
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 rounded-xl"></div>
+                                </div>
+                              ) : (
+                                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-100 flex items-center justify-center shadow-sm group-hover:border-amber-200 transition-colors duration-300">
+                                  <Package className="w-8 h-8 text-amber-400" />
+                                </div>
+                              )}
                             </div>
                             
-                            {/* Layer 2: Description - Full width */}
-                            {product.description && (
-                              <div className="mb-3">
-                                <Link 
-                                  to={`/product/${product.id}`}
-                                  className="hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors block"
-                                >
-                                  <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-                                </Link>
-                              </div>
-                            )}
-                            
-                            {/* Layer 3: Price/Stock and Button - Split layout */}
-                            <div className="flex justify-between items-end">
-                              {/* Left side: Price and Stock */}
-                              <div className="space-y-1">
-                                <p className="text-sm text-gray-600">
-                                  Preț: {product.pret} RON
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  Cantitate: {product.cantitate} {getUnitName(product.unitati_id)}
-                                </p>
+                            {/* Content Area - Redesigned */}
+                            <div className="flex-1 min-w-0 flex flex-col justify-between">
+                              {/* Product Info */}
+                              <div className="space-y-2">
+                                {/* Product Name */}
+                                <div>
+                                  <Link 
+                                    to={`/product/${product.id}`}
+                                    className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
+                                  >
+                                    <h5 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
+                                      {product.nume}
+                                    </h5>
+                                  </Link>
+                                </div>
+                                
+                                {/* Description */}
+                                {product.description && (
+                                  <div>
+                                    <Link 
+                                      to={`/product/${product.id}`}
+                                      className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
+                                    >
+                                      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                                        {product.description}
+                                      </p>
+                                    </Link>
+                                  </div>
+                                )}
+                                
+                                {/* Price and Quantity - Enhanced */}
+                                <div className="flex items-center space-x-4 pt-2">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg font-bold text-amber-600">
+                                      {product.pret} RON
+                                    </span>
+                                    <span className="text-xs text-gray-400">•</span>
+                                    <span className="text-sm text-gray-500">
+                                      {product.cantitate} {getUnitName(product.unitati_id)}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                               
-                              {/* Right side: Button */}
-                              <div className="flex-shrink-0">
+                              {/* Add to Cart Button - Enhanced */}
+                              <div className="flex-shrink-0 pt-3">
                                 <Button
                                   variant="primary"
                                   size="sm"
@@ -237,10 +253,10 @@ const WelcomePage: React.FC = () => {
                                     e.stopPropagation();
                                     addToCart(product);
                                   }}
-                                  className="px-3 py-1"
+                                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105"
                                 >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Adaugă
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Adaugă în coș
                                 </Button>
                               </div>
                             </div>
