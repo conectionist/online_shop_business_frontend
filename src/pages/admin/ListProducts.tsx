@@ -276,8 +276,7 @@ const ListProducts: React.FC = () => {
         isOpen={showAddProductModal}
         onClose={() => {
           setShowAddProductModal(false);
-          setSelectedProduct(null);
-          setStockLevel(1);
+          setSelectedProducts(new Set());
         }}
         title="Adaugă Produs în Listă"
       >

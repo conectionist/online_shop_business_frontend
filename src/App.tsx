@@ -25,6 +25,7 @@ import BusinessDetailsForm from './pages/admin/BusinessDetailsForm'
 import ListsList from './pages/admin/ListsList'
 import ListForm from './pages/admin/ListForm'
 import ListProducts from './pages/admin/ListProducts'
+import ListManagement from './pages/admin/ListManagement'
 import CartPage from './pages/customer/CartPage'
 import OrderForm from './pages/customer/OrderForm'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
@@ -75,6 +76,7 @@ function App() {
             <Route path="lists/new" element={<ListForm />} />
             <Route path="lists/:id/edit" element={<ListForm />} />
             <Route path="lists/:id/products" element={<ListProducts />} />
+            <Route path="lists/:id/manage" element={<ListManagement />} />
             {/* Future admin routes will go here */}
           </Route>
 

@@ -169,18 +169,10 @@ const ListsList: React.FC = () => {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => navigate(`/admin/lists/${list.id}/edit`)}
+                      onClick={() => navigate(`/admin/lists/${list.id}/manage`)}
                     >
                       <Edit className="w-4 h-4 mr-1" />
-                      Editează
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate(`/admin/lists/${list.id}/products`)}
-                    >
-                      <Package className="w-4 h-4 mr-1" />
-                      Produse
+                      Gestionează
                     </Button>
                     <Button
                       variant="danger"
