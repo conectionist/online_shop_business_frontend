@@ -165,27 +165,15 @@ const ProductPage: React.FC = () => {
                 </div>
 
                 {/* Price Section */}
-                <div className="space-y-2">
-                  <div className="flex items-baseline space-x-3">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {product.pret}
-                    </span>
-                    <span className="text-2xl text-gray-600">
-                      RON
-                    </span>
-                    <span className="text-2xl text-gray-600">
-                      / {getUnitName(product.unitati_id)}
-                    </span>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <p className="text-lg font-medium text-gray-900">
+                      Preț: {product.pret} RON
+                    </p>
+                    <p className="text-lg font-medium text-gray-900">
+                      Cantitate: {product.cantitate} {getUnitName(product.unitati_id)}
+                    </p>
                   </div>
-                  {/* <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${product.stoc_produs > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span className="text-sm text-gray-600">
-                      {product.stoc_produs > 0 
-                        ? `${product.stoc_produs} ${getUnitName(product.unitati_id)} disponibile`
-                        : 'Stoc epuizat'
-                      }
-                    </span>
-                  </div> */}
                 </div>
 
                 {/* Description */}
