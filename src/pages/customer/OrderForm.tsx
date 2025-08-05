@@ -248,7 +248,6 @@ const OrderForm: React.FC = () => {
                 <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                   <div className="flex-1">
                     <span className="font-medium">{item.quantity} x {item.nume}</span>
-                    <span className="text-gray-500 ml-2">({item.pret} RON/{item.unitate_denumire})</span>
                   </div>
                   <span className="font-semibold">
                     {item.quantity * item.pret} RON
