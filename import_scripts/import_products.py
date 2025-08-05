@@ -338,8 +338,8 @@ class ProductImporter:
             }
             
             if list_data.description:
-                # Truncate description to 45 characters
-                short_description = list_data.description[:45]
+                # Truncate description to 100 characters
+                short_description = list_data.description[:100]
                 data["mesaj_introducere"] = short_description
             
             response = self.session.post(f"{self.api_base_url}/liste", json=data)
