@@ -10,6 +10,7 @@ import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart } from 'lu
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { Link } from 'react-router-dom';
+import { getAppName } from '@/utils/appConfig';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetailsArray } = useBusinessDetails();
@@ -94,15 +95,21 @@ const WelcomePage: React.FC = () => {
   // Show the published list with exact same structure as admin preview
   return (
     <>
-
-
       <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
+        {/* App Name - Most Prominent Branding */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {getAppName()}
+          </h1>
+          <div className="w-16 h-1 bg-blue-600 mx-auto rounded-full"></div>
+        </div>
+
         {/* Title */}
         <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          {publishedList.mesaj_introducere || 'Listă de produse'}
-        </h2>
-      </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {publishedList.mesaj_introducere || 'Listă de produse'}
+          </h2>
+        </div>
 
       {/* Products Section */}
       <div className="mb-6">

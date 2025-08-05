@@ -10,6 +10,7 @@ import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart } from 'lu
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { Link } from 'react-router-dom';
+import { getAppName } from '@/utils/appConfig';
 
 const CustomerDashboard: React.FC = () => {
   const { data: businessDetailsArray } = useBusinessDetails();
