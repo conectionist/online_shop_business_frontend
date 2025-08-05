@@ -199,7 +199,7 @@ const ListProducts: React.FC = () => {
             </div>
           </div>
         </Card>
-        <Card>
+        {/* <Card>
           <div className="flex items-center space-x-3">
             <Package className="h-8 w-8 text-orange-600" />
             <div>
@@ -209,7 +209,7 @@ const ListProducts: React.FC = () => {
               </p>
             </div>
           </div>
-        </Card>
+        </Card> */}
       </div>
 
       {/* List Products */}
@@ -238,9 +238,9 @@ const ListProducts: React.FC = () => {
                         <p className="text-sm text-gray-600">
                           Preț: {product.pret} RON / {getUnitName(product.unitati_id)}
                         </p>
-                        <p className="text-sm font-medium text-green-600">
+                        {/* <p className="text-sm font-medium text-green-600">
                           Stoc: {product.stoc_produs} {getUnitName(product.unitati_id)}
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                     <Button

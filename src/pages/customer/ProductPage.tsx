@@ -68,7 +68,8 @@ const ProductPage: React.FC = () => {
   };
 
   const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 1 && newQuantity <= product.stoc_produs) {
+    // if (newQuantity >= 1 && newQuantity <= product.stoc_produs) {
+    if (newQuantity >= 1) {
       setQuantity(newQuantity);
     }
   };
@@ -176,7 +177,7 @@ const ProductPage: React.FC = () => {
                       / {getUnitName(product.unitati_id)}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  {/* <div className="flex items-center space-x-2">
                     <div className={`w-2 h-2 rounded-full ${product.stoc_produs > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <span className="text-sm text-gray-600">
                       {product.stoc_produs > 0 
@@ -184,7 +185,7 @@ const ProductPage: React.FC = () => {
                         : 'Stoc epuizat'
                       }
                     </span>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Description */}
@@ -224,7 +225,7 @@ const ProductPage: React.FC = () => {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleQuantityChange(quantity + 1)}
-                          disabled={quantity >= product.stoc_produs}
+                          // disabled={quantity >= product.stoc_produs}
                           className="w-12 h-12 p-0 rounded-full"
                         >
                           <Plus className="w-5 h-5" />
@@ -238,10 +239,11 @@ const ProductPage: React.FC = () => {
                     variant="primary"
                     onClick={addToCart}
                     className="w-full h-14 text-lg font-semibold"
-                    disabled={product.stoc_produs === 0}
+                    // disabled={product.stoc_produs === 0}
                   >
                     <Plus className="w-5 h-5 mr-3" />
-                    {product.stoc_produs === 0 ? 'Stoc epuizat' : 'Adaugă în coș'}
+                    {/* {product.stoc_produs === 0 ? 'Stoc epuizat' : 'Adaugă în coș'} */}
+                    Adaugă în coș
                   </Button>
                 </div>
               </div>

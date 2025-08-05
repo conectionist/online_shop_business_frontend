@@ -184,9 +184,9 @@ const WelcomePage: React.FC = () => {
                                 <p className="text-sm text-gray-600">
                                   Preț: {product.pret} RON / {getUnitName(product.unitati_id)}
                                 </p>
-                                <p className="text-sm font-medium text-green-600">
+                                {/* <p className="text-sm font-medium text-green-600">
                                   Stoc: {product.stoc_produs} {getUnitName(product.unitati_id)}
-                                </p>
+                                </p> */}
                               </div>
                               
                               {/* Right side: Button */}
