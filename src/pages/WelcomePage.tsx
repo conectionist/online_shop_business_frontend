@@ -30,6 +30,10 @@ const WelcomePage: React.FC = () => {
   // Cart store
   const { addItem, getTotalItems } = useCartStore();
 
+  // Interactive states
+  const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
+  const [showSuccessMessage, setShowSuccessMessage] = React.useState<{ [key: number]: boolean }>({});
+
   // Helper functions
   const getCategoryName = (categoryId: number) => {
     return categories?.find(c => c.id === categoryId)?.name || 'Categorie necunoscută';
@@ -39,8 +43,17 @@ const WelcomePage: React.FC = () => {
     return units?.find(u => u.id === unitId)?.denumire || 'unitate';
   };
 
-  // Cart functions
-  const addToCart = (product: any) => {
+  // Enhanced cart function with animations
+  const addToCart = async (product: any) => {
+    const productId = product.id;
+    
+    // Set loading state
+    setAddingToCart(prev => ({ ...prev, [productId]: true }));
+    
+    // Simulate a small delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Add to cart
     addItem({
       id: product.id,
       nume: product.nume,
@@ -49,6 +62,15 @@ const WelcomePage: React.FC = () => {
       unitate_denumire: getUnitName(product.unitati_id),
       images: product.images
     });
+    
+    // Show success state
+    setAddingToCart(prev => ({ ...prev, [productId]: false }));
+    setShowSuccessMessage(prev => ({ ...prev, [productId]: true }));
+    
+    // Hide success message after 2 seconds
+    setTimeout(() => {
+      setShowSuccessMessage(prev => ({ ...prev, [productId]: false }));
+    }, 2000);
   };
 
   if (isLoading) {
@@ -145,8 +167,45 @@ const WelcomePage: React.FC = () => {
       {/* Products Section */}
       <div className="mb-6">
         {isLoadingListProducts ? (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <p className="text-gray-500 mb-2">Se încarcă produsele...</p>
+          <div className="space-y-4">
+            {/* Skeleton Loading States */}
+            {[1, 2, 3].map((index) => (
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+                <div className="p-6">
+                  <div className="flex space-x-4">
+                    {/* Skeleton Image */}
+                    <div className="flex-shrink-0">
+                      <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl"></div>
+                    </div>
+                    
+                    {/* Skeleton Content */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div className="space-y-2">
+                        {/* Skeleton Title */}
+                        <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                        
+                        {/* Skeleton Description */}
+                        <div className="space-y-1">
+                          <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                        
+                        {/* Skeleton Price */}
+                        <div className="flex items-center space-x-4 pt-2">
+                          <div className="h-5 bg-gray-200 rounded w-20"></div>
+                          <div className="h-4 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Skeleton Button */}
+                      <div className="flex-shrink-0 pt-3">
+                        <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : listProducts && listProducts.length > 0 ? (
           <div className="space-y-6">
@@ -170,8 +229,15 @@ const WelcomePage: React.FC = () => {
                     <div className="w-12 h-0.5 bg-amber-400 mx-auto mt-2 rounded-full"></div>
                   </div>
                   <div className="space-y-4">
-                    {products.map((product: any) => (
-                      <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    {products.map((product: any, index: number) => (
+                      <div 
+                        key={product.id} 
+                        className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden group animate-fade-in-up"
+                        style={{
+                          animationDelay: `${index * 100}ms`,
+                          animationFillMode: 'both'
+                        }}
+                      >
                         <div className="p-6">
                           <div className="flex space-x-4">
                             {/* Product Image - Enhanced */}
@@ -253,10 +319,31 @@ const WelcomePage: React.FC = () => {
                                     e.stopPropagation();
                                     addToCart(product);
                                   }}
-                                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105"
+                                  disabled={addingToCart[product.id]}
+                                  className={`w-full font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 ${
+                                    showSuccessMessage[product.id]
+                                      ? 'bg-green-500 hover:bg-green-600'
+                                      : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+                                  } text-white`}
                                 >
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Adaugă în coș
+                                  {addingToCart[product.id] ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                      Se adaugă...
+                                    </>
+                                  ) : showSuccessMessage[product.id] ? (
+                                    <>
+                                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                      Adăugat!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus className="w-4 h-4 mr-2" />
+                                      Adaugă în coș
+                                    </>
+                                  )}
                                 </Button>
                               </div>
                             </div>
