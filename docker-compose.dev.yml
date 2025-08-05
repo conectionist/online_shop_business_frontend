@@ -9,6 +9,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+      - VITE_LOGO_PATH=/test/test_data/logo.jpg
     volumes:
       - ./src:/app/src
       - ./public:/app/public

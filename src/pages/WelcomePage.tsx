@@ -10,7 +10,7 @@ import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart } from 'lu
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { Link } from 'react-router-dom';
-import { getAppName } from '@/utils/appConfig';
+import { getAppName, getLogoPath } from '@/utils/appConfig';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetailsArray } = useBusinessDetails();
@@ -95,22 +95,53 @@ const WelcomePage: React.FC = () => {
   // Show the published list with exact same structure as admin preview
   return (
     <>
+      {/* Beautiful Header Section */}
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200 mb-8">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="text-center">
+            {/* Logo and App Name */}
+            <div className="flex items-center justify-center space-x-4 mb-4">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
+                <img 
+                  src={getLogoPath()} 
+                  alt="Logo" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback if logo fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              </div>
+              <div className="text-left">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                  {getAppName()}
+                </h1>
+                <p className="text-amber-700 font-medium text-sm md:text-base">Produse proaspete de brutărie</p>
+              </div>
+            </div>
+            
+            {/* Decorative Elements */}
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-8 h-px bg-amber-300"></div>
+              <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+              <div className="w-8 h-px bg-amber-300"></div>
+            </div>
+            
+            {/* Introduction Message */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-amber-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                {publishedList.mesaj_introducere || 'Listă de produse'}
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Comandă produsele tale preferate pentru livrare
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
-        {/* App Name - Most Prominent Branding */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {getAppName()}
-          </h1>
-          <div className="w-16 h-1 bg-blue-600 mx-auto rounded-full"></div>
-        </div>
-
-        {/* Title */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {publishedList.mesaj_introducere || 'Listă de produse'}
-          </h2>
-        </div>
-
       {/* Products Section */}
       <div className="mb-6">
         {isLoadingListProducts ? (
