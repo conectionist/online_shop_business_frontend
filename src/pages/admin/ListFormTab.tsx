@@ -220,7 +220,7 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
 
           {/* Status Flags */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center space-x-3">
+            {/* <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
                 id="is_current"
@@ -230,7 +230,7 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
               <label htmlFor="is_current" className="text-sm font-medium text-gray-700">
                 Listă Curentă
               </label>
-            </div>
+            </div> */}
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
@@ -475,11 +475,11 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
 
             {/* Status Indicators */}
             <div className="flex justify-center space-x-4 mt-6">
-              {watch('is_current') && (
+              {/* {watch('is_current') && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                   Listă Curentă
                 </span>
-              )}
+              )} */}
               {watch('is_published') && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                   Publicată
