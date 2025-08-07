@@ -70,14 +70,30 @@ const ProductPage: React.FC = () => {
   const hasMultipleImages = productImages.length > 1;
 
   const addToCart = () => {
-    addItem({
-      id: product.id,
-      nume: product.nume,
-      pret: product.pret,
-      unitati_id: product.unitati_id,
-      unitate_denumire: getUnitName(product.unitati_id),
-      images: product.images
-    });
+    // Get current cart state to check if item exists
+    const currentItems = useCartStore.getState().items;
+    const existingItem = currentItems.find(item => item.id === product.id);
+    
+    if (existingItem) {
+      // If item already exists, add the selected quantity to the existing quantity
+      const newQuantity = existingItem.quantity + quantity;
+      useCartStore.getState().updateQuantity(product.id, newQuantity);
+    } else {
+      // If it's a new item, add it with the selected quantity
+      addItem({
+        id: product.id,
+        nume: product.nume,
+        pret: product.pret,
+        unitati_id: product.unitati_id,
+        unitate_denumire: getUnitName(product.unitati_id),
+        images: product.images
+      });
+      
+      // Update the quantity to the selected amount since addItem always adds with quantity 1
+      setTimeout(() => {
+        useCartStore.getState().updateQuantity(product.id, quantity);
+      }, 0);
+    }
   };
 
   const handleQuantityChange = (newQuantity: number) => {
