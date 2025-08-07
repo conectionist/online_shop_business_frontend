@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Save, Loader2, Eye, EyeOff, Clock, Truck, CreditCard, Package } from 'lucide-react';
-import { useList, useListProducts } from '@/hooks/useLists';
-import { useCreateList, useUpdateList } from '@/hooks/useLists';
+import { useList } from '@/hooks/useLists';
+import { useCreateList, useUpdateList, useListProductsOrdered } from '@/hooks/useLists';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
@@ -49,11 +49,24 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
   const { data: deliveryTypes, isLoading: isLoadingDeliveryTypes } = useDeliveryTypes();
 
   // Fetch list products for preview (only when editing)
-  const { data: listProducts, isLoading: isLoadingListProducts } = useListProducts(listId);
+  const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(listId);
 
   // Fetch categories and units for product display
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
+
+  // Extract products from the new ordered structure
+  const listProducts = React.useMemo(() => {
+    if (!listProductsData?.categories) return [];
+    
+    // Flatten all products from all categories
+    return listProductsData.categories.flatMap(category => 
+      category.products.map(product => ({
+        ...product,
+        category_id: category.id // Ensure category_id is set
+      }))
+    );
+  }, [listProductsData]);
 
   // Form mutations
   const createListMutation = useCreateList();

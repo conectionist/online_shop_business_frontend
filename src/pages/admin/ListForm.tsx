@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Save, Loader2, Eye, EyeOff, Clock, Truck, CreditCard, Package } from 'lucide-react';
-import { useList, useListProducts } from '@/hooks/useLists';
-import { useCreateList, useUpdateList } from '@/hooks/useLists';
+import { useList } from '@/hooks/useLists';
+import { useCreateList, useUpdateList, useListProductsOrdered } from '@/hooks/useLists';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { ListCreate, ListUpdate } from '@/types/api';
-import { getImageUrl, getProductImageUrl } from '@/services/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -47,11 +46,24 @@ const ListForm: React.FC = () => {
   const { data: deliveryTypes, isLoading: isLoadingDeliveryTypes } = useDeliveryTypes();
 
   // Fetch list products for preview (only when editing)
-  const { data: listProducts, isLoading: isLoadingListProducts } = useListProducts(listId);
+  const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(listId);
 
   // Fetch categories and units for product display
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
+
+  // Extract products from the new ordered structure
+  const listProducts = React.useMemo(() => {
+    if (!listProductsData?.categories) return [];
+    
+    // Flatten all products from all categories
+    return listProductsData.categories.flatMap(category => 
+      category.products.map(product => ({
+        ...product,
+        category_id: category.id // Ensure category_id is set
+      }))
+    );
+  }, [listProductsData]);
 
   // Form mutations
   const createListMutation = useCreateList();
@@ -172,14 +184,14 @@ const ListForm: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleCancel}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Înapoi
-          </Button>
+                      <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleCancel}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Înapoi
+            </Button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
               {isEditing ? 'Editează Lista' : 'Creează Listă Nouă'}
