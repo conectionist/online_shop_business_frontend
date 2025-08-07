@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
-import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage } from '@/hooks/useProducts';
+import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, useDeleteProductImage } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { ProductCreate, ProductUpdate } from '@/types/api';
@@ -102,6 +102,7 @@ const ProductForm: React.FC = () => {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [shouldClearImage, setShouldClearImage] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -112,6 +113,7 @@ const ProductForm: React.FC = () => {
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
   const uploadProductImageMutation = useUploadProductImage();
+  const deleteProductImageMutation = useDeleteProductImage();
   const { handleError } = useErrorHandler();
   
   // Fetch categories for dropdown
@@ -255,6 +257,7 @@ const ProductForm: React.FC = () => {
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
+    setShouldClearImage(true);
     setErrors(prev => ({ ...prev, image: '' }));
   };
 
@@ -292,8 +295,29 @@ const ProductForm: React.FC = () => {
           data: updateData,
         });
 
-        // Upload image if selected
-        if (imageFile) {
+        // Handle image replacement
+        if (shouldClearImage && !imageFile) {
+          // User wants to remove the image - delete existing images
+          if (product?.images && product.images.length > 0) {
+            for (const image of product.images) {
+              await deleteProductImageMutation.mutateAsync({
+                productId: Number(id),
+                imageId: image.id,
+              });
+            }
+          }
+        } else if (imageFile) {
+          // User wants to upload a new image - delete old ones first if they exist
+          if (product?.images && product.images.length > 0) {
+            for (const image of product.images) {
+              await deleteProductImageMutation.mutateAsync({
+                productId: Number(id),
+                imageId: image.id,
+              });
+            }
+          }
+          
+          // Upload the new image
           await uploadProductImageMutation.mutateAsync({
             productId: Number(id),
             image: imageFile,
@@ -599,12 +623,12 @@ const ProductForm: React.FC = () => {
             >
                               Anulează
             </Button>
-            <Button
+                        <Button
               type="submit"
               variant="primary"
-              loading={createProductMutation.isPending || updateProductMutation.isPending || uploadProductImageMutation.isPending}
+              loading={createProductMutation.isPending || updateProductMutation.isPending || uploadProductImageMutation.isPending || deleteProductImageMutation.isPending}
             >
-                              {isEditing ? 'Actualizează Produsul' : 'Creează Produsul'}
+              {isEditing ? 'Actualizează Produsul' : 'Creează Produsul'}
             </Button>
           </div>
         </form>
