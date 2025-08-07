@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Package, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
-import { usePublishedList, useListProducts } from '@/hooks/useLists';
+import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 
@@ -15,9 +15,22 @@ const ProductPage: React.FC = () => {
   
   const { addItem, getTotalItems } = useCartStore();
   const { data: publishedList } = usePublishedList();
-  const { data: listProducts } = useListProducts(publishedList?.id || 0);
+  const { data: listProductsData } = useListProductsOrdered(publishedList?.id || 0);
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
+
+  // Extract products from the new ordered structure
+  const listProducts = React.useMemo(() => {
+    if (!listProductsData?.categories) return [];
+    
+    // Flatten all products from all categories
+    return listProductsData.categories.flatMap(category => 
+      category.products.map(product => ({
+        ...product,
+        category_id: category.id // Ensure category_id is set
+      }))
+    );
+  }, [listProductsData]);
 
   // Helper functions
   const getCategoryName = (categoryId: number) => {

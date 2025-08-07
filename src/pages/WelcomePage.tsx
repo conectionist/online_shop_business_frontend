@@ -1,6 +1,6 @@
 import React from 'react';
 import { useBusinessDetails } from '@/hooks/useBusinessDetails';
-import { usePublishedList, useListProducts } from '@/hooks/useLists';
+import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
@@ -20,12 +20,25 @@ const WelcomePage: React.FC = () => {
   const businessDetails = businessDetailsArray && businessDetailsArray.length > 0 ? businessDetailsArray[0] : null;
   
   // Fetch data for the published list
-  const { data: listProducts, isLoading: isLoadingListProducts } = useListProducts(publishedList?.id || 0);
+  const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(publishedList?.id || 0);
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
   const { data: deliverySchedules } = useDeliverySchedules();
   const { data: deliveryTypes } = useDeliveryTypes();
   const { data: paymentMethods } = usePaymentMethods();
+
+  // Extract products from the new ordered structure
+  const listProducts = React.useMemo(() => {
+    if (!listProductsData?.categories) return [];
+    
+    // Flatten all products from all categories
+    return listProductsData.categories.flatMap(category => 
+      category.products.map(product => ({
+        ...product,
+        category_id: category.id // Ensure category_id is set
+      }))
+    );
+  }, [listProductsData]);
 
   // Cart store
   const { addItem, getTotalItems } = useCartStore();
