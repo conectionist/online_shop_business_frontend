@@ -1,5 +1,5 @@
 {
-  "mesaj_introducere": "Puteti comanda produse pentru marti 5 august de:",
+  "mesaj_introducere": "Puteti comanda produse pentru vineri 8 auguuuust 🥰",
   "products": [
     {
       "nume": "Pâine cu secara",
@@ -18,7 +18,23 @@
       "category": "Brutarie"
     },
     {
-      "nume": "Pâine intermediara cu semințe de in",
+      "nume": "Paine cu fibre",
+      "description": "50% seminte germinate de in si floarea soarelui,faina intermediara,maia,sare,apa",
+      "pret": 16,
+      "unitate": "gr",
+      "cantitate": 500,
+      "category": "Brutarie"
+    },
+    {
+      "nume": "Pâine cu carbune si seminte prajite",
+      "description": null,
+      "pret": 20,
+      "unitate": "gr",
+      "cantitate": 500,
+      "category": "Brutarie"
+    },
+    {
+      "nume": "Psine cu turmeric și semințe de dovleac prajite",
       "description": null,
       "pret": 15,
       "unitate": "gr",
@@ -26,23 +42,7 @@
       "category": "Brutarie"
     },
     {
-      "nume": "Pâine integrala fara sare",
-      "description": "faina,apa,maia",
-      "pret": 15,
-      "unitate": "gr",
-      "cantitate": 500,
-      "category": "Brutarie"
-    },
-    {
-      "nume": "Paine cu faina fără gluten",
-      "description": "amestec de făinuri fără gluten de la Pronat (mei, porumb, orez, hrișca), tărâțe psyllium, amidon din porumb, maia (apă, făină FG ca mai sus ), ulei de măsline, sare, praf de copt",
-      "pret": 26,
-      "unitate": "gr",
-      "cantitate": 600,
-      "category": "Brutarie"
-    },
-    {
-      "nume": "Paine toast cu unt si lapte",
+      "nume": "Pâine Toast cu unt și lapte",
       "description": "faina,lapte,unt,zahar sare,ou,maia(faina+apa)",
       "pret": 15,
       "unitate": "gr",
@@ -50,7 +50,7 @@
       "category": "Brutarie"
     },
     {
-      "nume": "Baghetă cu unt si lapte",
+      "nume": "Baghetă cu unt și lapte",
       "description": "faina,lapte,unt,zahar sare,ou,maia(faina+apa)",
       "pret": 8,
       "unitate": "buc",
@@ -59,6 +59,30 @@
     },
     {
       "nume": "Baghetă cu usturoi",
+      "description": "faina,lapte,unt,zahar sare,ou,maia(faina+apa)",
+      "pret": 10,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category": "Brutarie"
+    },
+    {
+      "nume": "Japoneza",
+      "description": "faina,lapte,unt,zahar sare,ou,maia(faina+apa)",
+      "pret": 13,
+      "unitate": "gr",
+      "cantitate": 400,
+      "category": "Brutarie"
+    },
+    {
+      "nume": "Crutoane",
+      "description": "faina,lapte,unt,zahar sare,ou,maia(faina+apa)",
+      "pret": 7,
+      "unitate": "gr",
+      "cantitate": 200,
+      "category": "Brutarie"
+    },
+    {
+      "nume": "Corn cu ciocolata amaruie",
       "description": null,
       "pret": 10,
       "unitate": "buc",
@@ -66,19 +90,19 @@
       "category": "Brutarie"
     },
     {
-      "nume": "Impletita",
+      "nume": "Strudel cu mar si scortisoara",
       "description": null,
-      "pret": 15,
-      "unitate": "gr",
-      "cantitate": 450,
+      "pret": 12,
+      "unitate": "buc",
+      "cantitate": 1,
       "category": "Brutarie"
     },
     {
-      "nume": "Crutoane",
+      "nume": "Melc cu branza și stafide",
       "description": null,
-      "pret": 7,
-      "unitate": "gr",
-      "cantitate": 200,
+      "pret": 13,
+      "unitate": "buc",
+      "cantitate": 1,
       "category": "Brutarie"
     },
     {
@@ -90,44 +114,60 @@
       "category": "Brutarie"
     },
     {
-      "nume": "Negresa cu nuca coapte și ganache vegan",
-      "description": "faina, cacao, zahar, apa, ulei, praf copt, nuca coapta, rom, sare, ciocolata neagra, frișcă cocos",
-      "pret": 30,
-      "unitate": "buc",
-      "cantitate": 1,
-      "category": "Deliciosenii de cofetarie"
-    },
-    {
-      "nume": "Briose carrot cake cu nuca coapte si ciocolata neagra",
-      "description": "morcovi,ananas, zahar, ulei, faina, scortisoara, praf copt, bicarbonat, fulgi nuca cocos, nuca coapta, ciocolata neagra",
-      "pret": 8,
-      "unitate": "buc",
-      "cantitate": 1,
-      "category": "Deliciosenii de cofetarie"
-    },
-    {
-      "nume": "Crema vanilie cu fructe proaspete",
-      "description": "lapte, oua, zahar, sare, amidon,unt",
-      "pret": 25,
-      "unitate": "paharul",
-      "cantitate": 1,
-      "category": "Deliciosenii de cofetarie"
-    },
-    {
-      "nume": "Monoportie cu fructe exotice",
-      "description": "blat pufos pandispan (ouă, zahăr, amidon, făină, extract vanilie) Mousse ciocolată albă (frișcă lichidă, ciocolată albă, gelatină) jeleu fructe exotice (mango, fructului pasiunii, amidon, gelatină)",
-      "pret": 20,
-      "unitate": "buc",
-      "cantitate": 1,
-      "category": "Deliciosenii de cofetarie"
-    },
-    {
       "nume": "Mure proaspete de Sorogari",
       "description": null,
       "pret": 23,
       "unitate": "caserola",
       "cantitate": 500,
       "category": "Uncategorized"
+    },
+    {
+      "nume": "Ecler cu crema vanilie glazurate cu ciocolata cu lapte",
+      "description": "Conțin lapte, oua, faina, unt, zahar, sare, lapte, amidon, ciocolata cu lapte, fulgi migdale, extract vanilie",
+      "pret": 18,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category": "Deliciosenii de cofetarie"
+    },
+    {
+      "nume": "Amandina cu ciocolata neagra veritabila",
+      "description": "Ganache de ciocolată neagră (ciocolată neagră,frișcă lichidă, gelatină, esența rom) Blat pufos cu cacao (ouă, făină, cacao, zahar) Sirop(apă, esența rom,zahar)",
+      "pret": 25,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category": "Deliciosenii de cofetarie"
+    },
+    {
+      "nume": "Lapte vegan de migdale",
+      "description": "Conține migdale hidratate, miere, sare, extract vanilie, apa",
+      "pret": 17,
+      "unitate": "ml",
+      "cantitate": 500,
+      "category": "Deliciosenii de cofetarie"
+    },
+    {
+      "nume": "Prajitura vegana cu ciocolata neagra si zmeura",
+      "description": "Conține blat pufos (cacao, faina, ulei, apa, praf copt, sare, zahar), ganache vegan ( cocos, ciocolata neagra),zmeura",
+      "pret": 35,
+      "unitate": "buc",
+      "cantitate": 1,
+      "category": "Deliciosenii de cofetarie"
+    },
+    {
+      "nume": "Cremwursti pui",
+      "description": "Ingrediente: piept de pui, grasime, slanina, usturoi, boia dulce, coriandru, ienibahar, gheata, sare, piper, membrana naturala comestibila",
+      "pret": 35,
+      "unitate": "gr",
+      "cantitate": 500,
+      "category": "Bacania Boieresca"
+    },
+    {
+      "nume": "Sunculita Taraneasca",
+      "description": "Ingrediente: pulpa de porc, usturoi, cimbru, ienibahar, boia, sare, piper",
+      "pret": 35,
+      "unitate": "gr",
+      "cantitate": 450,
+      "category": "Bacania Boieresca"
     },
     {
       "nume": "Humus cu 7 arome libaneze",
@@ -138,16 +178,8 @@
       "category": "Tartinabile Camara cu di tati"
     },
     {
-      "nume": "Humus cu ardei copt si busuioc",
-      "description": null,
-      "pret": 16,
-      "unitate": "gr",
-      "cantitate": 375,
-      "category": "Tartinabile Camara cu di tati"
-    },
-    {
-      "nume": "Nszkhatun",
-      "description": "vinete coapte, roșii uscate, ceapa caramelizata cu melasă de rodii, usturoi, condimente",
+      "nume": "Pasta de fasole cu roșii uscate și pesto de busuioc",
+      "description": "Pasta de fasole cu roșii uscate și pesto - fasole, roșii uscate marinate, pesto busuioc, usturoi, suc lămâie, ulei de floarea soarelui, condimente",
       "pret": 16,
       "unitate": "gr",
       "cantitate": 250,
@@ -155,31 +187,15 @@
     },
     {
       "nume": "Pate de ficat pasare",
-      "description": "ficat de pasăre, ceapă, usturoi, ciuperci champignon, smântână, unt, ierburi și condimente (cimbru, rozmarin, sare, piper, nucșoară)",
+      "description": "Ingrediente: ficat de pasăre, ceapă, usturoi, ciuperci champignon, smântână, unt, ierburi și condimente (cimbru, rozmarin, sare, piper, nucșoară)",
       "pret": 20,
       "unitate": "gr",
       "cantitate": 250,
       "category": "Tartinabile Camara cu di tati"
     },
     {
-      "nume": "Crema de branza caju cu mărar și pătrunjel",
-      "description": null,
-      "pret": 12,
-      "unitate": "gr",
-      "cantitate": 120,
-      "category": "Tartinabile Andreea"
-    },
-    {
-      "nume": "Kefir cu ciuperca tibetana",
-      "description": null,
-      "pret": 15,
-      "unitate": "gr",
-      "cantitate": 400,
-      "category": "Tartinabile Andreea"
-    },
-    {
-      "nume": "Pate Ton",
-      "description": "Ton, caju hidratat, ulei de măsline, zeamă de lămâie, sare",
+      "nume": "Salată de Icre Crap",
+      "description": "Ingrediente: Icre Crap, ceapă verde, ulei de floarea soarelui, zeamă de lămâie ,sare",
       "pret": 22,
       "unitate": "gr",
       "cantitate": 200,
@@ -187,10 +203,18 @@
     },
     {
       "nume": "Salată vinete",
-      "description": "vinete coapte, maioneză de casă (ouă, ulei,, muștar,,, zeamă de lămâie,sare)",
+      "description": "Ingrediente: vinete coapte, maioneză de casă (ouă, ulei,muștar,zeamă de lămâie,sare)",
       "pret": 18,
       "unitate": "gr",
       "cantitate": 250,
+      "category": "Tartinabile Andreea"
+    },
+    {
+      "nume": "Zacuscă cu hribi și trufe",
+      "description": "Ingrediente: trufe, hribi, gălbiori, vinete, ardei kapia, ardei grași, ceapă, morcov, piper,foi dafin,suc roșii, ulei,sare",
+      "pret": 45,
+      "unitate": "borcanul",
+      "cantitate": 314,
       "category": "Tartinabile Andreea"
     },
     {
