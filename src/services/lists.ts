@@ -89,6 +89,12 @@ export const listService = {
     return response.data;
   },
 
+  // Get ordered products for a specific list (PUBLIC - no auth required)
+  getListProductsOrdered: async (listId: number): Promise<any> => {
+    const response = await apiClient.get(`/liste/${listId}/products/ordered`);
+    return response.data;
+  },
+
   // Add a product to a list (PROTECTED - requires auth)
   addProductToList: async (listId: number, productId: number, stock?: number): Promise<any> => {
     return authService.makeAuthenticatedRequest(async () => {
@@ -146,6 +152,14 @@ export const listService = {
   replaceListDeliveryTypes: async (listId: number, deliveryTypeIds: number[]): Promise<any[]> => {
     return authService.makeAuthenticatedRequest(async () => {
       const response = await apiClient.put(`/liste/${listId}/delivery-types`, deliveryTypeIds);
+      return response.data;
+    });
+  },
+
+  // Bulk update positions for categories and products in a list (PROTECTED - requires auth)
+  bulkUpdatePositions: async (listId: number, positions: Array<{ category_id: number; products: number[] }>): Promise<any> => {
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.put(`/liste/${listId}/positions`, { positions });
       return response.data;
     });
   },

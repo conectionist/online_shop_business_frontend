@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Package, Trash2 } from 'lucide-react';
 import { useList } from '@/hooks/useLists';
-import { useListProducts, useAddProductToList, useAddProductsToList, useRemoveProductFromList } from '@/hooks/useLists';
+import { useListProducts, useListProductsOrdered, useAddProductToList, useAddProductsToList, useRemoveProductFromList, useBulkUpdatePositions } from '@/hooks/useLists';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -37,7 +37,7 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
 
   // Queries
   const { data: list, isLoading: isLoadingList } = useList(listId);
-  const { data: listProducts, isLoading: isLoadingListProducts } = useListProducts(listId);
+  const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(listId);
   const { data: allProducts, isLoading: isLoadingProducts } = useProducts();
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
   const { data: units, isLoading: isLoadingUnits } = useUnits();
@@ -46,6 +46,22 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
   const addProductMutation = useAddProductToList();
   const addProductsMutation = useAddProductsToList();
   const removeProductMutation = useRemoveProductFromList();
+  const bulkUpdatePositionsMutation = useBulkUpdatePositions();
+
+  // Extract products from the new ordered structure
+  const listProducts = useMemo(() => {
+    if (!listProductsData?.categories) return [];
+    
+    // Flatten all products from all categories
+    return listProductsData.categories.flatMap(category => 
+      category.products.map(product => ({
+        ...product,
+        category_id: category.id // Ensure category_id is set
+      }))
+    );
+  }, [listProductsData]);
+
+
 
   // Filter available products (products not already in the list)
   const availableProducts = useMemo(() => {
@@ -91,6 +107,12 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
     
     updateOrder(newOrder);
     setDraggedItem(null);
+    
+    // Auto-save category order changes
+    if (currentOrder.length > 0 && typeof currentOrder[0] === 'string') {
+      // This is a category order change
+      saveCategoryOrder(newOrder);
+    }
   };
 
   // Filter products based on search and category
@@ -107,42 +129,27 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
     });
   }, [availableProducts, searchTerm, categoryFilter]);
 
-  // Group and sort products by category
+  // Group and sort products by category using the new ordered structure
   const groupedAndSortedProducts = useMemo(() => {
-    if (!listProducts) return [];
+    if (!listProductsData?.categories) return [];
     
-    // Group products by category
-    const groupedProducts = listProducts.reduce((acc: Record<string, ListProduct[]>, product: ListProduct) => {
-      const categoryName = getCategoryName(product.category_id);
-      if (!acc[categoryName]) {
-        acc[categoryName] = [];
-      }
-      acc[categoryName].push(product);
-      return acc;
-    }, {});
-
-    // Get unique categories and sort them
-    const uniqueCategories = Object.keys(groupedProducts);
-    const sortedCategories = categoryOrder.length > 0 
-      ? categoryOrder.filter(cat => uniqueCategories.includes(cat))
-      : uniqueCategories.sort();
-
-    return sortedCategories.map((categoryName) => {
-      const products = groupedProducts[categoryName];
+    return listProductsData.categories.map((category) => {
+      const categoryName = category.name;
+      const products = category.products;
       
-      // Sort products within category if custom order exists
+      // Use custom order if exists, otherwise use the order from backend
       const sortedProducts = productOrder[categoryName] 
         ? productOrder[categoryName]
             .map(productId => products.find(p => p.id === productId))
             .filter(Boolean) as ListProduct[]
-        : products.sort((a, b) => a.nume.localeCompare(b.nume));
+        : products; // Use backend order by default
       
       return {
         categoryName,
         products: sortedProducts
       };
     });
-  }, [listProducts, categoryOrder, productOrder]);
+  }, [listProductsData, productOrder]);
 
   // Handle add products in batch
   const handleAddProducts = async () => {
@@ -191,6 +198,73 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
       setProductToRemove(null);
     } catch (error) {
       console.error('Failed to remove product:', error);
+    }
+  };
+
+  // Save category order to backend
+  const saveCategoryOrder = async (newCategoryOrder: string[]) => {
+    if (!listProductsData?.categories) return;
+    
+    try {
+      // Prepare positions data for the API using the new structure
+      const positions = newCategoryOrder.map(categoryName => {
+        const category = listProductsData.categories.find(cat => cat.name === categoryName);
+        if (!category) return null;
+        
+        return {
+          category_id: category.id,
+          products: category.products.map(product => product.id)
+        };
+      }).filter(Boolean);
+      
+      if (positions.length > 0) {
+        await bulkUpdatePositionsMutation.mutateAsync({
+          listId,
+          positions: positions as Array<{ category_id: number; products: number[] }>
+        });
+        
+        // Update local state to reflect the new order
+        setCategoryOrder(newCategoryOrder);
+      }
+    } catch (error) {
+      console.error('Failed to save category order:', error);
+    }
+  };
+
+  // Save product order within a category to backend
+  const saveProductOrder = async (categoryName: string, newProductOrder: number[]) => {
+    if (!listProductsData?.categories) return;
+    
+    try {
+      // Get all categories with their current product orders
+      const allCategories = listProductsData.categories.map((category) => {
+        const catName = category.name;
+        
+        // Use the new order for the current category, otherwise use the order from backend
+        const currentProductOrder = catName === categoryName 
+          ? newProductOrder 
+          : category.products.map(p => p.id);
+        
+        return {
+          category_id: category.id,
+          products: currentProductOrder
+        };
+      });
+      
+      if (allCategories.length > 0) {
+        await bulkUpdatePositionsMutation.mutateAsync({
+          listId,
+          positions: allCategories
+        });
+        
+        // Update local state to reflect the new order
+        setProductOrder(prev => ({
+          ...prev,
+          [categoryName]: newProductOrder
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to save product order:', error);
     }
   };
 
@@ -491,14 +565,13 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
           
           <div className="space-y-2">
             {(() => {
-              // Get unique categories from list products
-              const uniqueCategories = listProducts ? 
-                [...new Set(listProducts.map(product => getCategoryName(product.category_id)))] : [];
+              // Get categories from the new ordered structure
+              const uniqueCategories = listProductsData?.categories?.map(cat => cat.name) || [];
               
-              // Use current order or default to alphabetical
+              // Use current order or default to the order from the API
               const currentOrder = categoryOrder.length > 0 
                 ? categoryOrder.filter(cat => uniqueCategories.includes(cat))
-                : uniqueCategories.sort();
+                : uniqueCategories;
               
                              return currentOrder.map((categoryName, index) => (
                  <div
@@ -522,10 +595,11 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
                        <Button
                          variant="ghost"
                          size="sm"
-                         onClick={() => {
+                         onClick={async () => {
                            const newOrder = [...currentOrder];
                            [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
                            setCategoryOrder(newOrder);
+                           await saveCategoryOrder(newOrder);
                          }}
                        >
                          ↑
@@ -535,10 +609,11 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
                        <Button
                          variant="ghost"
                          size="sm"
-                         onClick={() => {
+                         onClick={async () => {
                            const newOrder = [...currentOrder];
                            [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
                            setCategoryOrder(newOrder);
+                           await saveCategoryOrder(newOrder);
                          }}
                        >
                          ↓
@@ -561,7 +636,12 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
               Resetează la Ordinea Alfabetică
             </Button>
             <Button
-              onClick={() => setShowCategoryOrderModal(false)}
+              onClick={async () => {
+                await saveCategoryOrder(categoryOrder);
+                setShowCategoryOrderModal(false);
+              }}
+              disabled={bulkUpdatePositionsMutation.isPending}
+              loading={bulkUpdatePositionsMutation.isPending}
             >
               Salvează Ordinea
             </Button>
@@ -582,11 +662,12 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
           
           <div className="space-y-2">
             {(() => {
-              const categoryProducts = groupedAndSortedProducts.find(
-                item => item.categoryName === currentCategoryForProductOrder
-              )?.products || [];
+              const category = listProductsData?.categories?.find(
+                cat => cat.name === currentCategoryForProductOrder
+              );
+              const categoryProducts = category?.products || [];
               
-              // Use current order or default to alphabetical
+              // Use current order or default to the order from the API
               const currentOrder = productOrder[currentCategoryForProductOrder] || 
                 categoryProducts.map(p => p.id);
               
@@ -600,15 +681,25 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
                      draggable
                      onDragStart={(e) => handleDragStart(e, productId.toString())}
                      onDragOver={handleDragOver}
-                     onDrop={(e) => handleDrop(
-                       e, 
-                       productId.toString(), 
-                       currentOrder.map(id => id.toString()), 
-                       (newOrder) => setProductOrder(prev => ({
-                         ...prev,
-                         [currentCategoryForProductOrder]: newOrder.map(id => parseInt(id))
-                       }))
-                     )}
+                     onDrop={(e) => {
+                       const newOrder = [...currentOrder];
+                       const draggedIndex = newOrder.indexOf(parseInt(draggedItem!));
+                       const targetIndex = newOrder.indexOf(productId);
+                       
+                       if (draggedIndex !== -1 && targetIndex !== -1) {
+                         newOrder.splice(draggedIndex, 1);
+                         newOrder.splice(targetIndex, 0, parseInt(draggedItem!));
+                         
+                         setProductOrder(prev => ({
+                           ...prev,
+                           [currentCategoryForProductOrder]: newOrder
+                         }));
+                         
+                         // Auto-save product order changes
+                         saveProductOrder(currentCategoryForProductOrder, newOrder);
+                       }
+                       setDraggedItem(null);
+                     }}
                      className={`flex items-center justify-between p-3 border border-gray-200 rounded-lg cursor-move transition-colors ${
                        draggedItem === productId.toString() ? 'bg-blue-100 border-blue-300' : 'bg-gray-50'
                      }`}
@@ -632,13 +723,14 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
                          <Button
                            variant="ghost"
                            size="sm"
-                           onClick={() => {
+                           onClick={async () => {
                              const newOrder = [...currentOrder];
                              [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
                              setProductOrder(prev => ({
                                ...prev,
                                [currentCategoryForProductOrder]: newOrder
                              }));
+                             await saveProductOrder(currentCategoryForProductOrder, newOrder);
                            }}
                          >
                            ↑
@@ -648,13 +740,14 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
                          <Button
                            variant="ghost"
                            size="sm"
-                           onClick={() => {
+                           onClick={async () => {
                              const newOrder = [...currentOrder];
                              [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
                              setProductOrder(prev => ({
                                ...prev,
                                [currentCategoryForProductOrder]: newOrder
                              }));
+                             await saveProductOrder(currentCategoryForProductOrder, newOrder);
                            }}
                          >
                            ↓
@@ -682,7 +775,15 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
               Resetează la Ordinea Alfabetică
             </Button>
             <Button
-              onClick={() => setShowProductOrderModal(false)}
+              onClick={async () => {
+                const currentProductOrder = productOrder[currentCategoryForProductOrder];
+                if (currentProductOrder) {
+                  await saveProductOrder(currentCategoryForProductOrder, currentProductOrder);
+                }
+                setShowProductOrderModal(false);
+              }}
+              disabled={bulkUpdatePositionsMutation.isPending}
+              loading={bulkUpdatePositionsMutation.isPending}
             >
               Salvează Ordinea
             </Button>

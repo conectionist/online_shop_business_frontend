@@ -145,6 +145,16 @@ export const useListProducts = (listId: number) => {
   });
 };
 
+// Hook to get ordered list products
+export const useListProductsOrdered = (listId: number) => {
+  return useQuery({
+    queryKey: [...queryKeys.lists.detail(listId), 'products', 'ordered'],
+    queryFn: () => listService.getListProductsOrdered(listId),
+    enabled: !!listId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
 // Hook to add product to list
 export const useAddProductToList = () => {
   const queryClient = useQueryClient();
@@ -284,6 +294,25 @@ export const useReplaceListDeliveryTypes = () => {
     },
     onError: (error) => {
       console.error('Failed to replace list delivery types:', error);
+    },
+  });
+};
+
+// Hook to bulk update positions for categories and products in a list
+export const useBulkUpdatePositions = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ listId, positions }: { listId: number; positions: Array<{ category_id: number; products: number[] }> }) => 
+      listService.bulkUpdatePositions(listId, positions),
+    onSuccess: (_, { listId }) => {
+      // Invalidate list products to refresh the display
+      queryClient.invalidateQueries({ 
+        queryKey: [...queryKeys.lists.detail(listId), 'products'] 
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to bulk update positions:', error);
     },
   });
 }; 
