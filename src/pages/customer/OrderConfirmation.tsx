@@ -61,11 +61,38 @@ const OrderConfirmation: React.FC = () => {
   const copyToClipboard = async () => {
     const orderText = formatOrderText();
     try {
-      await navigator.clipboard.writeText(orderText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(orderText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        // Fallback for older browsers or when clipboard API is not available
+        const textArea = document.createElement('textarea');
+        textArea.value = orderText;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          console.error('Failed to copy using fallback method');
+          // Show a user-friendly error message
+          alert('Nu s-a putut copia textul. Vă rugăm să selectați și copiați manual textul de mai sus.');
+        }
+      }
     } catch (err) {
       console.error('Failed to copy: ', err);
+      // Show a user-friendly error message
+      alert('Nu s-a putut copia textul. Vă rugăm să selectați și copiați manual textul de mai sus.');
     }
   };
 
