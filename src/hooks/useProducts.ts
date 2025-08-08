@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productService, ProductFilters } from '@/services/products';
-import { Product, ProductCreate, ProductUpdate } from '@/types/api';
+import { ProductCreate, ProductUpdate } from '@/types/api';
 import { queryKeys, invalidateQueries } from '@/lib/queryKeys';
 
 // Hook to fetch all products
@@ -75,8 +75,8 @@ export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, permanent }: { id: number; permanent?: boolean }) => 
-      productService.deleteProduct(id, permanent),
+    mutationFn: ({ id }: { id: number }) => 
+      productService.deleteProduct(id),
     onSuccess: (_, { id }) => {
       // Remove the specific product from cache
       queryClient.removeQueries({ queryKey: queryKeys.products.detail(id) });
@@ -95,9 +95,9 @@ export const useUploadProductImage = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ productId, image, position }: { productId: number; image: File; position?: number }) => 
-      productService.uploadProductImage(productId, image, position),
-    onSuccess: (uploadedImage, { productId }) => {
+    mutationFn: ({ productId, image }: { productId: number; image: File }) => 
+      productService.uploadProductImage(productId, image),
+    onSuccess: (_, { productId }) => {
       // Force refresh the data by invalidating queries
       queryClient.invalidateQueries({ queryKey: queryKeys.products.detail(productId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.products.list({}) });

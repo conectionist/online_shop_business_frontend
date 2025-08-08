@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentMethodService } from '@/services/paymentMethods';
-import { PaymentMethod, PaymentMethodCreate, PaymentMethodUpdate } from '@/types/api';
+import { PaymentMethodUpdate } from '@/types/api';
 import { queryKeys } from '@/lib/queryKeys';
 
 // Get all payment methods

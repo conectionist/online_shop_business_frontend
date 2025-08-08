@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Search, Package, Trash2, Edit } from 'lucide-react';
+import { ArrowLeft, Plus, Package, Trash2 } from 'lucide-react';
 import { useList } from '@/hooks/useLists';
-import { useListProducts, useAddProductToList, useAddProductsToList, useRemoveProductFromList } from '@/hooks/useLists';
+import { useListProducts, useAddProductsToList, useRemoveProductFromList } from '@/hooks/useLists';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -22,7 +22,7 @@ const ListProducts: React.FC = () => {
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [productToRemove, setProductToRemove] = useState<ListProduct | null>(null);
@@ -31,11 +31,10 @@ const ListProducts: React.FC = () => {
   const { data: list, isLoading: isLoadingList } = useList(listId);
   const { data: listProducts, isLoading: isLoadingListProducts } = useListProducts(listId);
   const { data: allProducts, isLoading: isLoadingProducts } = useProducts();
-  const { data: categories, isLoading: isLoadingCategories } = useCategories();
-  const { data: units, isLoading: isLoadingUnits } = useUnits();
+  const { data: categories } = useCategories();
+  const { data: units } = useUnits();
 
   // Mutations
-  const addProductMutation = useAddProductToList();
   const addProductsMutation = useAddProductsToList();
   const removeProductMutation = useRemoveProductFromList();
 
@@ -55,7 +54,7 @@ const ListProducts: React.FC = () => {
       const matchesSearch = product.nume.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      const matchesCategory = categoryFilter === '' || product.category_id === categoryFilter;
+      const matchesCategory = categoryFilter === '' || product.category_id.toString() === categoryFilter;
       
       return matchesSearch && matchesCategory;
     });
@@ -290,18 +289,22 @@ const ListProducts: React.FC = () => {
               placeholder="Caută după nume sau descriere..."
             />
             
-            <Select
-              label="Filtrează după Categorie"
-              value={categoryFilter}
-              onChange={(value) => setCategoryFilter(value)}
-              options={[
-                { value: '', label: 'Toate Categoriile' },
-                ...(categories?.map(cat => ({
-                  value: cat.id,
-                  label: cat.name
-                })) || [])
-              ]}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrează după Categorie
+              </label>
+              <Select
+                value={categoryFilter}
+                onChange={(value) => setCategoryFilter(value)}
+                options={[
+                  { value: '', label: 'Toate Categoriile' },
+                  ...(categories?.map(cat => ({
+                    value: cat.id.toString(),
+                    label: cat.name
+                  })) || [])
+                ]}
+              />
+            </div>
           </div>
 
           {/* Available Products */}

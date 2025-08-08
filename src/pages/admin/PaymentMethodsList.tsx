@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, CreditCard, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, CreditCard } from 'lucide-react';
 import { usePaymentMethods, useDeletePaymentMethod } from '@/hooks/usePaymentMethods';
 import { PaymentMethod } from '@/types/api';
 import { Button } from '@/components/ui/Button';

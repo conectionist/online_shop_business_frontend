@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useCreatePaymentMethod, useUpdatePaymentMethod, usePaymentMethod } from '@/hooks/usePaymentMethods';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { PaymentMethodCreate, PaymentMethodUpdate } from '@/types/api';
+import { PaymentMethodCreate } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
@@ -85,7 +85,7 @@ const PaymentMethodForm: React.FC = () => {
 
       // Navigate back to payment methods list
       navigate('/admin/payment-methods');
-    } catch (error) {
+    } catch (error: any) {
       // Check if this is a friendly error (409 conflict or 400 duplicate)
       const isFriendlyError = error?.response?.status === 409 || error?.response?.status === 400;
       

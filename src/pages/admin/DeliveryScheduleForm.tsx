@@ -3,9 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useCreateDeliverySchedule, useUpdateDeliverySchedule, useDeliverySchedule } from '@/hooks/useDeliverySchedules';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { DeliveryScheduleCreate, DeliveryScheduleUpdate } from '@/types/api';
+import { DeliveryScheduleCreate } from '@/types/api';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
@@ -75,7 +74,7 @@ const DeliveryScheduleForm: React.FC = () => {
 
       // Navigate back to schedules list
       navigate('/admin/delivery-schedules');
-    } catch (error) {
+    } catch (error: any) {
       // Check if this is a friendly error (409 conflict)
       const isFriendlyError = error?.response?.status === 409;
       

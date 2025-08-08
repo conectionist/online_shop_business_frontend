@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { useDeleteCategory } from '@/hooks/useCategories';
 import { Category } from '@/types/api';

@@ -7,8 +7,7 @@ interface VersionDisplayProps {
 }
 
 export const VersionDisplay: React.FC<VersionDisplayProps> = ({ 
-  className = '', 
-  showEnvironment = true 
+  className = '' 
 }) => {
   const version = getDisplayVersion();
   

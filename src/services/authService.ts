@@ -22,28 +22,28 @@ export interface RefreshResponse {
 }
 
 class AuthService {
-  private baseURL: string;
-
-  constructor() {
-    this.baseURL = '/auth';
-  }
-
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>(`${this.baseURL}/login`, credentials);
+      // Get the full URL directly
+      const baseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const fullUrl = `${baseUrl}/api/v1/auth/login`;
       
-      const { access_token, refresh_token, admin } = response.data;
+      console.log('Login URL:', fullUrl);
+      
+      const response = await apiClient.post<AuthResponse>(fullUrl, credentials);
+      
+      const { access_token, refresh_token, user } = response.data;
       
       // Store tokens in localStorage
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
       
-      // Transform admin data to user format for our auth store
+      // Transform user data for our auth store
       const userData = {
-        id: admin.id,
-        email: admin.username, // Use username as email for now
-        name: admin.username,  // Use username as name for display
-        role: 'admin' as const
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
       };
       
       // Update auth store
@@ -64,7 +64,7 @@ class AuthService {
         throw new Error('No refresh token available');
       }
 
-      const response = await apiClient.post<RefreshResponse>(`${this.baseURL}/refresh`, {
+      const response = await apiClient.post<RefreshResponse>('/auth/refresh', {
         refresh_token: refreshToken,
       });
 

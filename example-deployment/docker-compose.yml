@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: your-registry/online-shop-frontend:latest
+    container_name: online-shop-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-https://api.mycompany.com}
+      - VITE_APP_NAME=${VITE_APP_NAME:-My Company Shop}
+      - VITE_LOGO_PATH=${VITE_LOGO_PATH:-/logos/my-logo.png}
+      - NODE_ENV=production
+    env_file:
+      - .env
+    # Users can override these environment variables to point to their own APIs

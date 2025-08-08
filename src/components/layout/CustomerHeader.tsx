@@ -1,16 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
-import { useBusinessDetails } from '@/hooks/useBusinessDetails';
+import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { useCartStore } from '@/stores/cartStore';
 import { getAppName } from '@/utils/appConfig';
 
 const CustomerHeader: React.FC = () => {
-  const { data: businessDetailsArray } = useBusinessDetails();
+  const { data: businessDetails } = useBusinessDetailsSingle();
   const { getTotalItems } = useCartStore();
-  
-  // Get the first business details (assuming there's only one or we want the first one)
-  const businessDetails = businessDetailsArray && businessDetailsArray.length > 0 ? businessDetailsArray[0] : null;
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -19,19 +16,19 @@ const CustomerHeader: React.FC = () => {
           {/* Logo/Brand */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3">
-              {businessDetails?.logo && (
+              {businessDetails?.logo_path && (
                 <img 
-                  src={businessDetails.logo} 
+                  src={businessDetails.logo_path} 
                   alt="Logo" 
                   className="h-8 w-8 object-contain"
                 />
               )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {businessDetails?.nume || getAppName()}
+                  {businessDetails?.motto || getAppName()}
                 </h1>
                 <p className="text-xs text-gray-500 hidden sm:block">
-                  {businessDetails?.description || 'Produse proaspete'}
+                  {businessDetails?.alte_detalii || 'Produse proaspete'}
                 </p>
               </div>
             </Link>

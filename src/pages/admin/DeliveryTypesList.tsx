@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Truck, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Truck } from 'lucide-react';
 import { useDeliveryTypes, useDeleteDeliveryType } from '@/hooks/useDeliveryTypes';
 import { DeliveryType } from '@/types/api';
 import { Button } from '@/components/ui/Button';

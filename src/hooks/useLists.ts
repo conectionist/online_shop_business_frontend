@@ -120,8 +120,8 @@ export const useDeleteList = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, permanent }: { id: number; permanent?: boolean }) => 
-      listService.deleteList(id, permanent),
+    mutationFn: ({ id }: { id: number }) => 
+      listService.deleteList(id),
     onSuccess: (_, { id }) => {
       // Remove the specific list from cache
       queryClient.removeQueries({ queryKey: queryKeys.lists.detail(id) });

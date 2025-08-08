@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Package, Trash2 } from 'lucide-react';
+import { Plus, Package, Trash2 } from 'lucide-react';
 import { useList } from '@/hooks/useLists';
-import { useListProducts, useListProductsOrdered, useAddProductToList, useAddProductsToList, useRemoveProductFromList, useBulkUpdatePositions } from '@/hooks/useLists';
+import { useListProductsOrdered, useAddProductsToList, useRemoveProductFromList, useBulkUpdatePositions } from '@/hooks/useLists';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -24,7 +24,7 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [productToRemove, setProductToRemove] = useState<ListProduct | null>(null);
@@ -39,11 +39,10 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
   const { data: list, isLoading: isLoadingList } = useList(listId);
   const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(listId);
   const { data: allProducts, isLoading: isLoadingProducts } = useProducts();
-  const { data: categories, isLoading: isLoadingCategories } = useCategories();
-  const { data: units, isLoading: isLoadingUnits } = useUnits();
+  const { data: categories } = useCategories();
+  const { data: units } = useUnits();
 
   // Mutations
-  const addProductMutation = useAddProductToList();
   const addProductsMutation = useAddProductsToList();
   const removeProductMutation = useRemoveProductFromList();
   const bulkUpdatePositionsMutation = useBulkUpdatePositions();
@@ -53,8 +52,8 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
     if (!listProductsData?.categories) return [];
     
     // Flatten all products from all categories
-    return listProductsData.categories.flatMap(category => 
-      category.products.map(product => ({
+    return listProductsData.categories.flatMap((category: { id: number; name: string; products: ListProduct[] }) => 
+      category.products.map((product: ListProduct) => ({
         ...product,
         category_id: category.id // Ensure category_id is set
       }))
@@ -71,10 +70,7 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
     return allProducts.filter(product => !listProductIds.includes(product.id));
   }, [allProducts, listProducts]);
 
-  // Get category name
-  const getCategoryName = (categoryId: number) => {
-    return categories?.find(cat => cat.id === categoryId)?.name || 'Unknown';
-  };
+
 
   // Get unit name
   const getUnitName = (unitId: number) => {
@@ -123,7 +119,7 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
       const matchesSearch = product.nume.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      const matchesCategory = categoryFilter === '' || product.category_id === categoryFilter;
+      const matchesCategory = categoryFilter === '' || product.category_id.toString() === categoryFilter;
       
       return matchesSearch && matchesCategory;
     });
@@ -133,14 +129,14 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
   const groupedAndSortedProducts = useMemo(() => {
     if (!listProductsData?.categories) return [];
     
-    return listProductsData.categories.map((category) => {
+    return listProductsData.categories.map((category: { id: number; name: string; products: ListProduct[] }) => {
       const categoryName = category.name;
       const products = category.products;
       
       // Use custom order if exists, otherwise use the order from backend
       const sortedProducts = productOrder[categoryName] 
         ? productOrder[categoryName]
-            .map(productId => products.find(p => p.id === productId))
+            .map(productId => products.find((p: ListProduct) => p.id === productId))
             .filter(Boolean) as ListProduct[]
         : products; // Use backend order by default
       
@@ -208,12 +204,12 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
     try {
       // Prepare positions data for the API using the new structure
       const positions = newCategoryOrder.map(categoryName => {
-        const category = listProductsData.categories.find(cat => cat.name === categoryName);
+        const category = listProductsData.categories.find((cat: { id: number; name: string; products: ListProduct[] }) => cat.name === categoryName);
         if (!category) return null;
         
         return {
           category_id: category.id,
-          products: category.products.map(product => product.id)
+          products: category.products.map((product: ListProduct) => product.id)
         };
       }).filter(Boolean);
       
@@ -237,13 +233,13 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
     
     try {
       // Get all categories with their current product orders
-      const allCategories = listProductsData.categories.map((category) => {
+      const allCategories = listProductsData.categories.map((category: { id: number; name: string; products: ListProduct[] }) => {
         const catName = category.name;
         
         // Use the new order for the current category, otherwise use the order from backend
         const currentProductOrder = catName === categoryName 
           ? newProductOrder 
-          : category.products.map(p => p.id);
+          : category.products.map((p: ListProduct) => p.id);
         
         return {
           category_id: category.id,
@@ -350,7 +346,7 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
             </div>
           ) : listProducts && listProducts.length > 0 ? (
             <div className="space-y-6">
-              {groupedAndSortedProducts.map(({ categoryName, products }) => (
+              {groupedAndSortedProducts.map(({ categoryName, products }: { categoryName: string; products: ListProduct[] }) => (
                 <div key={categoryName} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900">
@@ -432,18 +428,22 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
               placeholder="Caută după nume sau descriere..."
             />
             
-            <Select
-              label="Filtrează după Categorie"
-              value={categoryFilter}
-              onChange={(value) => setCategoryFilter(value)}
-              options={[
-                { value: '', label: 'Toate Categoriile' },
-                ...(categories?.map(cat => ({
-                  value: cat.id,
-                  label: cat.name
-                })) || [])
-              ]}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrează după Categorie
+              </label>
+              <Select
+                value={categoryFilter}
+                onChange={(value) => setCategoryFilter(value)}
+                options={[
+                  { value: '', label: 'Toate Categoriile' },
+                  ...(categories?.map(cat => ({
+                    value: cat.id.toString(),
+                    label: cat.name
+                  })) || [])
+                ]}
+              />
+            </div>
           </div>
 
           {/* Available Products */}
@@ -566,14 +566,14 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
           <div className="space-y-2">
             {(() => {
               // Get categories from the new ordered structure
-              const uniqueCategories = listProductsData?.categories?.map(cat => cat.name) || [];
+              const uniqueCategories = listProductsData?.categories?.map((cat: { name: string }) => cat.name) || [];
               
               // Use current order or default to the order from the API
               const currentOrder = categoryOrder.length > 0 
                 ? categoryOrder.filter(cat => uniqueCategories.includes(cat))
                 : uniqueCategories;
               
-                             return currentOrder.map((categoryName, index) => (
+                             return currentOrder.map((categoryName: string, index: number) => (
                  <div
                    key={categoryName}
                    draggable
@@ -663,16 +663,16 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
           <div className="space-y-2">
             {(() => {
               const category = listProductsData?.categories?.find(
-                cat => cat.name === currentCategoryForProductOrder
+                (cat: { name: string; products: ListProduct[] }) => cat.name === currentCategoryForProductOrder
               );
               const categoryProducts = category?.products || [];
               
               // Use current order or default to the order from the API
               const currentOrder = productOrder[currentCategoryForProductOrder] || 
-                categoryProducts.map(p => p.id);
+                categoryProducts.map((p: ListProduct) => p.id);
               
                              return currentOrder.map((productId, index) => {
-                 const product = categoryProducts.find(p => p.id === productId);
+                 const product = categoryProducts.find((p: ListProduct) => p.id === productId);
                  if (!product) return null;
                  
                  return (
@@ -681,7 +681,7 @@ const ListProductsTab2: React.FC<ListProductsTab2Props> = ({ listId }) => {
                      draggable
                      onDragStart={(e) => handleDragStart(e, productId.toString())}
                      onDragOver={handleDragOver}
-                     onDrop={(e) => {
+                     onDrop={() => {
                        const newOrder = [...currentOrder];
                        const draggedIndex = newOrder.indexOf(parseInt(draggedItem!));
                        const targetIndex = newOrder.indexOf(productId);

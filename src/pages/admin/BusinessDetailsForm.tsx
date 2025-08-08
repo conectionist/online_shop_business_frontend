@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Building2 } from 'lucide-react';
-import { useBusinessDetailsById, useCreateBusinessDetails, useUpdateBusinessDetails } from '@/hooks/useBusinessDetails';
-import { BusinessDetailsCreate, BusinessDetailsUpdate } from '@/types/api';
+import { ArrowLeft, Save } from 'lucide-react';
+import { useBusinessDetails, useCreateBusinessDetails, useUpdateBusinessDetails } from '@/hooks/useBusinessDetails';
+import { BusinessDetailsCreate } from '@/types/api';
 import Card from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -36,10 +36,13 @@ export default function BusinessDetailsForm() {
     url: string;
   } | null>(null);
 
-  const { data: existingDetails, isLoading: isLoadingDetails, error: loadError } = useBusinessDetailsById(businessDetailsId);
+  const { data: businessDetailsList, isLoading: isLoadingDetails, error: loadError } = useBusinessDetails();
   const createMutation = useCreateBusinessDetails();
   const updateMutation = useUpdateBusinessDetails();
   const { handleError } = useErrorHandler();
+
+  // Find the specific business details to edit
+  const existingDetails = businessDetailsList?.find(details => details.id === businessDetailsId);
 
   useEffect(() => {
     if (existingDetails) {
@@ -90,10 +93,10 @@ export default function BusinessDetailsForm() {
       }
       navigate('/admin/business-details');
     } catch (error) {
-      const errorMessage = handleError(error);
+      handleError(error, isEditing ? 'Încercare de actualizare a detaliilor business' : 'Încercare de creare a detaliilor business');
       setErrorDetails({
         title: isEditing ? 'Eroare la actualizarea detaliilor business' : 'Eroare la crearea detaliilor business',
-        message: errorMessage,
+        message: isEditing ? 'A apărut o eroare la actualizarea detaliilor business' : 'A apărut o eroare la crearea detaliilor business',
         technicalDetails: error instanceof Error ? error.stack : undefined,
         timestamp: new Date().toISOString(),
         userAction: isEditing ? 'Încercare de actualizare a detaliilor business' : 'Încercare de creare a detaliilor business',
@@ -109,9 +112,10 @@ export default function BusinessDetailsForm() {
 
   if (loadError) {
     return (
-      <Alert type="error">
-        Eroare la încărcarea detaliilor: {loadError.message}
-      </Alert>
+      <Alert 
+        type="error"
+        message={`Eroare la încărcarea detaliilor: ${loadError.message}`}
+      />
     );
   }
 

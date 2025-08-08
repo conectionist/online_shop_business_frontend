@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '@/services/authService';
+
 import { useAuthStore } from '@/stores/authStore';
 
 const LoginPage: React.FC = () => {
@@ -15,20 +15,21 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
-    if (error) {
-      setError(null);
-    }
+    // Don't clear error automatically - let user see the error message
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    (e.nativeEvent as Event).stopImmediatePropagation();
     
     if (!formData.username || !formData.password) {
       setError('Vă rugăm să completați toate câmpurile.');
@@ -40,8 +41,12 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // Use a direct fetch call to avoid the API client interceptor for login
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/login`, {
+      // Get the API base URL from runtime config
+      const apiBaseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const loginUrl = `${apiBaseUrl}/api/v1/auth/login`;
+      
+      // Use a direct fetch call like the original working version
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +66,7 @@ const LoginPage: React.FC = () => {
 
       const data = await response.json();
       
-      // Store tokens and update auth store manually since we bypassed the auth service
+      // Store tokens and update auth store manually
       const { access_token, refresh_token, admin } = data;
       
       // Store tokens in localStorage
@@ -119,7 +124,7 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md animate-fade-in">
                 <div className="flex">
@@ -160,7 +165,6 @@ const LoginPage: React.FC = () => {
                   name="username"
                   type="text"
                   autoComplete="username"
-                  required
                   value={formData.username}
                   onChange={handleInputChange}
                   disabled={isLoading || isSuccess}
@@ -180,7 +184,6 @@ const LoginPage: React.FC = () => {
                   name="password"
                   type="password"
                   autoComplete="current-password"
-                  required
                   value={formData.password}
                   onChange={handleInputChange}
                   disabled={isLoading || isSuccess}
@@ -191,11 +194,11 @@ const LoginPage: React.FC = () => {
             </div>
 
             <div>
-              <button
-                type="submit"
-                disabled={isLoading || isSuccess}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-200"
-              >
+                              <button
+                  type="submit"
+                  disabled={isLoading || isSuccess}
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-200"
+                >
                 {isLoading ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

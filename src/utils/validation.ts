@@ -47,7 +47,7 @@ export type ListFormData = z.infer<typeof listSchema>;
 export const formatValidationErrors = (errors: z.ZodError): Record<string, string> => {
   const formattedErrors: Record<string, string> = {};
   
-  errors.errors.forEach((error) => {
+  errors.issues.forEach((error: any) => {
     const field = error.path.join('.');
     formattedErrors[field] = error.message;
   });

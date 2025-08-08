@@ -1,12 +1,9 @@
 import React from 'react';
-import { Phone, Mail, MapPin, Clock } from 'lucide-react';
-import { useBusinessDetails } from '@/hooks/useBusinessDetails';
+import { Phone, MapPin, Clock } from 'lucide-react';
+import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 
 const CustomerFooter: React.FC = () => {
-  const { data: businessDetailsArray } = useBusinessDetails();
-  
-  // Get the first business details (assuming there's only one or we want the first one)
-  const businessDetails = businessDetailsArray && businessDetailsArray.length > 0 ? businessDetailsArray[0] : null;
+  const { data: businessDetails } = useBusinessDetailsSingle();
 
   return (
     <footer className="bg-gray-900 text-white mt-auto">
@@ -15,19 +12,19 @@ const CustomerFooter: React.FC = () => {
           {/* Business Information */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              {businessDetails?.logo && (
+              {businessDetails?.logo_path && (
                 <img 
-                  src={businessDetails.logo} 
+                  src={businessDetails.logo_path} 
                   alt="Logo" 
                   className="h-8 w-8 object-contain"
                 />
               )}
               <h3 className="text-lg font-semibold">
-                {businessDetails?.nume || 'Magazin Online'}
+                {businessDetails?.motto || 'Magazin Online'}
               </h3>
             </div>
             <p className="text-gray-300 text-sm">
-              {businessDetails?.description || 'Produse proaspete și de calitate'}
+              {businessDetails?.alte_detalii || 'Produse proaspete și de calitate'}
             </p>
           </div>
 
@@ -41,12 +38,7 @@ const CustomerFooter: React.FC = () => {
                   <span>{businessDetails.telefon}</span>
                 </div>
               )}
-              {businessDetails?.email && (
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4" />
-                  <span>{businessDetails.email}</span>
-                </div>
-              )}
+
               {businessDetails?.adresa && (
                 <div className="flex items-start space-x-2">
                   <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -72,7 +64,7 @@ const CustomerFooter: React.FC = () => {
         <div className="mt-8 pt-8 border-t border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-gray-400">
-              © {new Date().getFullYear()} {businessDetails?.nume || 'Magazin Online'}. 
+              © {new Date().getFullYear()} {businessDetails?.motto || 'Magazin Online'}. 
               Toate drepturile rezervate.
             </p>
             <div className="flex space-x-6 text-sm">

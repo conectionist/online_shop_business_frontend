@@ -1,8 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deliveryScheduleService } from '@/services/deliverySchedules';
 import { 
-  DeliverySchedule, 
-  DeliveryScheduleCreate, 
   DeliveryScheduleUpdate 
 } from '@/types/api';
 import { queryKeys } from '@/lib/queryKeys';

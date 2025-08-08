@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deliveryTypeService } from '@/services/deliveryTypes';
-import { DeliveryType, DeliveryTypeCreate, DeliveryTypeUpdate } from '@/types/api';
+import { DeliveryTypeUpdate } from '@/types/api';
 import { queryKeys } from '@/lib/queryKeys';
 
 // Get all delivery types

@@ -5,7 +5,7 @@ import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, 
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { ProductCreate, ProductUpdate } from '@/types/api';
-import { productService } from '@/services/products';
+
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -23,8 +23,18 @@ const hasRealImage = (product: any): boolean => {
     !product.image_versions.thumbnail.includes('placeholder'));
 };
 
+// Validation rule types
+interface ValidationRule {
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: RegExp;
+  min?: number;
+  max?: number;
+}
+
 // Validation rules
-const VALIDATION_RULES = {
+const VALIDATION_RULES: Record<string, ValidationRule> = {
   nume: {
     required: true,
     minLength: 2,
@@ -52,10 +62,20 @@ const VALIDATION_RULES = {
     required: true,
     min: 1
   }
-};
+} as const;
+
+// Validation message types
+interface ValidationMessages {
+  required?: string;
+  minLength?: string;
+  maxLength?: string;
+  pattern?: string;
+  min?: string;
+  max?: string;
+}
 
 // Validation messages
-const VALIDATION_MESSAGES = {
+const VALIDATION_MESSAGES: Record<string, ValidationMessages> = {
   nume: {
     required: 'Numele produsului este obligatoriu',
     minLength: 'Numele produsului trebuie să aibă cel puțin 2 caractere',
@@ -149,14 +169,17 @@ const ProductForm: React.FC = () => {
 
   // Validate a single field
   const validateField = (field: string, value: any): string => {
-    const rules = VALIDATION_RULES[field as keyof typeof VALIDATION_RULES];
+    const fieldRules = VALIDATION_RULES[field];
     const messages = VALIDATION_MESSAGES[field as keyof typeof VALIDATION_MESSAGES];
     
-    if (!rules) return '';
+    if (!fieldRules) return '';
+
+    // Type assertion to ensure we have the right type
+    const rules = fieldRules as ValidationRule;
 
     // Required validation
     if (rules.required && (!value || (typeof value === 'string' && !value.trim()))) {
-      return messages.required;
+      return messages.required || '';
     }
 
     // Skip other validations if not required and empty
@@ -167,23 +190,23 @@ const ProductForm: React.FC = () => {
     // String validations
     if (typeof value === 'string') {
       if (rules.minLength && value.length < rules.minLength) {
-        return messages.minLength;
+        return messages.minLength || '';
       }
       if (rules.maxLength && value.length > rules.maxLength) {
-        return messages.maxLength;
+        return messages.maxLength || '';
       }
       if (rules.pattern && !rules.pattern.test(value)) {
-        return messages.pattern;
+        return messages.pattern || '';
       }
     }
 
     // Number validations
     if (typeof value === 'number') {
       if (rules.min !== undefined && value < rules.min) {
-        return messages.min;
+        return messages.min || '';
       }
       if (rules.max !== undefined && value > rules.max) {
-        return messages.max;
+        return messages.max || '';
       }
     }
 
@@ -290,7 +313,7 @@ const ProductForm: React.FC = () => {
         if (formData.category_id !== product?.category_id) updateData.category_id = formData.category_id;
         if (formData.unitati_id !== product?.unitati_id) updateData.unitati_id = formData.unitati_id;
 
-        const updatedProduct = await updateProductMutation.mutateAsync({
+        await updateProductMutation.mutateAsync({
           id: Number(id),
           data: updateData,
         });
@@ -321,7 +344,6 @@ const ProductForm: React.FC = () => {
           await uploadProductImageMutation.mutateAsync({
             productId: Number(id),
             image: imageFile,
-            position: 0, // Primary image
           });
         }
       } else {
@@ -333,14 +355,13 @@ const ProductForm: React.FC = () => {
           await uploadProductImageMutation.mutateAsync({
             productId: createdProduct.id,
             image: imageFile,
-            position: 0, // Primary image
           });
         }
       }
 
       // Navigate back to products list
       navigate('/admin/products');
-    } catch (error) {
+    } catch (error: any) {
       // Check if this is a friendly error (409 conflict or 400 duplicate)
       const isFriendlyError = error?.response?.status === 409 || error?.response?.status === 400;
       
@@ -461,8 +482,10 @@ const ProductForm: React.FC = () => {
                   <Select
                     options={categoryOptions}
                     value={formData.category_id?.toString()}
-                    onChange={(value) => handleInputChange('category_id', parseInt(value))}
-                    onBlur={() => handleFieldBlur('category_id')}
+                    onChange={(value) => {
+                      handleInputChange('category_id', parseInt(value));
+                      handleFieldBlur('category_id');
+                    }}
                     placeholder="Selectează o categorie"
                   />
                   {touched.category_id && errors.category_id && (
@@ -533,7 +556,7 @@ const ProductForm: React.FC = () => {
                 </p>
               )}
               <p className="text-sm text-gray-500 ml-auto">
-                {formData.description.length}/{VALIDATION_RULES.description.maxLength}
+                {(formData.description || '').length}/{VALIDATION_RULES.description.maxLength}
               </p>
             </div>
           </div>

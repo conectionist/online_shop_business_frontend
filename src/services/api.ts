@@ -1,29 +1,36 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { ApiError } from '@/types/api';
 import { authService } from './authService';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-// Fail fast if API URL is not configured
-if (!API_BASE_URL) {
-  const error = new Error(
-    'VITE_API_BASE_URL environment variable is required but not set. ' +
-    'Please check your .env file and ensure VITE_API_BASE_URL is configured.'
-  );
-  throw error;
-}
-
+// Create axios instance without baseURL initially
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: `${API_BASE_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 10 seconds
 });
 
-// Request interceptor for authentication
+// Function to get API base URL dynamically
+const getApiBaseUrl = (): string => {
+  // Check runtime config first, then build-time env vars
+  const apiUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL;
+  
+  if (!apiUrl) {
+    console.warn('VITE_API_BASE_URL not set, using default: http://localhost:8001');
+    return 'http://localhost:8001';
+  }
+  return apiUrl;
+};
+
+
+
+// Request interceptor for authentication and dynamic baseURL
 apiClient.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: any) => {
+    // Set dynamic baseURL for each request
+    const baseUrl = getApiBaseUrl();
+    config.baseURL = `${baseUrl}/api/v1`;
+    
     const token = localStorage.getItem('access_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -31,6 +38,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -102,14 +110,14 @@ export const handleApiError = (error: any): ApiError => {
     }
     
     // Handle 5xx server errors
-    if (error.response?.status >= 500) {
+    if (error.response?.status && error.response.status >= 500) {
       return {
         detail: 'Something went wrong on our end. Please try again later.'
       };
     }
     
     // Handle specific 4xx client errors
-    if (error.response?.status >= 400 && error.response?.status < 500) {
+    if (error.response?.status && error.response.status >= 400 && error.response.status < 500) {
       const status = error.response.status;
       const data = error.response?.data;
       
@@ -192,43 +200,87 @@ export const getImageUrl = (imagePath: string | null | undefined): string | null
   
   // If it starts with /, it's already a relative path to the API
   if (imagePath.startsWith('/')) {
-    return `${API_BASE_URL}${imagePath}`;
+    const baseUrl = getApiBaseUrl();
+    return `${baseUrl}${imagePath}`;
   }
   
   // Otherwise, construct the full URL
-  return `${API_BASE_URL}/api/v1/static/${imagePath}`;
+  const baseUrl = getApiBaseUrl();
+  return `${baseUrl}/api/v1/static/${imagePath}`;
 };
 
 // Utility function for category images
 export const getCategoryImageUrl = (category: any, version: 'original' | 'medium' | 'thumbnail' = 'thumbnail') => {
+  const baseUrl = getApiBaseUrl();
+  
   if (!category.image_versions) {
-    return `${API_BASE_URL}/api/v1/static/placeholders/category_placeholder.jpg`;
+    return `${baseUrl}/api/v1/static/placeholders/category_placeholder.jpg`;
   }
   
   const imagePath = category.image_versions[version];
   
   // If it's already a full URL (starts with /api/v1/static/), use it as is
   if (imagePath.startsWith('/api/v1/static/')) {
-    return `${API_BASE_URL}${imagePath}`;
+    return `${baseUrl}${imagePath}`;
   }
   
   // Otherwise, construct the full URL
-  return `${API_BASE_URL}/api/v1/static/uploads/${imagePath}`;
+  return `${baseUrl}/api/v1/static/uploads/${imagePath}`;
 };
 
 // Utility function for product images
 export const getProductImageUrl = (product: any, version: 'original' | 'medium' | 'thumbnail' = 'thumbnail') => {
-  if (!product.image_versions) {
-    return `${API_BASE_URL}/api/v1/static/placeholders/product_placeholder.jpg`;
+  const baseUrl = getApiBaseUrl();
+  
+  // Check if product has image_versions directly (like in products list)
+  if (product.image_versions) {
+    const imagePath = product.image_versions[version];
+    
+    // If it's already a full URL (starts with /api/v1/static/), use it as is
+    if (imagePath.startsWith('/api/v1/static/')) {
+      return `${baseUrl}${imagePath}`;
+    }
+    
+    // Otherwise, construct the full URL
+    return `${baseUrl}/api/v1/static/uploads/${imagePath}`;
   }
   
-  const imagePath = product.image_versions[version];
-  
-  // If it's already a full URL (starts with /api/v1/static/), use it as is
-  if (imagePath.startsWith('/api/v1/static/')) {
-    return `${API_BASE_URL}${imagePath}`;
+  // Check if product has images array (like in list preview)
+  if (product.images && product.images.length > 0) {
+    const firstImage = product.images[0];
+    if (firstImage.image_versions && firstImage.image_versions[version]) {
+      const imagePath = firstImage.image_versions[version];
+      
+      // If it's already a full URL (starts with /api/v1/static/), use it as is
+      if (imagePath.startsWith('/api/v1/static/')) {
+        return `${baseUrl}${imagePath}`;
+      }
+      
+      // Otherwise, construct the full URL
+      return `${baseUrl}/api/v1/static/uploads/${imagePath}`;
+    }
   }
   
-  // Otherwise, construct the full URL
-  return `${API_BASE_URL}/api/v1/static/uploads/${imagePath}`;
+  // Fallback to placeholder
+  return `${baseUrl}/api/v1/static/placeholders/product_placeholder.jpg`;
+};
+
+// Utility function for logo images
+export const getLogoUrl = (logoPath: string | null | undefined): string => {
+  if (!logoPath) {
+    return '/test/test_data/logo.jpg'; // Default logo served by frontend
+  }
+  
+  // If it's already a full URL, return as is
+  if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+    return logoPath;
+  }
+  
+  // If it starts with /, it's a relative path to the frontend server
+  if (logoPath.startsWith('/')) {
+    return logoPath;
+  }
+  
+  // Otherwise, assume it's a relative path to the frontend server
+  return `/${logoPath}`;
 }; 

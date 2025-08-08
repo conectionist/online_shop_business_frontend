@@ -53,17 +53,21 @@ export const queryClient = new QueryClient({
 // Global error handler for queries
 queryClient.setDefaultOptions({
   queries: {
-    onError: (error: any) => {
-      const apiError = handleApiError(error);
-      console.error('Query error:', apiError.detail);
-      // Here we could integrate with a toast notification system
+    retry: (failureCount, error: any) => {
+      // Don't retry on 4xx errors (client errors)
+      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+        return false;
+      }
+      return failureCount < 3;
     },
   },
   mutations: {
-    onError: (error: any) => {
-      const apiError = handleApiError(error);
-      console.error('Mutation error:', apiError.detail);
-      // Here we could integrate with a toast notification system
+    retry: (failureCount, error: any) => {
+      // Don't retry on 4xx errors
+      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+        return false;
+      }
+      return failureCount < 2;
     },
   },
 }); 

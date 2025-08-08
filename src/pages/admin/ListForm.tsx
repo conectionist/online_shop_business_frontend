@@ -16,6 +16,7 @@ import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
+import { getProductImageUrl } from '@/services/api';
 
 interface ListFormData {
   data: string;
@@ -40,10 +41,10 @@ const ListForm: React.FC = () => {
   const { data: deliverySchedules, isLoading: isLoadingSchedules } = useDeliverySchedules();
   
   // Fetch payment methods for preview
-  const { data: paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods();
+  const { data: paymentMethods } = usePaymentMethods();
   
   // Fetch delivery types for preview
-  const { data: deliveryTypes, isLoading: isLoadingDeliveryTypes } = useDeliveryTypes();
+  const { data: deliveryTypes } = useDeliveryTypes();
 
   // Fetch list products for preview (only when editing)
   const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(listId);
@@ -57,8 +58,8 @@ const ListForm: React.FC = () => {
     if (!listProductsData?.categories) return [];
     
     // Flatten all products from all categories
-    return listProductsData.categories.flatMap(category => 
-      category.products.map(product => ({
+    return listProductsData.categories.flatMap((category: any) => 
+      category.products.map((product: any) => ({
         ...product,
         category_id: category.id // Ensure category_id is set
       }))
@@ -73,7 +74,6 @@ const ListForm: React.FC = () => {
   const {
     register,
     handleSubmit,
-    reset,
     watch,
     formState: { errors, isSubmitting },
     setValue,
@@ -136,20 +136,9 @@ const ListForm: React.FC = () => {
     navigate('/admin/lists');
   };
 
-  // Helper function to format date for title
-  const formatDateForTitle = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ro-RO', {
-      day: 'numeric',
-      month: 'long'
-    });
-  };
 
-  // Helper function to generate list title
-  const getListTitle = (date: string, introMessage?: string) => {
-    const dateFormatted = formatDateForTitle(date);
-    return introMessage ? `Lista ${dateFormatted} - ${introMessage}` : `Lista ${dateFormatted}`;
-  };
+
+
 
   // Helper functions for product display
   const getCategoryName = (categoryId: number) => {
@@ -416,7 +405,7 @@ const ListForm: React.FC = () => {
                                 <div className="flex-shrink-0">
                                   {product.images && product.images.length > 0 ? (
                                     <img
-                                      src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${product.images[0].image_versions?.thumbnail}`}
+                                      src={getProductImageUrl(product, 'thumbnail')}
                                       alt={product.nume}
                                       className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                                       onError={(e) => {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useCartStore } from '@/stores/cartStore';
-import { usePublishedList } from '@/hooks/useLists';
+
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { ArrowLeft, User, CreditCard, Truck, MapPin } from 'lucide-react';
@@ -21,7 +21,7 @@ interface OrderFormData {
 const OrderForm: React.FC = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCartStore();
-  const { data: publishedList } = usePublishedList();
+
   const { data: deliveryTypes } = useDeliveryTypes();
   const { data: paymentMethods } = usePaymentMethods();
 

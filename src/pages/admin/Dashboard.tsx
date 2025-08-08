@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FolderOpen, Package, List, Settings, Building2, CreditCard, Truck, Clock, Ruler, Wrench } from 'lucide-react';
+import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench } from 'lucide-react';
 import Card from '@/components/ui/Card';
 
 const AdminDashboard: React.FC = () => {

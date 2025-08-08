@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -150,7 +150,7 @@ const Pagination = React.memo<{
             {getPageNumbers().map(pageNum => (
               <Button
                 key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
+                variant={currentPage === pageNum ? "primary" : "outline"}
                 size="sm"
                 onClick={() => onPageChange(pageNum)}
                 className="w-8 h-8 p-0"
@@ -193,7 +193,7 @@ const Pagination = React.memo<{
             {getPageNumbers().map(pageNum => (
               <Button
                 key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
+                variant={currentPage === pageNum ? "primary" : "outline"}
                 size="sm"
                 onClick={() => onPageChange(pageNum)}
                 className="w-8 h-8 p-0"
@@ -235,10 +235,10 @@ const ProductsList: React.FC = () => {
   const { data: products, isLoading, error } = useProducts();
   
   // Fetch categories for display and filtering
-  const { data: categories, isLoading: isLoadingCategories } = useCategories();
+  const { data: categories } = useCategories();
   
   // Fetch units for display
-  const { data: units, isLoading: isLoadingUnits } = useUnits();
+  const { data: units } = useUnits();
   
   // Delete product mutation
   const deleteProductMutation = useDeleteProduct();
@@ -370,9 +370,11 @@ const ProductsList: React.FC = () => {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <Alert variant="error" title="Eroare la încărcarea produselor">
-          Nu s-au putut încărca produsele. Vă rugăm să încercați din nou.
-        </Alert>
+        <Alert 
+          type="error"
+          title="Eroare la încărcarea produselor"
+          message="Nu s-au putut încărca produsele. Vă rugăm să încercați din nou."
+        />
       </div>
     );
   }

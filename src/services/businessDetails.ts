@@ -6,8 +6,8 @@ const BASE_URL = '/detalii-business';
 
 export const businessDetailsService = {
   // Get business details (PUBLIC - no auth required)
-  async get(): Promise<BusinessDetails> {
-    const response = await apiClient.get<BusinessDetails>(BASE_URL);
+  async get(): Promise<BusinessDetails[]> {
+    const response = await apiClient.get<BusinessDetails[]>(BASE_URL);
     return response.data;
   },
 

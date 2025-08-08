@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Plus, Search, Edit, Trash2, MapPin, Phone, FileText, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Building2, Plus, Search, Edit, Trash2, MapPin, Phone, FileText } from 'lucide-react';
 import { useBusinessDetails, useDeleteBusinessDetails } from '@/hooks/useBusinessDetails';
 import { BusinessDetails } from '@/types/api';
 import Card from '@/components/ui/Card';
@@ -14,7 +14,6 @@ import { useErrorHandler } from '@/hooks/useErrorHandler';
 import AdminPageHeader from '@/components/layout/AdminPageHeader';
 
 export default function BusinessDetailsList() {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [businessDetailsToDelete, setBusinessDetailsToDelete] = useState<BusinessDetails | null>(null);
@@ -32,7 +31,11 @@ export default function BusinessDetailsList() {
   const deleteMutation = useDeleteBusinessDetails();
   const { handleError } = useErrorHandler();
 
-  const filteredBusinessDetails = businessDetails?.filter(details => {
+  // Handle the case where businessDetails might be null or undefined
+  const filteredBusinessDetails = businessDetails || [];
+  
+  // Filter based on search term if provided
+  const filteredResults = searchTerm.trim() ? filteredBusinessDetails.filter((details: BusinessDetails) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       details.adresa?.toLowerCase().includes(searchLower) ||
@@ -40,20 +43,20 @@ export default function BusinessDetailsList() {
       details.motto?.toLowerCase().includes(searchLower) ||
       details.alte_detalii?.toLowerCase().includes(searchLower)
     );
-  }) || [];
+  }) : filteredBusinessDetails;
 
   const handleDelete = async () => {
-    if (!businessDetailsToDelete) return;
+    if (!businessDetailsToDelete || !businessDetailsToDelete.id) return;
 
     try {
       await deleteMutation.mutateAsync(businessDetailsToDelete.id);
       setDeleteModalOpen(false);
       setBusinessDetailsToDelete(null);
     } catch (error) {
-      const errorMessage = handleError(error);
+      handleError(error, 'Încercare de ștergere a detaliilor business');
       setErrorDetails({
         title: 'Eroare la ștergerea detaliilor business',
-        message: errorMessage,
+        message: 'A apărut o eroare la ștergerea detaliilor business',
         technicalDetails: error instanceof Error ? error.stack : undefined,
         timestamp: new Date().toISOString(),
         userAction: 'Încercare de ștergere a detaliilor business',
@@ -64,6 +67,10 @@ export default function BusinessDetailsList() {
   };
 
   const openDeleteModal = (details: BusinessDetails) => {
+    if (!details.id) {
+      console.error('Cannot delete business details without ID');
+      return;
+    }
     setBusinessDetailsToDelete(details);
     setDeleteModalOpen(true);
   };
@@ -74,9 +81,10 @@ export default function BusinessDetailsList() {
 
   if (error) {
     return (
-      <Alert type="error">
-        Eroare la încărcarea detaliilor de business: {error.message}
-      </Alert>
+      <Alert 
+        type="error"
+        message={`Eroare la încărcarea detaliilor de business: ${error.message}`}
+      />
     );
   }
 
@@ -106,7 +114,7 @@ export default function BusinessDetailsList() {
         </Link>
       </AdminPageHeader>
 
-      {filteredBusinessDetails.length === 0 ? (
+      {filteredResults.length === 0 ? (
         <Card>
           <div className="text-center py-8">
             <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -131,7 +139,7 @@ export default function BusinessDetailsList() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {filteredBusinessDetails.map((details) => (
+          {filteredResults.map((details: BusinessDetails) => (
             <Card key={details.id} className="p-6">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -186,12 +194,14 @@ export default function BusinessDetailsList() {
                 </div>
                 
                 <div className="flex space-x-2">
-                  <Link to={`/admin/business-details/${details.id}/edit`}>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Editează
-                    </Button>
-                  </Link>
+                  {details.id && (
+                    <Link to={`/admin/business-details/${details.id}/edit`}>
+                      <Button variant="outline" size="sm">
+                        <Edit className="h-4 w-4 mr-1" />
+                        Editează
+                      </Button>
+                    </Link>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -227,7 +237,7 @@ export default function BusinessDetailsList() {
               Anulează
             </Button>
             <Button
-              variant="destructive"
+              variant="danger"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >

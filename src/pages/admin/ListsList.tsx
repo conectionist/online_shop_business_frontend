@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye, Calendar, MessageSquare, Phone, Package, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Calendar, MessageSquare } from 'lucide-react';
 import { useLists } from '@/hooks/useLists';
 import { useDeleteList } from '@/hooks/useLists';
 import { List } from '@/types/api';
@@ -94,13 +94,16 @@ const ListsList: React.FC = () => {
         title="Liste de Produse" 
         subtitle="Gestionează listele de produse disponibile"
         searchBox={
-          <Input
-            type="text"
-            placeholder="Caută în liste..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            icon={<Search className="w-4 h-4" />}
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Caută în liste..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         }
       >
         <Button

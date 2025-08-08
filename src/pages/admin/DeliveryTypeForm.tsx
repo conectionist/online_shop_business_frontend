@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useCreateDeliveryType, useUpdateDeliveryType, useDeliveryType } from '@/hooks/useDeliveryTypes';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { DeliveryTypeCreate, DeliveryTypeUpdate } from '@/types/api';
+import { DeliveryTypeCreate } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
@@ -75,7 +75,7 @@ const DeliveryTypeForm: React.FC = () => {
 
       // Navigate back to delivery types list
       navigate('/admin/delivery-types');
-    } catch (error) {
+    } catch (error: any) {
       // Check if this is a friendly error (409 conflict or 400 duplicate)
       const isFriendlyError = error?.response?.status === 409 || error?.response?.status === 400;
       

@@ -126,7 +126,7 @@ const CategoryForm: React.FC = () => {
 
       // Navigate back to categories list
       navigate('/admin/categories');
-    } catch (error) {
+    } catch (error: any) {
       // Check if this is a friendly error (409 conflict)
       const isFriendlyError = error?.response?.status === 409;
       

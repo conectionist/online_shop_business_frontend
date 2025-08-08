@@ -261,4 +261,25 @@ export interface ApiError {
     msg: string;
     input?: any;
   }>;
+}
+
+// Auth Types
+export interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  admin: {
+    id: number;
+    username: string;
+  };
+}
+
+// Generic API Response Types
+export interface ApiSuccessResponse<T> {
+  data: T;
+  message?: string;
+}
+
+export interface ApiErrorResponse {
+  detail: string;
+  status?: number;
 } 

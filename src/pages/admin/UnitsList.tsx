@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useUnits, useDeleteUnit } from '@/hooks/useUnits';
 import { Unit } from '@/types/api';
 import { Button } from '@/components/ui/Button';

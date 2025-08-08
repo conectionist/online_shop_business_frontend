@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { businessDetailsService } from '@/services/businessDetails';
-import { BusinessDetails, BusinessDetailsCreate, BusinessDetailsUpdate } from '@/types/api';
+import { BusinessDetailsUpdate } from '@/types/api';
 import { queryKeys } from '@/lib/queryKeys';
 
 export const useBusinessDetails = () => {
@@ -10,12 +10,18 @@ export const useBusinessDetails = () => {
   });
 };
 
-export const useBusinessDetailsById = (id: number) => {
-  return useQuery({
-    queryKey: [...queryKeys.business.details(), id],
-    queryFn: () => businessDetailsService.getById(id),
-    enabled: !!id,
-  });
+// Hook for getting a single business details item (for backward compatibility)
+export const useBusinessDetailsSingle = () => {
+  const { data: businessDetailsList, isLoading, error } = useBusinessDetails();
+  
+  // Return the first business details item, or null if none exist
+  const businessDetails = businessDetailsList && businessDetailsList.length > 0 ? businessDetailsList[0] : null;
+  
+  return {
+    data: businessDetails,
+    isLoading,
+    error
+  };
 };
 
 export const useCreateBusinessDetails = () => {
@@ -45,7 +51,7 @@ export const useDeleteBusinessDetails = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: businessDetailsService.delete,
+    mutationFn: (id: number) => businessDetailsService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.business.details() });
     },

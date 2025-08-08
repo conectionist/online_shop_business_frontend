@@ -6,6 +6,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
+import { getProductImageUrl } from '@/services/api';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -24,8 +25,8 @@ const ProductPage: React.FC = () => {
     if (!listProductsData?.categories) return [];
     
     // Flatten all products from all categories
-    return listProductsData.categories.flatMap(category => 
-      category.products.map(product => ({
+    return listProductsData.categories.flatMap((category: any) => 
+      category.products.map((product: any) => ({
         ...product,
         category_id: category.id // Ensure category_id is set
       }))
@@ -42,7 +43,7 @@ const ProductPage: React.FC = () => {
   };
 
   // Find the product
-  const product = listProducts?.find(p => p.id === parseInt(productId || '0'));
+  const product = listProducts?.find((p: any) => p.id === parseInt(productId || '0'));
 
   if (!product) {
     return (
@@ -141,7 +142,7 @@ const ProductPage: React.FC = () => {
                 <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden shadow-lg">
                   {productImages.length > 0 ? (
                     <img
-                      src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${productImages[selectedImageIndex]?.image_versions?.original}`}
+                      src={getProductImageUrl(product, 'original')}
                       alt={product.nume}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -160,7 +161,7 @@ const ProductPage: React.FC = () => {
                 {/* Thumbnail Gallery */}
                 {hasMultipleImages && (
                   <div className="flex space-x-3 overflow-x-auto pb-2">
-                    {productImages.map((image, index) => (
+                    {productImages.map((image: any, index: number) => (
                       <button
                         key={image.id}
                         onClick={() => setSelectedImageIndex(index)}
@@ -171,7 +172,7 @@ const ProductPage: React.FC = () => {
                         }`}
                       >
                         <img
-                          src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${image.image_versions?.thumbnail}`}
+                          src={getProductImageUrl(product, 'thumbnail')}
                           alt={`${product.nume} - imagine ${index + 1}`}
                           className="w-full h-full object-cover"
                         />

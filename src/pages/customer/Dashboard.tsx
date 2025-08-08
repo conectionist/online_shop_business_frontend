@@ -1,23 +1,20 @@
 import React from 'react';
-import { useBusinessDetails } from '@/hooks/useBusinessDetails';
+import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
+import { getProductImageUrl } from '@/services/api';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
-import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Clock, Package, Truck, CreditCard, Plus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { Link } from 'react-router-dom';
-import { getAppName } from '@/utils/appConfig';
 
 const CustomerDashboard: React.FC = () => {
-  const { data: businessDetailsArray } = useBusinessDetails();
+  const { data: businessDetails } = useBusinessDetailsSingle();
   const { data: publishedList, isLoading, error } = usePublishedList();
-  
-  // Get the first business details (assuming there's only one or we want the first one)
-  const businessDetails = businessDetailsArray && businessDetailsArray.length > 0 ? businessDetailsArray[0] : null;
   
   // Fetch data for the published list
   const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(publishedList?.id || 0);
@@ -32,8 +29,8 @@ const CustomerDashboard: React.FC = () => {
     if (!listProductsData?.categories) return [];
     
     // Flatten all products from all categories
-    return listProductsData.categories.flatMap(category => 
-      category.products.map(product => ({
+    return listProductsData.categories.flatMap((category: any) => 
+      category.products.map((product: any) => ({
         ...product,
         category_id: category.id // Ensure category_id is set
       }))
@@ -147,7 +144,7 @@ const CustomerDashboard: React.FC = () => {
                           <div className="flex-shrink-0">
                             {product.images && product.images.length > 0 ? (
                               <img
-                                src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${product.images[0].image_versions?.thumbnail}`}
+                                src={getProductImageUrl(product, 'thumbnail')}
                                 alt={product.nume}
                                 className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                                 onError={(e) => {
