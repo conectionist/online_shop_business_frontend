@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Online Shop Business</title>
     <script src="/config.js"></script>
+    <script>
+      // Set the page title dynamically from runtime config
+      // Wait for the config to be loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VITE_APP_NAME) {
+          document.title = window.__RUNTIME_CONFIG__.VITE_APP_NAME;
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

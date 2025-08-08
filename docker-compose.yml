@@ -11,4 +11,6 @@ services:
       - VITE_LOGO_PATH=${VITE_LOGO_PATH}
       - NODE_ENV=production
     env_file:
-      - .env 
+      - .env
+    volumes:
+      - ./assets/logo.jpg:/usr/share/nginx/html/assets/logo.jpg 
