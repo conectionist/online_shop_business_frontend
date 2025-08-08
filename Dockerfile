@@ -12,8 +12,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Create a placeholder config.js (will be replaced at runtime)
-RUN echo 'window.__RUNTIME_CONFIG__ = { VITE_API_BASE_URL: "PLACEHOLDER", VITE_APP_NAME: "PLACEHOLDER", VITE_LOGO_PATH: "PLACEHOLDER" };' > public/config.js
+# Create public directory if it doesn't exist and create a placeholder config.js (will be replaced at runtime)
+RUN mkdir -p public && echo 'window.__RUNTIME_CONFIG__ = { VITE_API_BASE_URL: "PLACEHOLDER", VITE_APP_NAME: "PLACEHOLDER", VITE_LOGO_PATH: "PLACEHOLDER" };' > public/config.js
 
 # Build arguments for environment variables
 ARG VITE_API_BASE_URL
