@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getApiBaseUrl } from '@/services/api';
 
 import { useAuthStore } from '@/stores/authStore';
 
@@ -42,7 +43,7 @@ const LoginPage: React.FC = () => {
 
     try {
       // Get the API base URL from runtime config
-      const apiBaseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const apiBaseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || getApiBaseUrl();
       const loginUrl = `${apiBaseUrl}/api/v1/auth/login`;
       
       // Use a direct fetch call like the original working version

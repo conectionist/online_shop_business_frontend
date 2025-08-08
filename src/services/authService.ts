@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { apiClient, getApiBaseUrl } from './api';
 import { useAuthStore } from '@/stores/authStore';
 
 export interface LoginCredentials {
@@ -25,7 +25,7 @@ class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       // Get the full URL directly
-      const baseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+      const baseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || getApiBaseUrl();
       const fullUrl = `${baseUrl}/api/v1/auth/login`;
       
       console.log('Login URL:', fullUrl);
