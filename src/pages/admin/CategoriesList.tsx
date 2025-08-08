@@ -4,7 +4,7 @@ import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { useDeleteCategory } from '@/hooks/useCategories';
 import { Category } from '@/types/api';
-import { getCategoryImageUrl } from '@/services/api';
+import { getCategoryImageUrl, getApiBaseUrl } from '@/services/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
@@ -115,6 +115,7 @@ const CategoriesList: React.FC = () => {
                     <Image
                       src={getCategoryImageUrl(category, 'medium')}
                       alt={category.name}
+                      fallback={`${getApiBaseUrl()}/api/v1/static/placeholders/category_placeholder.jpg`}
                       className="w-full h-full object-cover"
                     />
                   ) : (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
+import { getApiBaseUrl } from '@/services/api';
 
 export interface ImageProps {
   src: string;
@@ -17,7 +18,7 @@ export interface ImageProps {
 const Image: React.FC<ImageProps> = ({
   src,
   alt,
-  fallback = '/placeholder-image.png',
+  fallback,
   className = '',
   width,
   height,
@@ -26,6 +27,9 @@ const Image: React.FC<ImageProps> = ({
   onLoad,
   onError
 }) => {
+  // Default fallback with proper API base URL
+  const defaultFallback = `${getApiBaseUrl()}/api/v1/static/placeholders/product_placeholder.jpg`;
+  const finalFallback = fallback || defaultFallback;
   const [imageSrc, setImageSrc] = useState(src);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -38,8 +42,8 @@ const Image: React.FC<ImageProps> = ({
 
   const handleError = () => {
     setIsLoading(false);
-    if (imageSrc !== fallback) {
-      setImageSrc(fallback);
+    if (imageSrc !== finalFallback) {
+      setImageSrc(finalFallback);
       setHasError(false);
     } else {
       setHasError(true);

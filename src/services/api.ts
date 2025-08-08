@@ -11,7 +11,7 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 // Function to get API base URL dynamically
-const getApiBaseUrl = (): string => {
+export const getApiBaseUrl = (): string => {
   // Check runtime config first, then build-time env vars
   const apiUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL;
   
