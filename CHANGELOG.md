@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Image Upload Limits**: Updated image upload constraints to match backend capabilities
+  - Increased product image upload limit from 5MB to 25MB
+  - Added consistent image validation for categories (25MB limit, JPG/PNG/WebP formats)
+  - Implemented proper error handling and user feedback for category image uploads
+  - Added visual feedback for validation errors in category image upload area
+
 ## [0.18.0] - 2025-08-03
 
 ### Added

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
 import { useCreateCategory, useUpdateCategory, useCategory, useUploadCategoryImage } from '@/hooks/useCategories';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getCategoryImageUrl } from '@/services/api';
+import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
 
 // Helper function to check if category has a real image (not placeholder)
 const hasRealImage = (category: any): boolean => {
@@ -57,7 +58,21 @@ const CategoryForm: React.FC = () => {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validate file size (max 25MB)
+      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB) }));
+        return;
+      }
+
+      // Validate file type
+      if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
+        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS) }));
+        return;
+      }
+
       setImageFile(file);
+      setErrors(prev => ({ ...prev, image: '' }));
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target?.result as string);
@@ -81,8 +96,8 @@ const CategoryForm: React.FC = () => {
       newErrors.name = 'Numele categoriei este obligatoriu';
     }
 
-    if (formData.name.length > 100) {
-      newErrors.name = 'Numele categoriei trebuie să aibă mai puțin de 100 de caractere';
+    if (formData.name.length > VALIDATION.CATEGORY_NAME_MAX_LENGTH) {
+      newErrors.name = `Numele categoriei trebuie să aibă mai puțin de ${VALIDATION.CATEGORY_NAME_MAX_LENGTH} de caractere`;
     }
 
     setErrors(newErrors);
@@ -222,10 +237,17 @@ const CategoryForm: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                errors.image ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+              }`}>
+                <Upload className={`w-8 h-8 mx-auto mb-2 ${
+                  errors.image ? 'text-red-400' : 'text-gray-400'
+                }`} />
                 <p className="text-sm text-gray-600 mb-2">
-                  Încărcați o imagine pentru categorie (opțional)
+                  {IMAGE_UPLOAD.UI_TEXT.UPLOAD_CATEGORY_IMAGE}
+                </p>
+                <p className="text-xs text-gray-500 mb-3">
+                  {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
                 </p>
                 <input
                   type="file"
@@ -236,10 +258,16 @@ const CategoryForm: React.FC = () => {
                 />
                 <label
                   htmlFor="image-upload"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
                 >
-                  Alegeți Imaginea
+                  {IMAGE_UPLOAD.UI_TEXT.CHOOSE_CATEGORY_IMAGE}
                 </label>
+                {errors.image && (
+                  <p className="text-sm text-red-600 mt-2 flex items-center justify-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.image}
+                  </p>
+                )}
               </div>
             )}
           </div>

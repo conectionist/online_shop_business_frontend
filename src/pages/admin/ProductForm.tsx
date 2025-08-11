@@ -15,6 +15,7 @@ import Alert from '@/components/ui/Alert';
 import Image from '@/components/ui/Image';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getProductImageUrl } from '@/services/api';
+import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
 
 // Helper function to check if product has a real image (not placeholder)
 const hasRealImage = (product: any): boolean => {
@@ -38,21 +39,21 @@ const VALIDATION_RULES: Record<string, ValidationRule> = {
   nume: {
     required: true,
     minLength: 2,
-    maxLength: 100,
+    maxLength: VALIDATION.PRODUCT_NAME_MAX_LENGTH,
     pattern: /^[a-zA-ZăâîșțĂÂÎȘȚ0-9\s\-_.,()]+$/
   },
   pret: {
     required: true,
     min: 0.01,
-    max: 999999.99
+    max: VALIDATION.PRODUCT_PRICE_MAX
   },
   cantitate: {
     required: true,
     min: 0,
-    max: 999999
+    max: VALIDATION.PRODUCT_QUANTITY_MAX
   },
   description: {
-    maxLength: 1500
+    maxLength: VALIDATION.PRODUCT_DESCRIPTION_MAX_LENGTH
   },
   category_id: {
     required: true,
@@ -252,16 +253,15 @@ const ProductForm: React.FC = () => {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, image: 'Image size must be less than 5MB' }));
+      // Validate file size (max 25MB)
+      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB) }));
         return;
       }
 
       // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        setErrors(prev => ({ ...prev, image: 'Please select a valid image file (JPG, PNG, WebP)' }));
+      if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
+        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS) }));
         return;
       }
 
@@ -595,10 +595,10 @@ const ProductForm: React.FC = () => {
                   errors.image ? 'text-red-400' : 'text-gray-400'
                 }`} />
                 <p className="text-sm text-gray-600 mb-2">
-                  Încarcă o imagine pentru produs (opțional)
+                  {IMAGE_UPLOAD.UI_TEXT.UPLOAD_IMAGE}
                 </p>
                 <p className="text-xs text-gray-500 mb-3">
-                  Formate acceptate: JPG, PNG, WebP (max 5MB)
+                  {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
                 </p>
                 <input
                   type="file"
@@ -611,7 +611,7 @@ const ProductForm: React.FC = () => {
                   htmlFor="image-upload"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
                 >
-                  Alege Imaginea
+                  {IMAGE_UPLOAD.UI_TEXT.CHOOSE_IMAGE}
                 </label>
                 {errors.image && (
                   <p className="text-sm text-red-600 mt-2 flex items-center justify-center">
