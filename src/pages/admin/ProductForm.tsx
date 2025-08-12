@@ -40,7 +40,7 @@ const VALIDATION_RULES: Record<string, ValidationRule> = {
     required: true,
     minLength: 2,
     maxLength: VALIDATION.PRODUCT_NAME_MAX_LENGTH,
-    pattern: /^[a-zA-ZăâîșțĂÂÎȘȚ0-9\s\-_.,()]+$/
+    pattern: /^[a-zA-ZăâîșțĂÂÎȘȚ0-9\s\-_.,()%]+$/
   },
   pret: {
     required: true,
