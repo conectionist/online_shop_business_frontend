@@ -143,11 +143,122 @@ class ProductImporter:
             response.raise_for_status()
             products = response.json()
             
-            # Create a mapping of product name to product data
-            return {prod["nume"]: prod for prod in products}
+            # Create a mapping of product name to product data (case-insensitive)
+            products_map = {}
+            for prod in products:
+                product_name = prod["nume"]
+                # Store with original case
+                products_map[product_name] = prod
+                # Store with lowercase for case-insensitive comparison
+                products_map[product_name.lower()] = prod
+                # Store with normalized lowercase (remove diacritics) for better matching
+                normalized_name = self.normalize_string(product_name.lower())
+                products_map[normalized_name] = prod
+            
+            self.log(f"Fetched {len(products)} existing products from API")
+            
+            # Debug: log all product names to help identify the issue
+            if len(products) > 0:
+                all_names = [prod["nume"] for prod in products]
+                self.log(f"All existing product names: {all_names}")
+            
+            return products_map
         except requests.exceptions.RequestException as e:
             self.log(f"Error fetching products: {e}")
             return {}
+    
+    def normalize_string(self, text: str) -> str:
+        """Normalize string by removing diacritics and converting to lowercase"""
+        import unicodedata
+        # Normalize unicode characters and remove diacritics
+        normalized = unicodedata.normalize('NFD', text)
+        # Remove diacritics (combining characters)
+        normalized = ''.join(c for c in normalized if not unicodedata.combining(c))
+        return normalized.lower()
+    
+    def product_exists(self, product_name: str, existing_products: Dict[str, Dict]) -> Tuple[bool, Optional[Dict]]:
+        """Check if a product exists (case-insensitive) and return the product data if found"""
+        # Try exact match first
+        if product_name in existing_products:
+            return True, existing_products[product_name]
+        
+        # Try case-insensitive match
+        product_name_lower = product_name.lower()
+        if product_name_lower in existing_products:
+            return True, existing_products[product_name_lower]
+        
+        # Try normalized match (remove diacritics)
+        normalized_name = self.normalize_string(product_name)
+        if normalized_name in existing_products:
+            return True, existing_products[normalized_name]
+        
+        # Debug: log some sample existing product names to help debug
+        if len(existing_products) > 0:
+            # Get original product names (not the normalized keys)
+            original_names = []
+            for key, product in existing_products.items():
+                if key == product["nume"]:  # Only add original names, not the normalized ones
+                    original_names.append(key)
+            
+            sample_names = original_names[:10]  # Show more names
+            self.log(f"  Debug: Looking for '{product_name}' (normalized: '{normalized_name}')")
+            self.log(f"  Debug: Sample existing product names: {sample_names}")
+        
+        return False, None
+    
+    def get_product_by_name(self, product_name: str) -> Optional[Dict]:
+        """Get a product by name from the API (useful for fallback after 409 errors)"""
+        try:
+            # Try to get all products and find the one we need
+            response = self.session.get(f"{self.api_base_url}/products/")
+            response.raise_for_status()
+            products = response.json()
+            
+            # Search for the product (case-insensitive and normalized)
+            product_name_lower = product_name.lower()
+            product_name_normalized = self.normalize_string(product_name)
+            
+            for product in products:
+                existing_name = product["nume"]
+                if (existing_name.lower() == product_name_lower or 
+                    self.normalize_string(existing_name) == product_name_normalized):
+                    return product
+            
+            return None
+        except requests.exceptions.RequestException as e:
+            self.log(f"Error fetching product '{product_name}': {e}")
+            return None
+    
+    def verify_product_update(self, product_id: int, expected_product: Product):
+        """Verify that a product update was successful by fetching the product and comparing"""
+        try:
+            response = self.session.get(f"{self.api_base_url}/products/{product_id}")
+            response.raise_for_status()
+            actual_product = response.json()
+            
+            self.log(f"  Verification - Expected vs Actual:")
+            self.log(f"    cantitate: {expected_product.cantitate} vs {actual_product.get('cantitate')}")
+            self.log(f"    pret: {expected_product.pret} vs {actual_product.get('pret')}")
+            self.log(f"    unitati_id: {expected_product.unitati_id} vs {actual_product.get('unitati_id')}")
+            self.log(f"    category_id: {expected_product.category_id} vs {actual_product.get('category_id')}")
+            self.log(f"    description: '{expected_product.description}' vs '{actual_product.get('description')}'")
+            
+            # Check if all fields match
+            all_match = (
+                actual_product.get('cantitate') == expected_product.cantitate and
+                actual_product.get('pret') == expected_product.pret and
+                actual_product.get('unitati_id') == expected_product.unitati_id and
+                actual_product.get('category_id') == expected_product.category_id and
+                actual_product.get('description') == expected_product.description
+            )
+            
+            if all_match:
+                self.log(f"  ✅ Verification successful - all fields match")
+            else:
+                self.log(f"  ⚠️  Verification failed - some fields don't match")
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"  ❌ Error verifying product update: {e}")
     
     def create_category(self, name: str) -> Optional[int]:
         """Create a category and return its ID"""
@@ -179,8 +290,8 @@ class ProductImporter:
             self.log(f"❌ Error creating unit '{denumire}': {e}")
             return None
     
-    def create_product(self, product: Product) -> bool:
-        """Create a product"""
+    def create_product(self, product: Product) -> Optional[int]:
+        """Create a product and return its ID"""
         try:
             # Create form data as tuples (field_name, (None, value, content_type))
             files = [
@@ -199,30 +310,59 @@ class ProductImporter:
             created_product = response.json()
             self.log(f"✅ CREATED product: {product.nume} (ID: {created_product['id']})")
             self.stats['products']['created'] += 1
-            return True
+            return created_product['id']
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Error creating product '{product.nume}': {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                self.log(f"Response status: {e.response.status_code}")
-                self.log(f"Response body: {e.response.text}")
-            return False
+            if hasattr(e, 'response') and e.response is not None and e.response.status_code == 409:
+                # Product already exists - this is a fallback for when the initial fetch missed it
+                self.log(f"⚠️  Product '{product.nume}' already exists (409 conflict) - fetching existing product")
+                self.stats['products']['skipped'] += 1
+                
+                # Try to get the existing product
+                existing_product = self.get_product_by_name(product.nume)
+                if existing_product:
+                    self.log(f"✅ Found existing product '{product.nume}' (ID: {existing_product['id']})")
+                    return existing_product['id']
+                else:
+                    self.log(f"⚠️  Could not find existing product '{product.nume}' after 409 error")
+                    return None
+            else:
+                self.log(f"❌ Error creating product '{product.nume}': {e}")
+                if hasattr(e, 'response') and e.response is not None:
+                    self.log(f"Response status: {e.response.status_code}")
+                    self.log(f"Response body: {e.response.text}")
+                return None
     
     def update_product(self, product_id: int, product: Product) -> bool:
-        """Update a product via PATCH"""
+        """Update a product via PATCH using FormData (like the frontend)"""
         try:
-            # Prepare data for PATCH request
-            data = {
-                "cantitate": product.cantitate,
-                "pret": product.pret,
-                "unitati_id": product.unitati_id,
-                "category_id": product.category_id
-            }
+            # Build the form data (like the frontend does)
+            form_data = {}
+            form_data['cantitate'] = str(product.cantitate)
+            form_data['pret'] = str(product.pret)
+            form_data['unitati_id'] = str(product.unitati_id)
+            form_data['category_id'] = str(product.category_id)
             
+            # Handle description field - if it's None, send empty string to clear it
             if product.description is not None:
-                data["description"] = product.description
+                form_data['description'] = product.description
+            else:
+                # If description is None, send empty string to clear the existing description
+                form_data['description'] = ''
             
-            response = self.session.patch(f"{self.api_base_url}/products/{product_id}", json=data)
+            # Log what we're sending
+            self.log(f"  Sending PATCH FormData: {form_data}")
+            
+            # Send PATCH request with FormData (not JSON)
+            response = self.session.patch(f"{self.api_base_url}/products/{product_id}", data=form_data)
             response.raise_for_status()
+            
+            # Log what the API returned
+            updated_product = response.json()
+            self.log(f"  API returned: {updated_product}")
+            
+            # Verify the update by fetching the product again
+            self.verify_product_update(product_id, product)
+            
             self.log(f"🔄 UPDATED product: {product.nume} (ID: {product_id})")
             self.stats['products']['updated'] += 1
             return True
@@ -235,13 +375,68 @@ class ProductImporter:
     
     def products_are_equal(self, existing_product: Dict, new_product: Product) -> bool:
         """Compare existing product with new product data"""
+        # Handle description comparison - treat None and empty string as equal
+        existing_desc = existing_product.get("description") or ""
+        new_desc = new_product.description or ""
+        
         return (
             existing_product["cantitate"] == new_product.cantitate and
             existing_product["pret"] == new_product.pret and
             existing_product["unitati_id"] == new_product.unitati_id and
             existing_product["category_id"] == new_product.category_id and
-            existing_product.get("description") == new_product.description
+            existing_desc == new_desc
         )
+    
+    def show_product_differences(self, existing_product: Dict, new_product: Product, categories_map: Dict[str, int] = None, units_map: Dict[str, int] = None):
+        """Show detailed differences between existing and new product data"""
+        differences = []
+        
+        if existing_product["cantitate"] != new_product.cantitate:
+            differences.append(f"cantitate: {existing_product['cantitate']} → {new_product.cantitate}")
+        
+        if existing_product["pret"] != new_product.pret:
+            differences.append(f"pret: {existing_product['pret']} → {new_product.pret}")
+        
+        if existing_product["unitati_id"] != new_product.unitati_id:
+            # Try to show unit names if available
+            unit_diff = f"unitati_id: {existing_product['unitati_id']} → {new_product.unitati_id}"
+            if units_map:
+                # Find unit names by ID
+                old_unit_name = "unknown"
+                new_unit_name = "unknown"
+                for unit_name, unit_id in units_map.items():
+                    if unit_id == existing_product["unitati_id"]:
+                        old_unit_name = unit_name
+                    if unit_id == new_product.unitati_id:
+                        new_unit_name = unit_name
+                unit_diff += f" ({old_unit_name} → {new_unit_name})"
+            differences.append(unit_diff)
+        
+        if existing_product["category_id"] != new_product.category_id:
+            # Try to show category names if available
+            cat_diff = f"category_id: {existing_product['category_id']} → {new_product.category_id}"
+            if categories_map:
+                # Find category names by ID
+                old_cat_name = "unknown"
+                new_cat_name = "unknown"
+                for cat_name, cat_id in categories_map.items():
+                    if cat_id == existing_product["category_id"]:
+                        old_cat_name = cat_name
+                    if cat_id == new_product.category_id:
+                        new_cat_name = cat_name
+                cat_diff += f" ({old_cat_name} → {new_cat_name})"
+            differences.append(cat_diff)
+        
+        existing_desc = existing_product.get("description")
+        if existing_desc != new_product.description:
+            differences.append(f"description: '{existing_desc}' → '{new_product.description}'")
+        
+        if differences:
+            self.log(f"  Changes detected:")
+            for diff in differences:
+                self.log(f"    {diff}")
+        else:
+            self.log(f"  No differences found (this shouldn't happen)")
     
     def extract_categories_from_products(self, products_data: List[Dict]) -> List[Category]:
         """Extract unique categories from products data"""
@@ -288,42 +483,55 @@ class ProductImporter:
         
         return existing_units
     
-    def process_products(self, products: List[Product]) -> List[Dict]:
+    def process_products(self, products: List[Product], categories_map: Dict[str, int] = None, units_map: Dict[str, int] = None) -> List[Dict]:
         """Process products: create new ones, update existing ones, skip unchanged ones"""
         self.log("=== Processing Products ===")
+        self.log(f"Processing {len(products)} products from JSON file")
         existing_products = self.get_existing_products()
         processed_products = []
         
-        for product in products:
-            if product.nume in existing_products:
-                existing_product = existing_products[product.nume]
-                
-                if self.products_are_equal(existing_product, product):
-                    self.log(f"⏭️  SKIPPED product: {product.nume} (ID: {existing_product['id']}) - no changes")
+        for i, product in enumerate(products, 1):
+            self.log(f"Processing {i}/{len(products)}: {product.nume}")
+            
+            # Check if product exists (case-insensitive)
+            exists, existing_product_data = self.product_exists(product.nume, existing_products)
+            
+            if exists:
+                # Check if the product data is different
+                if self.products_are_equal(existing_product_data, product):
+                    self.log(f"⏭️  Product '{product.nume}' already exists. No updates needed.")
                     self.stats['products']['skipped'] += 1
                     processed_products.append({
-                        "id": existing_product["id"],
+                        "id": existing_product_data["id"],
                         "name": product.nume,
                         "cantitate": product.cantitate
                     })
                 else:
+                    self.log(f"🔄  Product '{product.nume}' exists but has different data. Updating...")
+                    # Show what's different
+                    self.show_product_differences(existing_product_data, product, categories_map, units_map)
+                    
                     # Update the product
-                    if self.update_product(existing_product["id"], product):
+                    if self.update_product(existing_product_data["id"], product):
                         processed_products.append({
-                            "id": existing_product["id"],
+                            "id": existing_product_data["id"],
                             "name": product.nume,
                             "cantitate": product.cantitate
                         })
             else:
+                self.log(f"✅  Creating new product '{product.nume}'...")
                 # Create new product
-                if self.create_product(product):
-                    # We need to get the created product ID
-                    # For now, we'll use the name as reference and get it later
+                product_id = self.create_product(product)
+                if product_id:
                     processed_products.append({
+                        "id": product_id,
                         "name": product.nume,
                         "cantitate": product.cantitate
                     })
+                else:
+                    self.log(f"⚠️  Failed to create product '{product.nume}' - will be skipped")
         
+        self.log(f"Product processing complete. Processed {len(processed_products)} products successfully.")
         return processed_products
     
     def create_list(self, list_data: ProductList) -> Optional[int]:
@@ -453,7 +661,7 @@ class ProductImporter:
             product_objects.append(product)
         
         # Process all products
-        processed_products = self.process_products(product_objects)
+        processed_products = self.process_products(product_objects, categories_map, units_map)
         
         # Print summary
         self.print_summary()

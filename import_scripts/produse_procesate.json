@@ -1,5 +1,5 @@
 {
-  "mesaj_introducere": "Puteti comanda produse pentru marti 12 august de:",
+  "mesaj_introducere": "Vineri nu facem paine! Luați maine sa va ajungă 1 sapt !💓\nPuteti comanda produse pentru marti 12 august de:",
   "products": [
     {
       "nume": "Pâine cu secara",
@@ -167,6 +167,14 @@
       "pret": 16,
       "unitate": "gr",
       "cantitate": 375,
+      "category": "Tartinabile Camara cu di tati"
+    },
+    {
+      "nume": "Pasta de fasole cu ierburi si lsmaie",
+      "description": null,
+      "pret": 16,
+      "unitate": "gr",
+      "cantitate": 250,
       "category": "Tartinabile Camara cu di tati"
     },
     {
