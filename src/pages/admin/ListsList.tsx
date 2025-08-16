@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Calendar, MessageSquare, Copy } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, MessageSquare, Copy, MoreVertical } from 'lucide-react';
 import { useLists } from '@/hooks/useLists';
 import { useDeleteList, useCloneList } from '@/hooks/useLists';
 import { List } from '@/types/api';
@@ -18,6 +18,7 @@ const ListsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [listToDelete, setListToDelete] = useState<List | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
   // Fetch all lists
   const { data: lists, isLoading, error } = useLists();
@@ -70,6 +71,32 @@ const ListsList: React.FC = () => {
     }
   };
 
+  const toggleDropdown = (listId: number) => {
+    setOpenDropdownId(openDropdownId === listId ? null : listId);
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdownId(null);
+  };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDropdownId !== null) {
+        // Check if the click is outside the dropdown
+        const target = event.target as Element;
+        const dropdownElement = document.querySelector(`[data-dropdown-id="${openDropdownId}"]`);
+        
+        if (dropdownElement && !dropdownElement.contains(target)) {
+          closeDropdown();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdownId]);
+
   const handleDeleteConfirm = async () => {
     if (listToDelete) {
       try {
@@ -115,7 +142,7 @@ const ListsList: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Header */}
       <AdminPageHeader 
         title="Liste de Produse" 
@@ -128,7 +155,7 @@ const ListsList: React.FC = () => {
               placeholder="Caută în liste..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full"
             />
           </div>
         }
@@ -137,6 +164,7 @@ const ListsList: React.FC = () => {
           variant="primary"
           size="md"
           onClick={() => navigate('/admin/lists/new')}
+          className="w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
           Adaugă Listă
@@ -145,73 +173,79 @@ const ListsList: React.FC = () => {
 
       {/* Lists Grid */}
       {filteredLists && filteredLists.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredLists.map((list) => (
-            <Card key={list.id} className="p-6">
-              <div className="space-y-4">
+            <Card key={list.id} className="p-4 sm:p-6">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Header */}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words pr-2">
                       {`Lista ${formatDate(list.data)}`}
                     </h3>
-                    <div className="flex items-center text-sm text-gray-500 mt-1">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      {formatDate(list.data)}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {/* {list.is_current && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Curentă
-                      </span>
-                    )} */}
+                    {/* Published Status - moved to second row */}
                     {list.is_published && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Publicată
-                      </span>
+                      <div className="mt-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
+                          Publicată
+                        </span>
+                      </div>
                     )}
                   </div>
-                </div>
-
-                {/* Details */}
-                <div className="space-y-2">
-                  {list.alte_detalii && (
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {list.alte_detalii}
-                    </p>
-                  )}
                   
-                  
-                </div>
+                  {/* Hamburger Menu Button */}
+                  <div className="relative">
+                    <button
+                      onClick={() => toggleDropdown(list.id)}
+                      className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
 
-                {/* Actions */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate(`/admin/lists/${list.id}/manage`)}
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Gestionează
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleCloneClick(list)}
-                      disabled={cloneListMutation.isPending}
-                    >
-                      <Copy className="w-4 h-4 mr-1" />
-                      {cloneListMutation.isPending ? 'Se clonează...' : 'Clonează'}
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => handleDeleteClick(list)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {/* Dropdown Menu */}
+                    {openDropdownId === list.id && (
+                      <div 
+                        className="absolute right-0 mt-2 w-44 sm:w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+                        data-dropdown-id={list.id}
+                      >
+                        {/* Manage Option */}
+                        <button
+                          onClick={() => {
+                            closeDropdown();
+                            navigate(`/admin/lists/${list.id}/manage`);
+                          }}
+                          className="w-full flex items-center px-3 sm:px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          <Edit className="w-4 h-4 mr-2 sm:mr-3 text-gray-400" />
+                          Gestionează
+                        </button>
+
+                        {/* Clone Option */}
+                        <button
+                          onClick={() => {
+                            closeDropdown();
+                            handleCloneClick(list);
+                          }}
+                          disabled={cloneListMutation.isPending}
+                          className="w-full flex items-center px-3 sm:px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        >
+                          <Copy className="w-4 h-4 mr-2 sm:mr-3 text-gray-400" />
+                          {cloneListMutation.isPending ? 'Se clonează...' : 'Clonează'}
+                        </button>
+
+                        {/* Delete Option */}
+                        <button
+                          onClick={() => {
+                            closeDropdown();
+                            handleDeleteClick(list);
+                          }}
+                          className="w-full flex items-center px-3 sm:px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2 sm:mr-3 text-red-400" />
+                          Șterge
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -219,14 +253,14 @@ const ListsList: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <MessageSquare className="w-12 h-12 text-gray-400" />
+        <div className="text-center py-8 sm:py-12 px-4">
+          <div className="mx-auto w-16 h-16 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <MessageSquare className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 break-words">
             {searchTerm ? 'Nu s-au găsit liste' : 'Nu există liste'}
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-sm sm:text-base text-gray-500 mb-6 break-words">
             {searchTerm 
               ? 'Încearcă să modifici termenii de căutare'
               : 'Creează prima listă de produse pentru a începe'
@@ -236,6 +270,7 @@ const ListsList: React.FC = () => {
             <Button
               variant="primary"
               onClick={() => navigate('/admin/lists/new')}
+              className="w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 mr-2" />
               Creează Prima Listă
@@ -251,17 +286,18 @@ const ListsList: React.FC = () => {
         title="Confirmă ștergerea"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 break-words">
             Ești sigur că vrei să ștergi lista "{listToDelete?.mesaj_introducere || 'fără titlu'}"?
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500 break-words">
             Această acțiune nu poate fi anulată. Toate produsele asociate cu această listă vor fi eliminate.
           </p>
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
             <Button
               variant="secondary"
               onClick={handleDeleteCancel}
               disabled={deleteListMutation.isPending}
+              className="w-full sm:w-auto order-2 sm:order-1"
             >
               Anulează
             </Button>
@@ -269,6 +305,7 @@ const ListsList: React.FC = () => {
               variant="danger"
               onClick={handleDeleteConfirm}
               disabled={deleteListMutation.isPending}
+              className="w-full sm:w-auto order-1 sm:order-2"
             >
               {deleteListMutation.isPending ? 'Se șterge...' : 'Șterge'}
             </Button>
