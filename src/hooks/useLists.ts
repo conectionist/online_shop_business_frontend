@@ -81,7 +81,7 @@ export const useUpdateList = () => {
   });
 };
 
-// Hook to replace a list (PUT)
+// Hook to replace a list (PUT for full replacement)
 export const useReplaceList = () => {
   const queryClient = useQueryClient();
   
@@ -111,6 +111,31 @@ export const useReplaceList = () => {
     },
     onError: (error) => {
       console.error('Failed to replace list:', error);
+    },
+  });
+};
+
+// Hook to clone a list
+export const useCloneList = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: number) => listService.cloneList(id),
+    onSuccess: (clonedList) => {
+      // Add the new cloned list to the lists cache
+      queryClient.setQueryData(
+        queryKeys.lists.list({}),
+        (oldData: any) => {
+          if (!oldData) return [clonedList];
+          return [clonedList, ...oldData];
+        }
+      );
+      
+      // Invalidate and refetch lists to ensure consistency
+      queryClient.invalidateQueries({ queryKey: invalidateQueries.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to clone list:', error);
     },
   });
 };

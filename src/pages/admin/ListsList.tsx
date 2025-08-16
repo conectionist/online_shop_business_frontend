@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye, Calendar, MessageSquare } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Calendar, MessageSquare, Copy } from 'lucide-react';
 import { useLists } from '@/hooks/useLists';
-import { useDeleteList } from '@/hooks/useLists';
+import { useDeleteList, useCloneList } from '@/hooks/useLists';
 import { List } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -11,6 +11,7 @@ import Modal from '@/components/ui/Modal';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
 import AdminPageHeader from '@/components/layout/AdminPageHeader';
+import { useToast } from '@/components/ui/ToastContainer';
 
 const ListsList: React.FC = () => {
   const navigate = useNavigate();
@@ -37,10 +38,36 @@ const ListsList: React.FC = () => {
 
   // Delete list mutation
   const deleteListMutation = useDeleteList();
+  
+  // Clone list mutation
+  const cloneListMutation = useCloneList();
+  
+  // Toast hook
+  const { showToast } = useToast();
 
   const handleDeleteClick = (list: List) => {
     setListToDelete(list);
     setDeleteModalOpen(true);
+  };
+
+  const handleCloneClick = async (list: List) => {
+    try {
+      const clonedList = await cloneListMutation.mutateAsync(list.id);
+      showToast({
+        type: 'success',
+        title: 'Listă clonată cu succes!',
+        message: `Lista "${list.mesaj_introducere || 'fără titlu'}" a fost clonată. Noua listă are ID-ul ${clonedList.id}.`
+      });
+      
+      // Navigate to the new cloned list for editing
+      navigate(`/admin/lists/${clonedList.id}/manage`);
+    } catch (error) {
+      showToast({
+        type: 'error',
+        title: 'Eroare la clonarea listei',
+        message: 'Nu s-a putut clona lista. Vă rugăm să încercați din nou.'
+      });
+    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -164,18 +191,19 @@ const ListsList: React.FC = () => {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => navigate(`/admin/lists/${list.id}`)}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      Vezi
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
                       onClick={() => navigate(`/admin/lists/${list.id}/manage`)}
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Gestionează
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleCloneClick(list)}
+                      disabled={cloneListMutation.isPending}
+                    >
+                      <Copy className="w-4 h-4 mr-1" />
+                      {cloneListMutation.isPending ? 'Se clonează...' : 'Clonează'}
                     </Button>
                     <Button
                       variant="danger"

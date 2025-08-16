@@ -76,6 +76,14 @@ export const listService = {
     });
   },
 
+  // Clone an existing list (PROTECTED - requires auth)
+  cloneList: async (id: number): Promise<List> => {
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.post(`/liste/${id}/clone`, {});
+      return response.data;
+    });
+  },
+
   // Delete a list (PROTECTED - requires auth)
   deleteList: async (id: number): Promise<void> => {
     return authService.makeAuthenticatedRequest(async () => {

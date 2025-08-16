@@ -14,7 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented proper error handling and user feedback for category image uploads
   - Added visual feedback for validation errors in category image upload area
 
-## [0.18.0] - 2025-08-03
+## [0.19.0] - 2025-01-17
+
+### Added
+- **List Cloning Feature**: Admins can now clone existing product lists with a single click
+  - Clone button added to each list in the admin interface
+  - Automatically copies all list metadata, products, categories, and stock quantities
+  - New cloned lists start as drafts for easy customization
+  - Seamless navigation to the new cloned list for editing
+
+## [0.18.0] - 2025-01-16
 
 ### Added
 - **Complete Authentication System**: Enterprise-grade JWT-based authentication
