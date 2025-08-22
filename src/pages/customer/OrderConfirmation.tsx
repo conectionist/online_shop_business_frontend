@@ -40,6 +40,9 @@ const OrderConfirmation: React.FC = () => {
       orderText += `${item.quantity} x ${item.nume} (${item.quantity * item.pret} RON)\n`;
     });
     
+    // Add total price
+    orderText += `Total: ${orderData.total} RON\n`;
+    
     // Add payment method
     if (orderData.paymentMethod) {
       orderText += `Plata ${orderData.paymentMethod.name.toLowerCase()}.\n`;
