@@ -38,6 +38,12 @@ COPY --from=builder /app/test /usr/share/nginx/html/test
 # Copy robots.txt for SEO
 COPY robots.txt /usr/share/nginx/html/robots.txt
 
+# Copy sitemap.xml for SEO
+COPY sitemap.xml /usr/share/nginx/html/sitemap.xml
+
+# Copy web manifest for PWA support
+COPY site.webmanifest /usr/share/nginx/html/site.webmanifest
+
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
