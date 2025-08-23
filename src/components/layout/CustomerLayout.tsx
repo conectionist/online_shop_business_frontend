@@ -8,8 +8,12 @@ import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } fr
 const CustomerLayout: React.FC = () => {
   // Inject organization schema markup for SEO
   useEffect(() => {
-    const organizationSchema = generateOrganizationSchema();
-    injectSchemaMarkup(organizationSchema, 'organization');
+    try {
+      const organizationSchema = generateOrganizationSchema();
+      injectSchemaMarkup(organizationSchema, 'organization');
+    } catch (error) {
+      console.warn('Failed to inject organization schema:', error);
+    }
 
     // Cleanup: remove schema markup when component unmounts
     return () => {

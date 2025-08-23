@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
@@ -12,6 +12,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { Link } from 'react-router-dom';
 import { getAppName, getLogoPath } from '@/utils/appConfig';
 import { getProductImageUrl } from '@/services/api';
+import { generateOrganizationSchema, generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
@@ -44,6 +45,33 @@ const WelcomePage: React.FC = () => {
   // Interactive states
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
   const [showSuccessMessage, setShowSuccessMessage] = React.useState<{ [key: number]: boolean }>({});
+
+  // Inject schema markup for SEO
+  useEffect(() => {
+    // Inject organization schema
+    try {
+      const organizationSchema = generateOrganizationSchema(businessDetails);
+      injectSchemaMarkup(organizationSchema, 'organization');
+    } catch (error) {
+      console.warn('Failed to inject organization schema:', error);
+    }
+
+    // Inject main page schema if business details are available
+    if (businessDetails) {
+      try {
+        const mainPageSchema = generateMainPageSchema(businessDetails);
+        injectSchemaMarkup(mainPageSchema, 'main-page');
+      } catch (error) {
+        console.warn('Failed to inject main page schema:', error);
+      }
+    }
+
+    // Cleanup: remove schema markup when component unmounts
+    return () => {
+      removeSchemaMarkup('organization');
+      removeSchemaMarkup('main-page');
+    };
+  }, [businessDetails]);
 
   // Helper functions
   const getCategoryName = (categoryId: number) => {

@@ -44,8 +44,12 @@ const CustomerDashboard: React.FC = () => {
   // Inject main page schema markup for SEO
   useEffect(() => {
     if (businessDetails) {
-      const mainPageSchema = generateMainPageSchema(businessDetails);
-      injectSchemaMarkup(mainPageSchema, 'main-page');
+      try {
+        const mainPageSchema = generateMainPageSchema(businessDetails);
+        injectSchemaMarkup(mainPageSchema, 'main-page');
+      } catch (error) {
+        console.warn('Failed to inject main page schema:', error);
+      }
     }
 
     // Cleanup: remove schema markup when component unmounts

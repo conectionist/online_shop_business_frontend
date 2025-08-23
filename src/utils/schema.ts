@@ -118,10 +118,12 @@ export const injectSchemaMarkup = (schema: any, id?: string) => {
     // Create new schema script
     const script = document.createElement('script');
     script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(schema);
+    
+    // Add ID as a separate attribute for our internal management
     if (id) {
       script.setAttribute('data-schema-id', id);
     }
-    script.textContent = JSON.stringify(schema);
     
     // Insert into head
     document.head.appendChild(script);
