@@ -44,6 +44,9 @@ COPY sitemap.xml /usr/share/nginx/html/sitemap.xml
 # Copy web manifest for PWA support
 COPY site.webmanifest /usr/share/nginx/html/site.webmanifest
 
+# Copy Google verification file for Search Console
+COPY google*.html /usr/share/nginx/html/
+
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
