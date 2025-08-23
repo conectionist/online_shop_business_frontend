@@ -54,7 +54,7 @@ const ProductPage: React.FC = () => {
         const categoryName = getCategoryName(product.category_id);
         const unitName = getUnitName(product.unitati_id);
         const productSchema = generateProductSchema(product, categoryName, unitName);
-        injectSchemaMarkup(productSchema);
+        injectSchemaMarkup(productSchema, 'product');
       } catch (error) {
         console.warn('Failed to generate product schema:', error);
       }
@@ -62,7 +62,7 @@ const ProductPage: React.FC = () => {
 
     // Cleanup: remove schema markup when component unmounts
     return () => {
-      removeSchemaMarkup();
+      removeSchemaMarkup('product');
     };
   }, [product, categories, units]);
 

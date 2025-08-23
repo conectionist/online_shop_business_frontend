@@ -45,12 +45,12 @@ const CustomerDashboard: React.FC = () => {
   useEffect(() => {
     if (businessDetails) {
       const mainPageSchema = generateMainPageSchema(businessDetails);
-      injectSchemaMarkup(mainPageSchema);
+      injectSchemaMarkup(mainPageSchema, 'main-page');
     }
 
     // Cleanup: remove schema markup when component unmounts
     return () => {
-      removeSchemaMarkup();
+      removeSchemaMarkup('main-page');
     };
   }, [businessDetails]);
 

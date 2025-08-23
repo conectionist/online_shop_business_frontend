@@ -93,7 +93,7 @@ export const generateMainPageSchema = (businessDetails?: any) => {
 };
 
 // Helper function to inject schema markup into the DOM
-export const injectSchemaMarkup = (schema: any) => {
+export const injectSchemaMarkup = (schema: any, id?: string) => {
   try {
     // Validate schema before injecting
     if (!schema || typeof schema !== 'object') {
@@ -101,15 +101,26 @@ export const injectSchemaMarkup = (schema: any) => {
       return;
     }
 
-    // Remove any existing schema markup
-    const existingScript = document.querySelector('script[type="application/ld+json"]');
-    if (existingScript) {
-      existingScript.remove();
+    // If ID is provided, remove only that specific schema
+    if (id) {
+      const existingScript = document.querySelector(`script[data-schema-id="${id}"]`);
+      if (existingScript) {
+        existingScript.remove();
+      }
+    } else {
+      // Remove any existing schema markup (for backward compatibility)
+      const existingScript = document.querySelector('script[type="application/ld+json"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
     }
 
     // Create new schema script
     const script = document.createElement('script');
     script.type = 'application/ld+json';
+    if (id) {
+      script.setAttribute('data-schema-id', id);
+    }
     script.textContent = JSON.stringify(schema);
     
     // Insert into head
@@ -120,9 +131,18 @@ export const injectSchemaMarkup = (schema: any) => {
 };
 
 // Helper function to remove schema markup
-export const removeSchemaMarkup = () => {
-  const existingScript = document.querySelector('script[type="application/ld+json"]');
-  if (existingScript) {
-    existingScript.remove();
+export const removeSchemaMarkup = (id?: string) => {
+  if (id) {
+    // Remove specific schema by ID
+    const existingScript = document.querySelector(`script[data-schema-id="${id}"]`);
+    if (existingScript) {
+      existingScript.remove();
+    }
+  } else {
+    // Remove any existing schema markup (for backward compatibility)
+    const existingScript = document.querySelector('script[type="application/ld+json"]');
+    if (existingScript) {
+      existingScript.remove();
+    }
   }
 };

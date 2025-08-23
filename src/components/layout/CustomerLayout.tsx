@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import CustomerHeader from './CustomerHeader';
 import CustomerFooter from './CustomerFooter';
 import VersionDisplay from '@/components/ui/VersionDisplay';
+import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 
 const CustomerLayout: React.FC = () => {
+  // Inject organization schema markup for SEO
+  useEffect(() => {
+    const organizationSchema = generateOrganizationSchema();
+    injectSchemaMarkup(organizationSchema, 'organization');
+
+    // Cleanup: remove schema markup when component unmounts
+    return () => {
+      removeSchemaMarkup('organization');
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
