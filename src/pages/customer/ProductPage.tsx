@@ -7,6 +7,7 @@ import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { getProductImageUrl } from '@/services/api';
+import SEO from '@/components/SEO';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -47,28 +48,43 @@ const ProductPage: React.FC = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Produsul nu a fost găsit
-            </h1>
-            <p className="text-gray-600 mb-6">
-              Produsul pe care îl cauți nu există sau nu este disponibil.
-            </p>
-            <Button variant="primary" onClick={() => navigate('/')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Înapoi la Produse
-            </Button>
+      <>
+        <SEO 
+          title="Produsul nu a fost găsit"
+          description="Produsul pe care îl cauți nu există sau nu este disponibil."
+          robots="noindex, nofollow"
+        />
+        <div className="min-h-screen bg-gray-50 py-12">
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                Produsul nu a fost găsit
+              </h1>
+              <p className="text-gray-600 mb-6">
+                Produsul pe care îl cauți nu există sau nu este disponibil.
+              </p>
+              <Button variant="primary" onClick={() => navigate('/')}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Înapoi la Produse
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   const productImages = product.images || [];
   const hasMultipleImages = productImages.length > 1;
+
+  // Generate product-specific SEO data
+  const productTitle = product.nume;
+  const productDescription = product.description || 
+    `${product.nume} - produs proaspăt de brutărie cu maia. ${getCategoryName(product.category_id)}. Preț: ${product.pret} RON pentru ${product.cantitate} ${getUnitName(product.unitati_id)}. Comandă online cu livrare rapidă în Iasi.`;
+  const productKeywords = `${product.nume}, ${getCategoryName(product.category_id)}, brutărie, maia, produse proaspete, comandă online, livrare, panificatie, românia, iasi`;
+  const productImage = productImages.length > 0 ? getProductImageUrl(product, 'original') : undefined;
+  const productCanonical = `${window.location.origin}/product/${product.id}`;
 
   const addToCart = () => {
     // Get current cart state to check if item exists
@@ -106,6 +122,18 @@ const ProductPage: React.FC = () => {
 
   return (
     <>
+      {/* SEO Component for Product-Specific Meta Tags */}
+      <SEO 
+        title={productTitle}
+        description={productDescription}
+        keywords={productKeywords}
+        canonical={productCanonical}
+        ogImage={productImage}
+        ogImageAlt={`Imagine pentru ${productTitle} - ${getCategoryName(product.category_id)}`}
+        ogType="product"
+        twitterCard="summary_large_image"
+      />
+
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50">
         <Link to="/cart">
