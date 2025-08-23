@@ -4,6 +4,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import AdminLayout from './components/layout/AdminLayout'
 import ProtectedRoute from './components/ProtectedRoute'
+import SEO from './components/SEO'
 import WelcomePage from './pages/WelcomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -37,6 +38,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
       <Router>
+        {/* Default SEO component for the entire app */}
+        <SEO />
+        
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<WelcomePage />} />
