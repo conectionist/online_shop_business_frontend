@@ -15,56 +15,108 @@ export interface SEOProps {
   ogImage?: string;
   /** Open Graph image alt text */
   ogImageAlt?: string;
+  /** Open Graph image width in pixels */
+  ogImageWidth?: number;
+  /** Open Graph image height in pixels */
+  ogImageHeight?: number;
+  /** Open Graph image MIME type */
+  ogImageType?: string;
   /** Open Graph type (article, website, product, etc.) */
   ogType?: 'website' | 'article' | 'product' | 'profile' | 'book';
   /** Twitter Card type */
   twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player';
-  /** Whether to index this page (default: true) */
-  noindex?: boolean;
-  /** Whether to follow links on this page (default: true) */
-  nofollow?: boolean;
-  /** Additional meta tags */
-  additionalMeta?: Array<{
-    name?: string;
-    property?: string;
-    content: string;
-  }>;
-}
-
-export interface MetaTag {
-  name?: string;
-  property?: string;
-  content: string;
+  /** Twitter site handle (e.g., @businessname) */
+  twitterSite?: string;
+  /** Twitter creator handle */
+  twitterCreator?: string;
+  /** Whether to index the page */
+  robots?: 'index, follow' | 'noindex, nofollow' | 'index, nofollow' | 'noindex, follow';
+  /** Page language */
+  language?: string;
+  /** Page locale */
+  locale?: string;
 }
 
 export interface SEOConfig {
   /** Base title for the application */
   baseTitle: string;
-  /** Default description */
+  /** Default meta description */
   defaultDescription: string;
-  /** Default keywords */
+  /** Default meta keywords */
   defaultKeywords: string;
   /** Default author */
   defaultAuthor: string;
   /** Default Open Graph type */
-  defaultOgType: string;
+  defaultOgType: 'website' | 'article' | 'product' | 'profile' | 'book';
   /** Default Twitter Card type */
-  defaultTwitterCard: string;
-  /** Base URL for canonical URLs */
+  defaultTwitterCard: 'summary' | 'summary_large_image' | 'app' | 'player';
+  /** Base URL for the application */
   baseUrl: string;
   /** Default Open Graph image */
   defaultOgImage: string;
+  /** Default Open Graph image width */
+  defaultOgImageWidth: number;
+  /** Default Open Graph image height */
+  defaultOgImageHeight: number;
+  /** Default Open Graph image type */
+  defaultOgImageType: string;
+  /** Twitter site handle */
+  twitterSite?: string;
+  /** Twitter creator handle */
+  twitterCreator?: string;
+  /** Default locale */
+  defaultLocale: string;
 }
 
 export interface PageSEO {
+  /** Full page title */
   title: string;
+  /** Page description */
   description: string;
+  /** Page keywords */
   keywords: string;
+  /** Page author */
+  author: string;
+  /** Canonical URL */
   canonical: string;
+  /** Open Graph title */
   ogTitle: string;
+  /** Open Graph description */
   ogDescription: string;
+  /** Open Graph image */
   ogImage: string;
-  ogType: string;
-  twitterCard: string;
+  /** Open Graph image alt */
+  ogImageAlt: string;
+  /** Open Graph image width */
+  ogImageWidth: number;
+  /** Open Graph image height */
+  ogImageHeight: number;
+  /** Open Graph image type */
+  ogImageType: string;
+  /** Open Graph type */
+  ogType: 'website' | 'article' | 'product' | 'profile' | 'book';
+  /** Open Graph URL */
+  ogUrl: string;
+  /** Open Graph locale */
+  ogLocale: string;
+  /** Open Graph site name */
+  ogSiteName: string;
+  /** Twitter Card type */
+  twitterCard: 'summary' | 'summary_large_image' | 'app' | 'player';
+  /** Twitter title */
+  twitterTitle: string;
+  /** Twitter description */
+  twitterDescription: string;
+  /** Twitter image */
+  twitterImage: string;
+  /** Twitter image alt */
+  twitterImageAlt: string;
+  /** Twitter site */
+  twitterSite?: string;
+  /** Twitter creator */
+  twitterCreator?: string;
+  /** Robots directive */
   robots: string;
+  /** Page language */
+  language: string;
 }
