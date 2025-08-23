@@ -35,6 +35,9 @@ COPY --from=builder /app/public/config.js /usr/share/nginx/html/config.js
 # Copy test data (including logo)
 COPY --from=builder /app/test /usr/share/nginx/html/test
 
+# Copy robots.txt for SEO
+COPY robots.txt /usr/share/nginx/html/robots.txt
+
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
