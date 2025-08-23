@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://pcma.akdscloud.eu/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /login
+
+# Allow important pages
+Allow: /
+Allow: /product/
+Allow: /cart
+Allow: /order-form
+Allow: /order-confirmation
+
+# Crawl delay (optional)
+Crawl-delay: 1

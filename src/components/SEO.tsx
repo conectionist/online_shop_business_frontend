@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SEOProps, SEOConfig, PageSEO } from '@/types/seo';
 import { getAppName } from '@/utils/appConfig';
+import { generateCanonicalUrl, generateMetaDescription, generateMetaKeywords } from '@/utils/seo';
 
 // Default SEO configuration
 const defaultSEOConfig: SEOConfig = {
@@ -46,24 +47,24 @@ const SEO: React.FC<SEOProps> = ({
     // Prepare page SEO data
     const pageSEO: PageSEO = {
       title: title ? `${title} | ${defaultSEOConfig.baseTitle}` : defaultSEOConfig.baseTitle,
-      description: description || defaultSEOConfig.defaultDescription,
-      keywords: keywords || defaultSEOConfig.defaultKeywords,
+      description: generateMetaDescription(description),
+      keywords: generateMetaKeywords(keywords ? keywords.split(', ') : undefined),
       author: author || defaultSEOConfig.defaultAuthor,
-      canonical: canonical || `${defaultSEOConfig.baseUrl}${location.pathname}`,
+      canonical: generateCanonicalUrl(canonical || location.pathname),
       ogTitle: title ? `${title} | ${defaultSEOConfig.baseTitle}` : defaultSEOConfig.baseTitle,
-      ogDescription: description || defaultSEOConfig.defaultDescription,
+      ogDescription: generateMetaDescription(description),
       ogImage: ogImage || defaultSEOConfig.defaultOgImage,
       ogImageAlt: ogImageAlt || `Imagine pentru ${title || defaultSEOConfig.baseTitle}`,
       ogImageWidth: ogImageWidth || defaultSEOConfig.defaultOgImageWidth,
       ogImageHeight: ogImageHeight || defaultSEOConfig.defaultOgImageHeight,
       ogImageType: ogImageType || defaultSEOConfig.defaultOgImageType,
       ogType: ogType || defaultSEOConfig.defaultOgType,
-      ogUrl: canonical || `${defaultSEOConfig.baseUrl}${location.pathname}`,
+      ogUrl: generateCanonicalUrl(canonical || location.pathname),
       ogLocale: locale || defaultSEOConfig.defaultLocale,
       ogSiteName: defaultSEOConfig.baseTitle,
       twitterCard: twitterCard || defaultSEOConfig.defaultTwitterCard,
       twitterTitle: title ? `${title} | ${defaultSEOConfig.baseTitle}` : defaultSEOConfig.baseTitle,
-      twitterDescription: description || defaultSEOConfig.defaultDescription,
+      twitterDescription: generateMetaDescription(description),
       twitterImage: ogImage || defaultSEOConfig.defaultOgImage,
       twitterImageAlt: ogImageAlt || `Imagine pentru ${title || defaultSEOConfig.baseTitle}`,
       twitterSite: twitterSite || defaultSEOConfig.twitterSite,
