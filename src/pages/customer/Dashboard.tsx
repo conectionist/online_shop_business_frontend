@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
@@ -11,6 +11,7 @@ import { Clock, Package, Truck, CreditCard, Plus, ShoppingCart } from 'lucide-re
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { Link } from 'react-router-dom';
+import { generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 
 const CustomerDashboard: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
@@ -39,6 +40,19 @@ const CustomerDashboard: React.FC = () => {
 
   // Cart store
   const { addItem, getTotalItems } = useCartStore();
+
+  // Inject main page schema markup for SEO
+  useEffect(() => {
+    if (businessDetails) {
+      const mainPageSchema = generateMainPageSchema(businessDetails);
+      injectSchemaMarkup(mainPageSchema);
+    }
+
+    // Cleanup: remove schema markup when component unmounts
+    return () => {
+      removeSchemaMarkup();
+    };
+  }, [businessDetails]);
 
   // Helper functions
   const getCategoryName = (categoryId: number) => {

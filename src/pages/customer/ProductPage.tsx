@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Package, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { getProductImageUrl } from '@/services/api';
 import SEO from '@/components/SEO';
+import { generateProductSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -46,6 +47,25 @@ const ProductPage: React.FC = () => {
   // Find the product
   const product = listProducts?.find((p: any) => p.id === parseInt(productId || '0'));
 
+  // Inject product schema markup for SEO - must be before any early returns
+  useEffect(() => {
+    if (product && categories && units) {
+      try {
+        const categoryName = getCategoryName(product.category_id);
+        const unitName = getUnitName(product.unitati_id);
+        const productSchema = generateProductSchema(product, categoryName, unitName);
+        injectSchemaMarkup(productSchema);
+      } catch (error) {
+        console.warn('Failed to generate product schema:', error);
+      }
+    }
+
+    // Cleanup: remove schema markup when component unmounts
+    return () => {
+      removeSchemaMarkup();
+    };
+  }, [product, categories, units]);
+
   if (!product) {
     return (
       <>
@@ -58,7 +78,7 @@ const ProductPage: React.FC = () => {
           <div className="max-w-2xl mx-auto px-4">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              <h1 className="text-1xl font-bold text-gray-900 mb-4">
                 Produsul nu a fost găsit
               </h1>
               <p className="text-gray-600 mb-6">
