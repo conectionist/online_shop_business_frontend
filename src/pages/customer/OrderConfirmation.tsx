@@ -9,6 +9,7 @@ interface OrderData {
   payment_method_id: number;
   delivery_type_id: number;
   address?: string;
+  observatii?: string;
   items: any[];
   total: number;
   deliveryType: any;
@@ -56,6 +57,10 @@ const OrderConfirmation: React.FC = () => {
     // Add address if it's home delivery
     if (orderData.address && orderData.deliveryType?.denumire.toLowerCase().includes('livrare')) {
       orderText += `Adresa: ${orderData.address}\n`;
+    }
+    // Add observatii if present
+    if (orderData.observatii) {
+      orderText += `Observații: ${orderData.observatii}\n`;
     }
 
     return orderText.trim();

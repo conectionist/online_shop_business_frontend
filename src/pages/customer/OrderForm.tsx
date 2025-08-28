@@ -16,6 +16,7 @@ interface OrderFormData {
   payment_method_id: number | null;
   delivery_type_id: number | null;
   address?: string;
+  observatii?: string;
 }
 
 const OrderForm: React.FC = () => {
@@ -235,6 +236,17 @@ const OrderForm: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Observații (Notes) */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Observații pentru livrare sau comandă</label>
+            <textarea
+              {...register('observatii')}
+              rows={3}
+              placeholder="Scrie aici orice detalii speciale pentru livrare sau comandă..."
+              className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            />
           </div>
 
           {/* Order Summary */}
