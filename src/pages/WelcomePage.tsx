@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
@@ -6,7 +6,7 @@ import { useUnits } from '@/hooks/useUnits';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
-import { Clock, Package, Truck, CreditCard, Plus, ShoppingCart } from 'lucide-react';
+import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { Link } from 'react-router-dom';
@@ -44,7 +44,12 @@ const WelcomePage: React.FC = () => {
 
   // Interactive states
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
-  const [showSuccessMessage, setShowSuccessMessage] = React.useState<{ [key: number]: boolean }>({});
+  // Quantity state for each product
+  const [quantities, setQuantities] = React.useState<{ [key: number]: number }>({});
+
+  // Refs for animation
+  const cartIconRef = useRef<HTMLDivElement>(null);
+  const imageRefs = useRef<{ [key: number]: HTMLImageElement | null }>({});
 
   // Inject schema markup for SEO
   useEffect(() => {
@@ -82,34 +87,67 @@ const WelcomePage: React.FC = () => {
     return units?.find(u => u.id === unitId)?.denumire || 'unitate';
   };
 
-  // Enhanced cart function with animations
+  // Add to cart with quantity logic
+  // Helper for animation
+  const animateImageToCart = (productId: number) => {
+    const img = imageRefs.current[productId];
+    const cartIcon = cartIconRef.current;
+    if (!img || !cartIcon) return;
+    const imgRect = img.getBoundingClientRect();
+    const cartRect = cartIcon.getBoundingClientRect();
+    const clone = img.cloneNode(true) as HTMLImageElement;
+    clone.style.position = 'fixed';
+    clone.style.zIndex = '9999';
+    clone.style.left = `${imgRect.left}px`;
+    clone.style.top = `${imgRect.top}px`;
+    clone.style.width = `${imgRect.width}px`;
+    clone.style.height = `${imgRect.height}px`;
+    clone.style.transition = 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
+    document.body.appendChild(clone);
+    requestAnimationFrame(() => {
+      clone.style.left = `${cartRect.left + cartRect.width / 2 - imgRect.width / 2}px`;
+      clone.style.top = `${cartRect.top + cartRect.height / 2 - imgRect.height / 2}px`;
+      clone.style.width = '32px';
+      clone.style.height = '32px';
+      clone.style.opacity = '0.5';
+    });
+    clone.addEventListener('transitionend', () => {
+      clone.remove();
+    });
+  };
+
   const addToCart = async (product: any) => {
     const productId = product.id;
-    
-    // Set loading state
+    const quantity = quantities[productId] || 1;
+    animateImageToCart(productId);
     setAddingToCart(prev => ({ ...prev, [productId]: true }));
-    
-    // Simulate a small delay for better UX
     await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Add to cart
-    addItem({
-      id: product.id,
-      nume: product.nume,
-      pret: product.pret,
-      unitati_id: product.unitati_id,
-      unitate_denumire: getUnitName(product.unitati_id),
-      images: product.images
-    });
-    
-    // Show success state
+    const currentItems = useCartStore.getState().items;
+    const existingItem = currentItems.find(item => item.id === productId);
+    if (existingItem) {
+      const newQuantity = existingItem.quantity + quantity;
+      useCartStore.getState().updateQuantity(productId, newQuantity);
+    } else {
+      addItem({
+        id: product.id,
+        nume: product.nume,
+        pret: product.pret,
+        unitati_id: product.unitati_id,
+        unitate_denumire: getUnitName(product.unitati_id),
+        images: product.images
+      });
+      setTimeout(() => {
+        useCartStore.getState().updateQuantity(productId, quantity);
+      }, 0);
+    }
     setAddingToCart(prev => ({ ...prev, [productId]: false }));
-    setShowSuccessMessage(prev => ({ ...prev, [productId]: true }));
-    
-    // Hide success message after 2 seconds
-    setTimeout(() => {
-      setShowSuccessMessage(prev => ({ ...prev, [productId]: false }));
-    }, 2000);
+  };
+
+  // Handle quantity change for each product
+  const handleQuantityChange = (productId: number, newQuantity: number) => {
+    if (newQuantity >= 1) {
+      setQuantities(prev => ({ ...prev, [productId]: newQuantity }));
+    }
   };
 
   if (isLoading) {
@@ -156,6 +194,19 @@ const WelcomePage: React.FC = () => {
   // Show the published list with exact same structure as admin preview
   return (
     <>
+      {/* Floating Cart Icon */}
+      <div className="fixed top-4 right-4 z-50" ref={cartIconRef}>
+        <Link to="/cart">
+          <div className="relative bg-white rounded-full shadow-lg border border-gray-200 p-3 hover:shadow-xl transition-shadow">
+            <ShoppingCart className="h-6 w-6 text-gray-700" />
+            {getTotalItems() > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                {getTotalItems()}
+              </span>
+            )}
+          </div>
+        </Link>
+      </div>
       {/* Beautiful Header Section */}
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200 mb-8">
         <div className="max-w-4xl mx-auto px-6 py-8">
@@ -287,6 +338,7 @@ const WelcomePage: React.FC = () => {
                                     src={getProductImageUrl(product, 'thumbnail')}
                                     alt={product.nume}
                                     className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-xl border-2 border-amber-100 shadow-sm group-hover:border-amber-200 transition-colors duration-300"
+                                    ref={el => { imageRefs.current[product.id] = el; }}
                                     onError={(e) => {
                                       // Fallback to package icon if image fails to load
                                       const target = e.target as HTMLImageElement;
@@ -348,8 +400,30 @@ const WelcomePage: React.FC = () => {
                                 </div>
                               </div>
                               
-                              {/* Add to Cart Button - Enhanced */}
-                              <div className="flex-shrink-0 pt-3">
+                              {/* Quantity Selector and Add to Cart Button */}
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-3">
+                                <div className="flex items-center justify-between gap-2 w-full sm:w-auto">
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => handleQuantityChange(product.id, (quantities[product.id] || 1) - 1)}
+                                    disabled={(quantities[product.id] || 1) <= 1}
+                                    className="w-10 h-10 p-0 rounded-full"
+                                  >
+                                    <Minus className="w-4 h-4" />
+                                  </Button>
+                                  <span className="text-lg font-bold text-gray-900 w-10 text-center">
+                                    {quantities[product.id] || 1}
+                                  </span>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => handleQuantityChange(product.id, (quantities[product.id] || 1) + 1)}
+                                    className="w-10 h-10 p-0 rounded-full"
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </div>
                                 <Button
                                   variant="primary"
                                   size="sm"
@@ -359,23 +433,12 @@ const WelcomePage: React.FC = () => {
                                     addToCart(product);
                                   }}
                                   disabled={addingToCart[product.id]}
-                                  className={`w-full font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 ${
-                                    showSuccessMessage[product.id]
-                                      ? 'bg-green-500 hover:bg-green-600'
-                                      : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
-                                  } text-white`}
+                                  className={"w-full sm:w-auto font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"}
                                 >
                                   {addingToCart[product.id] ? (
                                     <>
                                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                                       Se adaugă...
-                                    </>
-                                  ) : showSuccessMessage[product.id] ? (
-                                    <>
-                                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                      </svg>
-                                      Adăugat!
                                     </>
                                   ) : (
                                     <>
