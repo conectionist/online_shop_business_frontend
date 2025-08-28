@@ -1,4 +1,5 @@
 import React from 'react';
+import { getProductImageUrl } from '@/services/api';
 import { useCartStore } from '@/stores/cartStore';
 import { Package, Trash2, Plus, Minus, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -87,7 +88,7 @@ const CartPage: React.FC = () => {
                   <div className="flex-shrink-0">
                     {item.images && item.images.length > 0 ? (
                       <img
-                        src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/static/uploads/${item.images[0].image_versions?.thumbnail}`}
+                        src={getProductImageUrl(item, 'thumbnail')}
                         alt={item.nume}
                         className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                         onError={(e) => {
