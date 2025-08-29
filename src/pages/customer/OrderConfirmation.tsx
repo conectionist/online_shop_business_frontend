@@ -188,19 +188,6 @@ const OrderConfirmation: React.FC = () => {
           </div>
         </div>
 
-        {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">
-            Următorii pași:
-          </h3>
-          <ol className="list-decimal list-inside space-y-2 text-blue-800">
-            <li>Copiază textul comenzii de mai sus</li>
-            <li>Deschide WhatsApp</li>
-            <li>Trimite textul către numărul de contact al magazinului</li>
-            <li>Așteaptă confirmarea comenzii</li>
-          </ol>
-        </div>
-
         {/* Navigation */}
         <div className="flex justify-center">
           <Button
