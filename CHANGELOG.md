@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-01-30
+
+### Added
+- **Enhanced Orders PDF Printing**: Improved PDF generation and web display for order lists
+  - Orders now display in chronological order (oldest first) for better workflow
+  - Cleaner PDF output with simplified formatting for kitchen/fulfillment use
+  - Removed redundant information from PDF while keeping essential order details
+  - PDF title now shows "Lista Comenzi <date>" for better identification
+
+### Changed
+- **Orders Display Order**: Web interface now shows orders sorted by creation date
+  - Consistent ordering between web display and PDF output
+  - Better workflow for staff processing orders chronologically
+- **PDF Format Simplification**: Streamlined PDF output for practical use
+  - Removed command titles and list metadata for cleaner appearance
+  - Eliminated duplicate total information
+  - Kept essential order details (items, payment, delivery methods)
+
+### Technical
+- **Order Sorting**: Implemented chronological sorting for both web and PDF views
+- **PDF Generation**: Enhanced PDF output with cleaner, more focused content
+- **Code Organization**: Separated web display and PDF formatting logic for maintainability
+
+## [Unreleased]
+
 ### Changed
 - **Image Upload Limits**: Updated image upload constraints to match backend capabilities
   - Increased product image upload limit from 5MB to 25MB
