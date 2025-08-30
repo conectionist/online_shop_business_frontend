@@ -12,6 +12,7 @@ import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
+import { requiresAddress } from '@/utils/delivery';
 
 
 interface ListOrdersTabProps {
@@ -107,13 +108,16 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     const paymentMethodName = getPaymentMethodName(order.payment_method_id);
     orderText += `Plata ${paymentMethodName.toLowerCase()}.\n`;
     
-    // Add delivery method
-    const deliveryTypeName = getDeliveryTypeName(order.delivery_type_id);
-    orderText += `${deliveryTypeName}.\n`;
-    
-    // Add address if it's home delivery
-    if (order.delivery_address && getDeliveryTypeName(order.delivery_type_id).toLowerCase().includes('livrare')) {
-      orderText += `Adresa: ${order.delivery_address}\n`;
+    // Add delivery method and address
+    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+    if (deliveryType) {
+      if (order.delivery_address && requiresAddress(deliveryType)) {
+        // If address is provided, show clean delivery message
+        orderText += `Livrare la adresa: ${order.delivery_address}\n`;
+      } else {
+        // If no address, show the original delivery method description
+        orderText += `${deliveryType.denumire}.\n`;
+      }
     }
     
     // Add observatii if present
