@@ -253,6 +253,59 @@ export interface ListProduct {
   images: ProductImage[];
 }
 
+// Order Types
+export interface Order {
+  id: number;
+  nume_client: string;
+  data_plasarii: string;
+  liste_id: number;
+  delivery_type_id: number;
+  payment_method_id: number;
+  delivery_address?: string;
+  order_notes?: string;
+  created_at: string;
+  updated_at: string;
+  items?: OrderItem[];
+}
+
+export interface OrderItem {
+  comenzi_id: number;
+  produse_id: number;
+  pret_produs: number;
+  cantitate_produs: number;
+  unitati_id: number;
+}
+
+export interface OrderCreate {
+  nume_client: string;
+  data_plasarii: string;
+  liste_id: number;
+  delivery_type_id: number;
+  payment_method_id: number;
+  delivery_address?: string;
+  order_notes?: string;
+  items?: OrderItemBase[];
+}
+
+export interface OrderItemBase {
+  produse_id: number;
+  pret_produs: number;
+  cantitate_produs: number;
+  unitati_id: number;
+}
+
+export interface OrderUpdate {
+  nume_client?: string;
+  order_notes?: string;
+  delivery_type_id?: number;
+  payment_method_id?: number;
+  delivery_address?: string;
+}
+
+export interface OrderRead extends Order {
+  items: OrderItem[];
+}
+
 // Error Types
 export interface ApiError {
   detail: string | Array<{

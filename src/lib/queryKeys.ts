@@ -79,6 +79,16 @@ export const queryKeys = {
     details: () => [...queryKeys.deliverySchedules.all, 'detail'] as const,
     detail: (id: number) => [...queryKeys.deliverySchedules.details(), id] as const,
   },
+
+  // Orders
+  orders: {
+    all: ['orders'] as const,
+    lists: () => [...queryKeys.orders.all, 'list'] as const,
+    list: (filters?: Record<string, any>) => 
+      [...queryKeys.orders.lists(), filters] as const,
+    details: () => [...queryKeys.orders.all, 'detail'] as const,
+    detail: (id: number) => [...queryKeys.orders.details(), id] as const,
+  },
 };
 
 // Helper function to invalidate related queries
@@ -106,4 +116,7 @@ export const invalidateQueries = {
   
   // Invalidate all delivery schedule-related queries
   deliverySchedules: () => queryKeys.deliverySchedules.all,
+  
+  // Invalidate all order-related queries
+  orders: () => queryKeys.orders.all,
 }; 
