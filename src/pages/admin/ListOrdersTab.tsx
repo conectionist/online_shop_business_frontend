@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Eye, Trash2 } from 'lucide-react';
+import { Package, Eye, Trash2, MoreVertical, Printer, FileText } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { useDeleteOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
@@ -24,6 +24,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<OrderRead | null>(null);
+  const [openDropdown, setOpenDropdown] = useState(false);
 
   // Fetch orders for this specific list
   const { data: orders, isLoading, error } = useOrders({ liste_id: listId });
@@ -128,6 +129,228 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     return orderText.trim();
   };
 
+  const toggleDropdown = () => {
+    setOpenDropdown(!openDropdown);
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdown(false);
+  };
+
+  const handlePrintList = () => {
+    closeDropdown();
+    
+    // Create a formatted print view
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Lista Comenzi - ${listId}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+            .header h1 { margin: 0; color: #333; }
+            .header p { margin: 5px 0; color: #666; }
+            .order { margin-bottom: 30px; page-break-inside: avoid; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
+            .order-header { font-weight: bold; margin-bottom: 10px; color: #333; }
+            .order-content { background: #f9f9f9; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-line; }
+            .order-details { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            .detail-item { display: flex; justify-content: space-between; }
+            .detail-label { font-weight: bold; color: #555; }
+            .detail-value { color: #333; }
+            .total { font-weight: bold; font-size: 1.1em; color: #333; margin-top: 10px; text-align: right; }
+            @media print {
+              body { margin: 15px; }
+              .order { border: 1px solid #ccc; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Lista Comenzi</h1>
+            <p>ID Lista: ${listId}</p>
+            <p>Data generării: ${new Date().toLocaleDateString('ro-RO')}</p>
+            <p>Total comenzi: ${orders?.length || 0}</p>
+          </div>
+          
+          ${orders?.map((order) => `
+            <div class="order">
+              <div class="order-header">Comanda #${order.id} - ${order.nume_client}</div>
+              <div class="order-content">${formatOrderText(order)}</div>
+              <div class="order-details">
+                <div class="detail-item">
+                  <span class="detail-label">Data plasării:</span>
+                  <span class="detail-value">${formatDate(order.data_plasarii)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Metoda de plată:</span>
+                  <span class="detail-value">${getPaymentMethodName(order.payment_method_id)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Metoda de livrare:</span>
+                  <span class="detail-value">${getDeliveryTypeName(order.delivery_type_id)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total produse:</span>
+                  <span class="detail-value">${order.items?.length || 0}</span>
+                </div>
+              </div>
+              <div class="total">Total: ${calculateTotal(order)} RON</div>
+            </div>
+          `).join('') || '<p>Nu există comenzi pentru această listă.</p>'}
+        </body>
+      </html>
+    `;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      
+      // Wait for content to load then print
+      printWindow.onload = () => {
+        printWindow.print();
+        // Close the window after printing
+        printWindow.onafterprint = () => printWindow.close();
+      };
+    } else {
+      // Fallback: print the current page
+      window.print();
+    }
+  };
+
+  const handleSaveAsPDF = async () => {
+    closeDropdown();
+    
+    try {
+      // Dynamic import of jsPDF to avoid build issues
+      const { default: jsPDF } = await import('jspdf');
+      
+      // Create new PDF document
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const contentWidth = pageWidth - (2 * margin);
+      
+      let yPosition = margin;
+      
+      // Add header
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Lista Comenzi', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`ID Lista: ${listId}`, margin, yPosition);
+      yPosition += 8;
+      pdf.text(`Data generării: ${new Date().toLocaleDateString('ro-RO')}`, margin, yPosition);
+      yPosition += 8;
+      pdf.text(`Total comenzi: ${orders?.length || 0}`, margin, yPosition);
+      yPosition += 20;
+      
+      // Add orders
+      if (orders && orders.length > 0) {
+        orders.forEach((order, index) => {
+          // Check if we need a new page
+          if (yPosition > pageHeight - 60) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          
+          // Order header
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`Comanda #${order.id} - ${order.nume_client}`, margin, yPosition);
+          yPosition += 8;
+          
+          // Order content
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          const orderText = formatOrderText(order);
+          const lines = pdf.splitTextToSize(orderText, contentWidth);
+          
+          // Add background for order content
+          const textHeight = lines.length * 5;
+          pdf.setFillColor(249, 249, 249);
+          pdf.rect(margin, yPosition - 2, contentWidth, textHeight + 4, 'F');
+          
+          pdf.text(lines, margin + 2, yPosition + 2);
+          yPosition += textHeight + 8;
+          
+          // Order details
+          const details = [
+            ['Data plasării:', formatDate(order.data_plasarii)],
+            ['Metoda de plată:', getPaymentMethodName(order.payment_method_id)],
+            ['Metoda de livrare:', getDeliveryTypeName(order.delivery_type_id)],
+            ['Total produse:', `${order.items?.length || 0}`]
+          ];
+          
+          details.forEach(([label, value]) => {
+            if (yPosition > pageHeight - 40) {
+              pdf.addPage();
+              yPosition = margin;
+            }
+            
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(label, margin, yPosition);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(value, margin + 60, yPosition);
+            yPosition += 6;
+          });
+          
+          // Total
+          if (yPosition > pageHeight - 30) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`Total: ${calculateTotal(order)} RON`, pageWidth - margin, yPosition, { align: 'right' });
+          yPosition += 20;
+          
+          // Add separator line
+          if (index < orders.length - 1) {
+            pdf.setDrawColor(200, 200, 200);
+            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+            yPosition += 10;
+          }
+        });
+      } else {
+        pdf.setFontSize(12);
+        pdf.text('Nu există comenzi pentru această listă.', margin, yPosition);
+      }
+      
+      // Save the PDF
+      pdf.save(`lista-comenzi-${listId}-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      // Fallback: show error message
+      alert('Eroare la generarea PDF-ului. Vă rugăm să încercați din nou.');
+    }
+  };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDropdown) {
+        const target = event.target as Element;
+        const dropdownElement = document.querySelector('[data-dropdown-id="orders-actions"]');
+        
+        if (dropdownElement && !dropdownElement.contains(target)) {
+          closeDropdown();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -173,6 +396,42 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           <p className="text-gray-600">
             {orders.length} {orders.length === 1 ? 'comandă găsită' : 'comenzi găsite'}
           </p>
+        </div>
+        
+        {/* 3-dot Menu */}
+        <div className="relative">
+          <button
+            onClick={toggleDropdown}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {openDropdown && (
+            <div 
+              className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+              data-dropdown-id="orders-actions"
+            >
+              {/* Print List Option */}
+              <button
+                onClick={handlePrintList}
+                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              >
+                <Printer className="w-4 h-4 mr-3 text-gray-400" />
+                Tipareste Lista
+              </button>
+
+              {/* Save as PDF Option */}
+              <button
+                onClick={handleSaveAsPDF}
+                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              >
+                <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                Salveaza ca PDF
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
