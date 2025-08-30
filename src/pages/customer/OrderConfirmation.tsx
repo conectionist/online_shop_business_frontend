@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { usePublishedList } from '@/hooks/useLists';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
+import { requiresAddress } from '@/utils/delivery';
 
 
 interface OrderData {
@@ -33,7 +34,8 @@ const OrderConfirmation: React.FC = () => {
   useEffect(() => {
     const storedOrderData = sessionStorage.getItem('orderData');
     if (storedOrderData) {
-      setOrderData(JSON.parse(storedOrderData));
+      const parsedData = JSON.parse(storedOrderData);
+      setOrderData(parsedData);
     } else {
       // If no order data, redirect to home page
       navigate('/');
@@ -58,15 +60,19 @@ const OrderConfirmation: React.FC = () => {
       orderText += `Plata ${orderData.paymentMethod.name.toLowerCase()}.\n`;
     }
     
-    // Add delivery method
+    // Add delivery method and address
     if (orderData.deliveryType) {
-      orderText += `${orderData.deliveryType.denumire}.\n`;
+      if (orderData.address && requiresAddress(orderData.deliveryType)) {
+        // If address is provided, show clean delivery message
+        orderText += `Livrare la adresa: ${orderData.address}\n`;
+      } else {
+        // If no address, show the original delivery method description
+        orderText += `${orderData.deliveryType.denumire}.\n`;
+      }
     }
     
-    // Add address if it's home delivery
-    if (orderData.address && orderData.deliveryType?.denumire.toLowerCase().includes('livrare')) {
-      orderText += `Adresa: ${orderData.address}\n`;
-    }
+
+    
     // Add observatii if present
     if (orderData.observatii) {
       orderText += `Observații: ${orderData.observatii}\n`;

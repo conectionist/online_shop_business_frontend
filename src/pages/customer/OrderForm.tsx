@@ -10,6 +10,7 @@ import { ArrowLeft, User, CreditCard, Truck, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
+import { requiresAddress } from '@/utils/delivery';
 
 interface OrderFormData {
   nume: string;
@@ -30,13 +31,6 @@ const OrderForm: React.FC = () => {
   const { data: paymentMethods } = usePaymentMethods();
 
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
-
-  // Helper function to check if delivery type requires address
-  const requiresAddress = (deliveryType: any): boolean => {
-    if (!deliveryType?.denumire) return false;
-    const denumire = deliveryType.denumire.toLowerCase();
-    return denumire.includes('livrare') || denumire.includes('curier');
-  };
 
   const {
     register,
@@ -126,6 +120,8 @@ const OrderForm: React.FC = () => {
       deliveryType: selectedDeliveryType,
       paymentMethod: paymentMethods?.find(pm => pm.id === data.payment_method_id)
     };
+    
+
     
     // Store order data in sessionStorage for confirmation page
     sessionStorage.setItem('orderData', JSON.stringify(orderData));
