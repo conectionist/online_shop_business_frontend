@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useCartStore } from '@/stores/cartStore';
 
+import { usePublishedList } from '@/hooks/useLists';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { ArrowLeft, User, CreditCard, Truck, MapPin } from 'lucide-react';
@@ -23,10 +24,19 @@ const OrderForm: React.FC = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCartStore();
 
-  const { data: deliveryTypes } = useDeliveryTypes();
+  // Get the current published list and all delivery types
+  const { data: publishedList, isLoading: isLoadingList } = usePublishedList();
+  const { data: deliveryTypes, isLoading: isLoadingDeliveryTypes } = useDeliveryTypes();
   const { data: paymentMethods } = usePaymentMethods();
 
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
+
+  // Helper function to check if delivery type requires address
+  const requiresAddress = (deliveryType: any): boolean => {
+    if (!deliveryType?.denumire) return false;
+    const denumire = deliveryType.denumire.toLowerCase();
+    return denumire.includes('livrare') || denumire.includes('curier');
+  };
 
   const {
     register,
@@ -55,6 +65,45 @@ const OrderForm: React.FC = () => {
     }
   }, [watchedDeliveryType, deliveryTypes]);
 
+  // Show loading state while fetching data
+  if (isLoadingList || isLoadingDeliveryTypes) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Se încarcă...
+            </h1>
+            <p className="text-gray-600">
+              Se încarcă opțiunile de livrare și plată.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no published list
+  if (!publishedList) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Nu se poate finaliza comanda
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Nu s-a găsit o listă publicată.
+            </p>
+            <Button variant="primary" onClick={() => navigate('/')}>
+              Înapoi la Produse
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const onSubmit = (data: OrderFormData) => {
     // Validate required fields
     if (!data.payment_method_id) {
@@ -66,6 +115,8 @@ const OrderForm: React.FC = () => {
       alert('Te rugăm să selectezi o metodă de livrare.');
       return;
     }
+
+
     
     // For now, just navigate to confirmation page with order data
     const orderData = {
@@ -217,16 +268,16 @@ const OrderForm: React.FC = () => {
                 )}
               </div>
 
-              {/* Address field - only show if home delivery is selected */}
-              {selectedDeliveryType && (selectedDeliveryType.denumire.toLowerCase().includes('livrare') || selectedDeliveryType.denumire.toLowerCase().includes('curier')) && (
+              {/* Address field - only show if delivery type requires address */}
+              {selectedDeliveryType && requiresAddress(selectedDeliveryType) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
                     <MapPin className="w-4 h-4 mr-1" />
-                    Adresa de livrare *
+                    Adresa de livrare
                   </label>
                   <Input
                     {...register('address', { 
-                      required: (selectedDeliveryType.denumire.toLowerCase().includes('livrare') || selectedDeliveryType.denumire.toLowerCase().includes('curier'))
+                      required: requiresAddress(selectedDeliveryType)
                         ? 'Adresa este obligatorie pentru livrare' 
                         : false 
                     })}
