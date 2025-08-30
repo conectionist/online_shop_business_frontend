@@ -275,13 +275,13 @@ This roadmap outlines the complete development plan for the online shop business
   - Handle stock level updates
   - Implement product removal
 
-#### 5.3 List Delivery Configuration
-- [ ] **Delivery Types Assignment**
+#### 5.3 List Delivery Configuration ✅
+- [x] **Delivery Types Assignment**
   - Create delivery type selection interface
   - Implement delivery type management
   - Add delivery type validation
 
-- [ ] **List Delivery API Integration**
+- [x] **List Delivery API Integration**
   - Create list delivery service functions
   - Setup list delivery queries and mutations
 

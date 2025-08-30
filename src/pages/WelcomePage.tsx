@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
-import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
+import { usePublishedList, useListProductsOrdered, useListDeliveryTypes } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
-import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -23,7 +22,8 @@ const WelcomePage: React.FC = () => {
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
   const { data: deliverySchedules } = useDeliverySchedules();
-  const { data: deliveryTypes } = useDeliveryTypes();
+  // Fetch list-specific delivery types instead of all system delivery types
+  const { data: listDeliveryTypes } = useListDeliveryTypes(publishedList?.id || 0);
   const { data: paymentMethods } = usePaymentMethods();
 
   // Extract products from the new ordered structure
@@ -499,8 +499,8 @@ const WelcomePage: React.FC = () => {
             <div className="flex-1">
               <h4 className="font-medium text-gray-900 mb-2">Metode de Livrare</h4>
               <div className="text-sm text-gray-600">
-                {deliveryTypes && deliveryTypes.length > 0 
-                  ? deliveryTypes.map(dt => (
+                {listDeliveryTypes && listDeliveryTypes.length > 0 
+                  ? listDeliveryTypes.map(dt => (
                       <div key={dt.id} className="mb-1 last:mb-0">
                         {dt.denumire}
                       </div>

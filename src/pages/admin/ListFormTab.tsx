@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Save, Loader2, Eye, EyeOff, Clock, Truck, CreditCard, Package } from 'lucide-react';
+import { Save, Loader2, Eye, EyeOff, Clock, Truck, CreditCard, Package, Check } from 'lucide-react';
 import { useList } from '@/hooks/useLists';
-import { useCreateList, useUpdateList, useListProductsOrdered } from '@/hooks/useLists';
+import { useCreateList, useUpdateList, useListProductsOrdered, useListDeliveryTypes, useReplaceListDeliveryTypes } from '@/hooks/useLists';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
@@ -33,9 +32,9 @@ interface ListFormTabProps {
 }
 
 const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
-  const navigate = useNavigate();
   const isEditing = !!listId;
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedDeliveryTypes, setSelectedDeliveryTypes] = useState<number[]>([]);
 
   // Fetch list data if editing
   const { data: list, isLoading: isLoadingList, error: listError } = useList(listId);
@@ -46,8 +45,11 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
   // Fetch payment methods for preview
   const { data: paymentMethods } = usePaymentMethods();
   
-  // Fetch delivery types for preview
+  // Fetch delivery types for selection and preview
   const { data: deliveryTypes } = useDeliveryTypes();
+
+  // Fetch list-specific delivery types if editing
+  const { data: listDeliveryTypes } = useListDeliveryTypes(listId);
 
   // Fetch list products for preview (only when editing)
   const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(listId);
@@ -55,6 +57,11 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
   // Fetch categories and units for product display
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
+
+  // Form mutations
+  const createListMutation = useCreateList();
+  const updateListMutation = useUpdateList();
+  const replaceListDeliveryTypesMutation = useReplaceListDeliveryTypes();
 
   // Extract products from the new ordered structure
   const listProducts = React.useMemo(() => {
@@ -68,10 +75,6 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
       }))
     );
   }, [listProductsData]);
-
-  // Form mutations
-  const createListMutation = useCreateList();
-  const updateListMutation = useUpdateList();
 
   // Form setup
   const {
@@ -103,6 +106,13 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
     }
   }, [list, isEditing, setValue]);
 
+  // Set selected delivery types when list delivery types are loaded (for editing)
+  useEffect(() => {
+    if (listDeliveryTypes && isEditing) {
+      setSelectedDeliveryTypes(listDeliveryTypes.map(dt => dt.id));
+    }
+  }, [listDeliveryTypes, isEditing]);
+
   const onSubmit = async (data: ListFormData) => {
     try {
       if (isEditing) {
@@ -116,7 +126,14 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
         };
         
         await updateListMutation.mutateAsync({ id: listId, data: updateData });
-        onSaveSuccess?.();
+        
+        // Update delivery types for existing list
+        if (selectedDeliveryTypes.length > 0) {
+          await replaceListDeliveryTypesMutation.mutateAsync({
+            listId,
+            deliveryTypeIds: selectedDeliveryTypes
+          });
+        }
       } else {
         const createData: ListCreate = {
           data: data.data,
@@ -127,12 +144,33 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
           orare_livrari_id: data.orare_livrari_id,
         };
         
-        await createListMutation.mutateAsync(createData);
-        navigate('/admin/lists');
+        const createdList = await createListMutation.mutateAsync(createData);
+        
+        // Assign delivery types to newly created list
+        if (selectedDeliveryTypes.length > 0) {
+          await replaceListDeliveryTypesMutation.mutateAsync({
+            listId: createdList.id,
+            deliveryTypeIds: selectedDeliveryTypes
+          });
+        }
+      }
+      
+      if (onSaveSuccess) {
+        onSaveSuccess();
       }
     } catch (error) {
       console.error('Eroare la salvarea listei:', error);
     }
+  };
+
+  const handleDeliveryTypeToggle = (deliveryTypeId: number) => {
+    setSelectedDeliveryTypes(prev => {
+      if (prev.includes(deliveryTypeId)) {
+        return prev.filter(id => id !== deliveryTypeId);
+      } else {
+        return [...prev, deliveryTypeId];
+      }
+    });
   };
 
   // Helper functions for product display
@@ -231,6 +269,53 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
             </div>
           </div>
 
+          {/* Delivery Types Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Metode de Livrare Disponibile *
+            </label>
+            <div className="text-sm text-gray-600 mb-3">
+              Selectează metodele de livrare care vor fi disponibile pentru această listă
+            </div>
+            {deliveryTypes && deliveryTypes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {deliveryTypes.map((deliveryType) => (
+                  <div
+                    key={deliveryType.id}
+                    className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                      selectedDeliveryTypes.includes(deliveryType.id)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    onClick={() => handleDeliveryTypeToggle(deliveryType.id)}
+                  >
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center mr-3 ${
+                      selectedDeliveryTypes.includes(deliveryType.id)
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedDeliveryTypes.includes(deliveryType.id) && (
+                        <Check className="w-3 h-3 text-white" />
+                      )}
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {deliveryType.denumire}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                Nu există metode de livrare definite
+              </div>
+            )}
+            {selectedDeliveryTypes.length === 0 && (
+              <p className="text-sm text-red-600 mt-2">
+                Trebuie să selectezi cel puțin o metodă de livrare
+              </p>
+            )}
+          </div>
+
           {/* Status Flags */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* <div className="flex items-center space-x-3">
@@ -303,7 +388,7 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting || isLoadingSchedules}
+              disabled={isSubmitting || isLoadingSchedules || selectedDeliveryTypes.length === 0}
             >
               {isSubmitting ? (
                 <>
@@ -445,21 +530,25 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
                 </div>
               </div>
 
-              {/* Delivery Methods */}
+              {/* Selected Delivery Methods */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
                   <Truck className="h-6 w-6 text-orange-600 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 mb-2">Metode de Livrare</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">Metode de Livrare Selectate</h4>
                     <div className="text-sm text-gray-600">
-                      {deliveryTypes && deliveryTypes.length > 0 
-                        ? deliveryTypes.map(dt => (
-                            <div key={dt.id} className="mb-1 last:mb-0">
-                              {dt.denumire}
+                      {selectedDeliveryTypes.length > 0 ? (
+                        selectedDeliveryTypes.map(deliveryTypeId => {
+                          const deliveryType = deliveryTypes?.find(dt => dt.id === deliveryTypeId);
+                          return (
+                            <div key={deliveryTypeId} className="mb-1 last:mb-0">
+                              {deliveryType ? deliveryType.denumire : `Metodă ${deliveryTypeId}`}
                             </div>
-                          ))
-                        : 'Metode de livrare nedefinite'
-                      }
+                          );
+                        })
+                      ) : (
+                        'Nu au fost selectate metode de livrare'
+                      )}
                     </div>
                   </div>
                 </div>

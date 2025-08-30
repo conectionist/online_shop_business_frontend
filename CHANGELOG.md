@@ -14,6 +14,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented proper error handling and user feedback for category image uploads
   - Added visual feedback for validation errors in category image upload area
 
+## [0.20.0] - 2025-08-30
+
+### Added
+- **List Delivery Type Assignment**: Admins can now specify which delivery methods are available for each list
+  - Delivery type selection interface in list creation and editing forms
+  - Visual checkbox-style selection with clear visual feedback
+  - Automatic assignment of selected delivery types to lists after creation
+  - Preview shows selected delivery methods for each list
+  - Form validation ensures at least one delivery type is selected
+  - Import script automatically assigns all available delivery types to imported lists
+
+### Changed
+- **List Creation Workflow**: Enhanced list creation process with delivery method configuration
+  - Lists now require delivery type selection before they can be created
+  - Delivery types are assigned immediately after list creation
+  - Existing lists can be updated with new delivery type selections
+  - Preview section shows selected delivery methods instead of all system delivery types
+
+### Technical
+- **Delivery Type Management**: Enhanced list-delivery type relationship
+  - `useListDeliveryTypes` hook for fetching list-specific delivery types
+  - `useReplaceListDeliveryTypes` hook for bulk delivery type assignment
+  - Automatic delivery type assignment in both create and update operations
+  - Import script integration for bulk delivery type assignment
+
 ## [0.19.0] - 2025-01-17
 
 ### Added

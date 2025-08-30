@@ -534,6 +534,34 @@ class ProductImporter:
         self.log(f"Product processing complete. Processed {len(processed_products)} products successfully.")
         return processed_products
     
+    def get_existing_delivery_types(self) -> Dict[str, int]:
+        """Get existing delivery types from the API"""
+        try:
+            response = self.session.get(f"{self.api_base_url}/tipuri-livrare")
+            response.raise_for_status()
+            delivery_types = response.json()
+            
+            # Create a mapping of delivery type name to ID
+            return {dt["denumire"]: dt["id"] for dt in delivery_types}
+        except requests.exceptions.RequestException as e:
+            self.log(f"Error fetching delivery types: {e}")
+            return {}
+
+    def assign_delivery_types_to_list(self, list_id: int, delivery_type_ids: List[int]) -> bool:
+        """Assign delivery types to a list"""
+        try:
+            # Use the replace endpoint to assign all delivery types at once
+            response = self.session.put(
+                f"{self.api_base_url}/liste/{list_id}/delivery-types",
+                json=delivery_type_ids
+            )
+            response.raise_for_status()
+            self.log(f"Successfully assigned {len(delivery_type_ids)} delivery types to list {list_id}")
+            return True
+        except requests.exceptions.RequestException as e:
+            self.log(f"Error assigning delivery types to list {list_id}: {e}")
+            return False
+
     def create_list(self, list_data: ProductList) -> Optional[int]:
         """Create a list and return its ID"""
         try:
@@ -554,6 +582,18 @@ class ProductImporter:
             response.raise_for_status()
             created_list = response.json()
             self.log(f"Created list: {list_data.nume} (ID: {created_list['id']})")
+            
+            # Assign all available delivery types to the list
+            delivery_types = self.get_existing_delivery_types()
+            if delivery_types:
+                delivery_type_ids = list(delivery_types.values())
+                if self.assign_delivery_types_to_list(created_list['id'], delivery_type_ids):
+                    self.log(f"Assigned {len(delivery_type_ids)} delivery types to list {created_list['id']}")
+                else:
+                    self.log(f"Warning: Failed to assign delivery types to list {created_list['id']}")
+            else:
+                self.log(f"Warning: No delivery types found to assign to list {created_list['id']}")
+            
             return created_list["id"]
         except requests.exceptions.RequestException as e:
             self.log(f"Error creating list '{list_data.nume}': {e}")

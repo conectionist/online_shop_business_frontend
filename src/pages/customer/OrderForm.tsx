@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useCartStore } from '@/stores/cartStore';
-
 import { usePublishedList } from '@/hooks/useLists';
-import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
+import { useListDeliveryTypes } from '@/hooks/useLists';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useCartStore } from '@/stores/cartStore';
 import { ArrowLeft, User, CreditCard, Truck, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -22,12 +21,13 @@ interface OrderFormData {
 }
 
 const OrderForm: React.FC = () => {
+  console.log('OrderForm - Component is rendering');
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCartStore();
 
-  // Get the current published list and all delivery types
+  // Get the current published list and list-specific delivery types
   const { data: publishedList, isLoading: isLoadingList } = usePublishedList();
-  const { data: deliveryTypes, isLoading: isLoadingDeliveryTypes } = useDeliveryTypes();
+  const { data: listDeliveryTypes, isLoading: isLoadingDeliveryTypes } = useListDeliveryTypes(publishedList?.id || 0);
   const { data: paymentMethods } = usePaymentMethods();
 
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
@@ -53,11 +53,11 @@ const OrderForm: React.FC = () => {
 
   // Update selected delivery type when form changes
   React.useEffect(() => {
-    if (watchedDeliveryType && deliveryTypes) {
-      const deliveryType = deliveryTypes.find(dt => dt.id === watchedDeliveryType);
+    if (watchedDeliveryType && listDeliveryTypes) {
+      const deliveryType = listDeliveryTypes.find(dt => dt.id === watchedDeliveryType);
       setSelectedDeliveryType(deliveryType);
     }
-  }, [watchedDeliveryType, deliveryTypes]);
+  }, [watchedDeliveryType, listDeliveryTypes]);
 
   // Show loading state while fetching data
   if (isLoadingList || isLoadingDeliveryTypes) {
@@ -249,7 +249,7 @@ const OrderForm: React.FC = () => {
                   Selectează metoda de livrare *
                 </label>
                 <Select
-                  options={deliveryTypes?.map(dt => ({
+                  options={listDeliveryTypes?.map(dt => ({
                     value: dt.id.toString(),
                     label: dt.denumire
                   })) || []}
