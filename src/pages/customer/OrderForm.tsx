@@ -21,7 +21,6 @@ interface OrderFormData {
 }
 
 const OrderForm: React.FC = () => {
-  console.log('OrderForm - Component is rendering');
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCartStore();
 
