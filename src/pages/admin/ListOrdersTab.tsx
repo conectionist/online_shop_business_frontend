@@ -34,6 +34,14 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const deleteOrderMutation = useDeleteOrder();
   const { showToast } = useToast();
 
+  // Sort orders by creation date (oldest first)
+  const sortedOrders = React.useMemo(() => {
+    if (!orders) return [];
+    return [...orders].sort((a, b) => 
+      new Date(a.data_plasarii).getTime() - new Date(b.data_plasarii).getTime()
+    );
+  }, [orders]);
+
   const handleViewOrder = (order: OrderRead) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
@@ -129,6 +137,39 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     return orderText.trim();
   };
 
+  const formatOrderTextForPDF = (order: OrderRead) => {
+    let orderText = `${order.nume_client}\n`;
+    
+    // Add items
+    order.items?.forEach(item => {
+      const productName = getProductName(item.produse_id);
+      orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
+    });
+    
+    // Add payment method
+    const paymentMethodName = getPaymentMethodName(order.payment_method_id);
+    orderText += `Plata ${paymentMethodName.toLowerCase()}.\n`;
+    
+    // Add delivery method and address
+    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+    if (deliveryType) {
+      if (order.delivery_address && requiresAddress(deliveryType)) {
+        // If address is provided, show clean delivery message
+        orderText += `Livrare la adresa: ${order.delivery_address}\n`;
+      } else {
+        // If no address, show the original delivery method description
+        orderText += `${deliveryType.denumire}.\n`;
+      }
+    }
+    
+    // Add observatii if present
+    if (order.order_notes) {
+      orderText += `Observații: ${order.order_notes}\n`;
+    }
+
+    return orderText.trim();
+  };
+
   const toggleDropdown = () => {
     setOpenDropdown(!openDropdown);
   };
@@ -145,20 +186,13 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Lista Comenzi - ${listId}</title>
+          <title>Lista Comenzi - ${new Date().toLocaleDateString('ro-RO')}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
             .header h1 { margin: 0; color: #333; }
-            .header p { margin: 5px 0; color: #666; }
             .order { margin-bottom: 30px; page-break-inside: avoid; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
-            .order-header { font-weight: bold; margin-bottom: 10px; color: #333; }
             .order-content { background: #f9f9f9; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-line; }
-            .order-details { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-            .detail-item { display: flex; justify-content: space-between; }
-            .detail-label { font-weight: bold; color: #555; }
-            .detail-value { color: #333; }
-            .total { font-weight: bold; font-size: 1.1em; color: #333; margin-top: 10px; text-align: right; }
             @media print {
               body { margin: 15px; }
               .order { border: 1px solid #ccc; }
@@ -167,35 +201,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         </head>
         <body>
           <div class="header">
-            <h1>Lista Comenzi</h1>
-            <p>ID Lista: ${listId}</p>
-            <p>Data generării: ${new Date().toLocaleDateString('ro-RO')}</p>
-            <p>Total comenzi: ${orders?.length || 0}</p>
+            <h1>Lista Comenzi ${new Date().toLocaleDateString('ro-RO')}</h1>
           </div>
           
-          ${orders?.map((order) => `
+          ${sortedOrders?.map((order) => `
             <div class="order">
-              <div class="order-header">Comanda #${order.id} - ${order.nume_client}</div>
-              <div class="order-content">${formatOrderText(order)}</div>
-              <div class="order-details">
-                <div class="detail-item">
-                  <span class="detail-label">Data plasării:</span>
-                  <span class="detail-value">${formatDate(order.data_plasarii)}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Metoda de plată:</span>
-                  <span class="detail-value">${getPaymentMethodName(order.payment_method_id)}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Metoda de livrare:</span>
-                  <span class="detail-value">${getDeliveryTypeName(order.delivery_type_id)}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Total produse:</span>
-                  <span class="detail-value">${order.items?.length || 0}</span>
-                </div>
-              </div>
-              <div class="total">Total: ${calculateTotal(order)} RON</div>
+              <div class="order-content">${formatOrderTextForPDF(order)}</div>
             </div>
           `).join('') || '<p>Nu există comenzi pentru această listă.</p>'}
         </body>
@@ -239,37 +250,22 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       // Add header
       pdf.setFontSize(20);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Lista Comenzi', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 15;
-      
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`ID Lista: ${listId}`, margin, yPosition);
-      yPosition += 8;
-      pdf.text(`Data generării: ${new Date().toLocaleDateString('ro-RO')}`, margin, yPosition);
-      yPosition += 8;
-      pdf.text(`Total comenzi: ${orders?.length || 0}`, margin, yPosition);
+      pdf.text(`Lista Comenzi ${new Date().toLocaleDateString('ro-RO')}`, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 20;
       
       // Add orders
-      if (orders && orders.length > 0) {
-        orders.forEach((order, index) => {
+      if (sortedOrders && sortedOrders.length > 0) {
+        sortedOrders.forEach((order, index) => {
           // Check if we need a new page
           if (yPosition > pageHeight - 60) {
             pdf.addPage();
             yPosition = margin;
           }
           
-          // Order header
-          pdf.setFontSize(14);
-          pdf.setFont('helvetica', 'bold');
-          pdf.text(`Comanda #${order.id} - ${order.nume_client}`, margin, yPosition);
-          yPosition += 8;
-          
           // Order content
           pdf.setFontSize(10);
           pdf.setFont('helvetica', 'normal');
-          const orderText = formatOrderText(order);
+          const orderText = formatOrderTextForPDF(order);
           const lines = pdf.splitTextToSize(orderText, contentWidth);
           
           // Add background for order content
@@ -280,40 +276,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           pdf.text(lines, margin + 2, yPosition + 2);
           yPosition += textHeight + 8;
           
-          // Order details
-          const details = [
-            ['Data plasării:', formatDate(order.data_plasarii)],
-            ['Metoda de plată:', getPaymentMethodName(order.payment_method_id)],
-            ['Metoda de livrare:', getDeliveryTypeName(order.delivery_type_id)],
-            ['Total produse:', `${order.items?.length || 0}`]
-          ];
-          
-          details.forEach(([label, value]) => {
-            if (yPosition > pageHeight - 40) {
-              pdf.addPage();
-              yPosition = margin;
-            }
-            
-            pdf.setFont('helvetica', 'bold');
-            pdf.text(label, margin, yPosition);
-            pdf.setFont('helvetica', 'normal');
-            pdf.text(value, margin + 60, yPosition);
-            yPosition += 6;
-          });
-          
-          // Total
-          if (yPosition > pageHeight - 30) {
-            pdf.addPage();
-            yPosition = margin;
-          }
-          
-          pdf.setFontSize(12);
-          pdf.setFont('helvetica', 'bold');
-          pdf.text(`Total: ${calculateTotal(order)} RON`, pageWidth - margin, yPosition, { align: 'right' });
-          yPosition += 20;
-          
           // Add separator line
-          if (index < orders.length - 1) {
+          if (index < sortedOrders.length - 1) {
             pdf.setDrawColor(200, 200, 200);
             pdf.line(margin, yPosition, pageWidth - margin, yPosition);
             yPosition += 10;
@@ -325,7 +289,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       }
       
       // Save the PDF
-      pdf.save(`lista-comenzi-${listId}-${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`lista-comenzi-${new Date().toISOString().split('T')[0]}.pdf`);
       
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -437,7 +401,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
 
       {/* Orders List */}
       <div className="space-y-4">
-        {orders.map((order) => (
+        {sortedOrders.map((order) => (
           <Card key={order.id} className="p-6">
             <div className="space-y-4">
               {/* Order Display - Similar to OrderConfirmation */}
