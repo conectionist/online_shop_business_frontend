@@ -32,6 +32,9 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy placeholder config.js (will be replaced by entrypoint)
 COPY --from=builder /app/public/config.js /usr/share/nginx/html/config.js
 
+# Copy fonts for PDF generation
+COPY --from=builder /app/public/fonts /usr/share/nginx/html/fonts
+
 # Copy test data (including logo)
 COPY --from=builder /app/test /usr/share/nginx/html/test
 

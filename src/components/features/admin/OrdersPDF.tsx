@@ -1,0 +1,131 @@
+import React from 'react';
+import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { OrderRead } from '@/types/api';
+
+// Register Roboto font for proper diacritic support
+Font.register({
+  family: 'Roboto',
+  src: '/fonts/Roboto-Regular.ttf',
+});
+
+// Define styles
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: 'column',
+    backgroundColor: '#ffffff',
+    padding: 40,
+    fontSize: 10,
+    fontFamily: 'Roboto',
+  },
+  header: {
+    fontSize: 20,
+    textAlign: 'center',
+    marginBottom: 30,
+    fontFamily: 'Roboto',
+    fontWeight: 'bold',
+  },
+  order: {
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+  },
+  orderText: {
+    fontFamily: 'Roboto',
+    lineHeight: 1.4,
+    whiteSpace: 'pre-line',
+  },
+  separator: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#cccccc',
+    marginVertical: 10,
+  },
+  noOrders: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#666666',
+    fontFamily: 'Roboto',
+  },
+});
+
+interface OrdersPDFProps {
+  orders: OrderRead[];
+  deliveryTypes: any[];
+  getProductName: (productId: number) => string;
+  getPaymentMethodName: (paymentMethodId: number) => string;
+  requiresAddress: (deliveryType: any) => boolean;
+}
+
+const OrdersPDF: React.FC<OrdersPDFProps> = ({
+  orders,
+  deliveryTypes,
+  getProductName,
+  getPaymentMethodName,
+  requiresAddress,
+}) => {
+  const formatOrderText = (order: OrderRead) => {
+    let orderText = `${order.nume_client}\n`;
+    
+    // Add items
+    order.items?.forEach(item => {
+      const productName = getProductName(item.produse_id);
+      orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
+    });
+    
+    // Add total price
+    const total = order.items?.reduce((sum, item) => sum + (item.pret_produs * item.cantitate_produs), 0) || 0;
+    orderText += `Total: ${total} RON\n`;
+    
+    // Add payment method
+    const paymentMethodName = getPaymentMethodName(order.payment_method_id);
+    orderText += `Plata ${paymentMethodName.toLowerCase()}.\n`;
+    
+    // Add delivery method and address
+    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+    if (deliveryType) {
+      if (order.delivery_address && requiresAddress(deliveryType)) {
+        // If address is provided, show clean delivery message
+        orderText += `Livrare la adresa: ${order.delivery_address}\n`;
+      } else {
+        // If no address, show the original delivery method description
+        orderText += `${deliveryType.denumire}.\n`;
+      }
+    }
+    
+    // Add observatii if present
+    if (order.order_notes) {
+      orderText += `Observații: ${order.order_notes}\n`;
+    }
+
+    return orderText.trim();
+  };
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.header}>
+          Lista Comenzi {new Date().toLocaleDateString('ro-RO')}
+        </Text>
+        
+        {orders && orders.length > 0 ? (
+          orders.map((order, index) => (
+            <View key={order.id}>
+              <View style={styles.order}>
+                <Text style={styles.orderText}>
+                  {formatOrderText(order)}
+                </Text>
+              </View>
+              {index < orders.length - 1 && <View style={styles.separator} />}
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noOrders}>
+            Nu există comenzi pentru această listă.
+          </Text>
+        )}
+      </Page>
+    </Document>
+  );
+};
+
+export default OrdersPDF;

@@ -25,7 +25,7 @@ const OrderConfirmation: React.FC = () => {
   const navigate = useNavigate();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [copied, setCopied] = useState(false);
-  const [orderSubmitted, setOrderSubmitted] = useState(false);
+
   
   // Get the current published list for the order
   const { data: publishedList } = usePublishedList();
@@ -143,7 +143,6 @@ const OrderConfirmation: React.FC = () => {
       };
 
       await createOrderMutation.mutateAsync(orderCreateData);
-      setOrderSubmitted(true);
       console.log('Order submitted successfully to server');
     } catch (error) {
       console.error('Failed to submit order to server:', error);
@@ -198,13 +197,6 @@ const OrderConfirmation: React.FC = () => {
           <p className="text-gray-600">
             Comanda ta a fost pregătită. Copiază textul de mai jos și trimite-l prin WhatsApp.
           </p>
-          {orderSubmitted && (
-            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-700">
-                ✓ Comanda a fost trimisă și către server
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Order Display */}

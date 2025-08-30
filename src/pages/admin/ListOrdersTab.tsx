@@ -13,6 +13,8 @@ import Alert from '@/components/ui/Alert';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
 import { requiresAddress } from '@/utils/delivery';
+import OrdersPDF from '@/components/features/admin/OrdersPDF';
+import { pdf } from '@react-pdf/renderer';
 
 
 interface ListOrdersTabProps {
@@ -137,38 +139,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     return orderText.trim();
   };
 
-  const formatOrderTextForPDF = (order: OrderRead) => {
-    let orderText = `${order.nume_client}\n`;
-    
-    // Add items
-    order.items?.forEach(item => {
-      const productName = getProductName(item.produse_id);
-      orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
-    });
-    
-    // Add payment method
-    const paymentMethodName = getPaymentMethodName(order.payment_method_id);
-    orderText += `Plata ${paymentMethodName.toLowerCase()}.\n`;
-    
-    // Add delivery method and address
-    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-    if (deliveryType) {
-      if (order.delivery_address && requiresAddress(deliveryType)) {
-        // If address is provided, show clean delivery message
-        orderText += `Livrare la adresa: ${order.delivery_address}\n`;
-      } else {
-        // If no address, show the original delivery method description
-        orderText += `${deliveryType.denumire}.\n`;
-      }
-    }
-    
-    // Add observatii if present
-    if (order.order_notes) {
-      orderText += `Observații: ${order.order_notes}\n`;
-    }
 
-    return orderText.trim();
-  };
 
   const toggleDropdown = () => {
     setOpenDropdown(!openDropdown);
@@ -206,7 +177,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           
           ${sortedOrders?.map((order) => `
             <div class="order">
-              <div class="order-content">${formatOrderTextForPDF(order)}</div>
+              <div class="order-content">${formatOrderText(order)}</div>
             </div>
           `).join('') || '<p>Nu există comenzi pentru această listă.</p>'}
         </body>
@@ -235,66 +206,41 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     closeDropdown();
     
     try {
-      // Dynamic import of jsPDF to avoid build issues
-      const { default: jsPDF } = await import('jspdf');
+      // Create PDF document using react-pdf/renderer
+      const pdfDoc = (
+        <OrdersPDF
+          orders={sortedOrders || []}
+          deliveryTypes={deliveryTypes || []}
+          getProductName={getProductName}
+          getPaymentMethodName={getPaymentMethodName}
+          requiresAddress={requiresAddress}
+        />
+      );
       
-      // Create new PDF document
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 20;
-      const contentWidth = pageWidth - (2 * margin);
+      // Generate PDF blob
+      const blob = await pdf(pdfDoc).toBlob();
       
-      let yPosition = margin;
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `lista-comenzi-${new Date().toISOString().split('T')[0]}.pdf`;
       
-      // Add header
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`Lista Comenzi ${new Date().toLocaleDateString('ro-RO')}`, pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 20;
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
       
-      // Add orders
-      if (sortedOrders && sortedOrders.length > 0) {
-        sortedOrders.forEach((order, index) => {
-          // Check if we need a new page
-          if (yPosition > pageHeight - 60) {
-            pdf.addPage();
-            yPosition = margin;
-          }
-          
-          // Order content
-          pdf.setFontSize(10);
-          pdf.setFont('helvetica', 'normal');
-          const orderText = formatOrderTextForPDF(order);
-          const lines = pdf.splitTextToSize(orderText, contentWidth);
-          
-          // Add background for order content
-          const textHeight = lines.length * 5;
-          pdf.setFillColor(249, 249, 249);
-          pdf.rect(margin, yPosition - 2, contentWidth, textHeight + 4, 'F');
-          
-          pdf.text(lines, margin + 2, yPosition + 2);
-          yPosition += textHeight + 8;
-          
-          // Add separator line
-          if (index < sortedOrders.length - 1) {
-            pdf.setDrawColor(200, 200, 200);
-            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-            yPosition += 10;
-          }
-        });
-      } else {
-        pdf.setFontSize(12);
-        pdf.text('Nu există comenzi pentru această listă.', margin, yPosition);
-      }
-      
-      // Save the PDF
-      pdf.save(`lista-comenzi-${new Date().toISOString().split('T')[0]}.pdf`);
+      // Cleanup
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
     } catch (error) {
       console.error('Error generating PDF:', error);
-      // Fallback: show error message
-      alert('Eroare la generarea PDF-ului. Vă rugăm să încercați din nou.');
+      showToast({
+        type: 'error',
+        title: 'Eroare la generarea PDF-ului',
+        message: 'Vă rugăm să încercați din nou.'
+      });
     }
   };
 
