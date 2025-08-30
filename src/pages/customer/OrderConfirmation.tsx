@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, ArrowLeft, Copy, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { usePublishedList } from '@/hooks/useLists';
+import { useCreateOrder } from '@/hooks/useOrders';
+import { OrderCreate } from '@/types/api';
+
 
 interface OrderData {
   prenume: string;
@@ -20,6 +24,11 @@ const OrderConfirmation: React.FC = () => {
   const navigate = useNavigate();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [copied, setCopied] = useState(false);
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
+  
+  // Get the current published list for the order
+  const { data: publishedList } = usePublishedList();
+  const createOrderMutation = useCreateOrder();
 
   useEffect(() => {
     const storedOrderData = sessionStorage.getItem('orderData');
@@ -104,7 +113,44 @@ const OrderConfirmation: React.FC = () => {
     }
   };
 
-  const shareOrder = () => {
+  const submitOrderToServer = async () => {
+    if (!orderData || !publishedList) {
+      console.error('Order data or published list not available');
+      return;
+    }
+
+    try {
+      const orderCreateData: OrderCreate = {
+        nume_client: `${orderData.prenume} ${orderData.nume}`,
+        data_plasarii: new Date().toISOString(),
+        liste_id: publishedList.id,
+        delivery_type_id: orderData.delivery_type_id,
+        payment_method_id: orderData.payment_method_id,
+        delivery_address: orderData.address || undefined,
+        order_notes: orderData.observatii || undefined,
+        items: orderData.items.map(item => ({
+          produse_id: item.id,
+          pret_produs: item.pret,
+          cantitate_produs: item.quantity,
+          unitati_id: item.unitati_id,
+        })),
+      };
+
+      await createOrderMutation.mutateAsync(orderCreateData);
+      setOrderSubmitted(true);
+      console.log('Order submitted successfully to server');
+    } catch (error) {
+      console.error('Failed to submit order to server:', error);
+      // Don't show error to user as this is a background operation
+      // The WhatsApp functionality will still work
+    }
+  };
+
+  const shareOrder = async () => {
+    // First submit the order to the server
+    await submitOrderToServer();
+    
+    // Then proceed with WhatsApp sharing (existing functionality)
     const orderText = formatOrderText();
     const whatsappText = encodeURIComponent(orderText);
     const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
@@ -146,6 +192,13 @@ const OrderConfirmation: React.FC = () => {
           <p className="text-gray-600">
             Comanda ta a fost pregătită. Copiază textul de mai jos și trimite-l prin WhatsApp.
           </p>
+          {orderSubmitted && (
+            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-700">
+                ✓ Comanda a fost trimisă și către server
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Order Display */}
@@ -180,10 +233,11 @@ const OrderConfirmation: React.FC = () => {
             <Button
               variant="secondary"
               onClick={shareOrder}
+              disabled={createOrderMutation.isPending}
               className="w-full"
             >
               <Share2 className="w-4 h-4 mr-2" />
-              Trimite prin WhatsApp
+              {createOrderMutation.isPending ? 'Se trimite...' : 'Trimite prin WhatsApp'}
             </Button>
           </div>
         </div>
