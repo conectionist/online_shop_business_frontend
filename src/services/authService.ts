@@ -34,8 +34,7 @@ class AuthService {
       
       const { access_token, refresh_token, user } = response.data;
       
-      // Store tokens in localStorage
-      localStorage.setItem('access_token', access_token);
+      // Store refresh token in localStorage (needed for refresh calls)
       localStorage.setItem('refresh_token', refresh_token);
       
       // Transform user data for our auth store
@@ -46,7 +45,7 @@ class AuthService {
         role: user.role
       };
       
-      // Update auth store
+      // Update auth store (which will also store access_token in localStorage)
       useAuthStore.getState().login(access_token, userData);
       
       return response.data;
@@ -70,10 +69,7 @@ class AuthService {
 
       const { access_token } = response.data;
       
-      // Update stored token
-      localStorage.setItem('access_token', access_token);
-      
-      // Update auth store token
+      // Update token in auth store (which will also update localStorage)
       useAuthStore.getState().updateToken(access_token);
       
       return response.data;
@@ -94,12 +90,11 @@ class AuthService {
   }
 
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('access_token');
-    return !!token;
+    return useAuthStore.getState().isAuthenticated;
   }
 
   getAccessToken(): string | null {
-    return localStorage.getItem('access_token');
+    return useAuthStore.getState().getCurrentToken();
   }
 
   getRefreshToken(): string | null {

@@ -70,8 +70,7 @@ const LoginPage: React.FC = () => {
       // Store tokens and update auth store manually
       const { access_token, refresh_token, admin } = data;
       
-      // Store tokens in localStorage
-      localStorage.setItem('access_token', access_token);
+      // Store refresh token in localStorage (needed for refresh calls)
       localStorage.setItem('refresh_token', refresh_token);
       
       // Transform admin data to user format for our auth store
@@ -82,7 +81,7 @@ const LoginPage: React.FC = () => {
         role: 'admin' as const
       };
       
-      // Update auth store with user data
+      // Update auth store with user data (which will also store access_token)
       useAuthStore.getState().login(access_token, userData);
       
       // Show success state briefly before redirect

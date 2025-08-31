@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { ApiError } from '@/types/api';
 import { authService } from './authService';
+import { useAuthStore } from '@/stores/authStore';
 
 // Create axios instance without baseURL initially
 export const apiClient: AxiosInstance = axios.create({
@@ -37,7 +38,8 @@ apiClient.interceptors.request.use(
     const baseUrl = getApiBaseUrl();
     config.baseURL = `${baseUrl}/api/v1`;
     
-    const token = localStorage.getItem('access_token');
+    // Get token from auth store instead of localStorage for consistency
+    const token = useAuthStore.getState().getCurrentToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }

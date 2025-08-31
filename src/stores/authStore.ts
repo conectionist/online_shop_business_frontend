@@ -21,13 +21,14 @@ export interface AuthActions {
   setLoading: (loading: boolean) => void;
   updateUser: (user: User) => void;
   updateToken: (token: string) => void;
+  getCurrentToken: () => string | null;
 }
 
 export type AuthStore = AuthState & AuthActions;
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // State
       user: null,
       token: null,
@@ -43,8 +44,9 @@ export const useAuthStore = create<AuthStore>()(
           isLoading: false,
         });
         
-        // Store token in localStorage for API requests
+        // Store token in localStorage for backward compatibility
         localStorage.setItem('access_token', token);
+        localStorage.setItem('refresh_token', token); // Temporary, should be separate
       },
 
       logout: () => {
@@ -55,8 +57,9 @@ export const useAuthStore = create<AuthStore>()(
           isLoading: false,
         });
         
-        // Remove token from localStorage
+        // Remove tokens from localStorage
         localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
       },
 
       setLoading: (loading: boolean) => {
@@ -69,8 +72,12 @@ export const useAuthStore = create<AuthStore>()(
 
       updateToken: (token: string) => {
         set({ token });
-        // Update token in localStorage for API requests
+        // Update token in localStorage for backward compatibility
         localStorage.setItem('access_token', token);
+      },
+
+      getCurrentToken: () => {
+        return get().token;
       },
     }),
     {
