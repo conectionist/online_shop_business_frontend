@@ -44,6 +44,30 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     );
   }, [orders]);
 
+  // Calculate total quantities for each product across all orders
+  const orderTotals = React.useMemo(() => {
+    if (!orders || !products) return {};
+    
+    const totals: { [productId: number]: { name: string; quantity: number } } = {};
+    
+    orders.forEach(order => {
+      order.items?.forEach(item => {
+        const product = products.find(p => p.id === item.produse_id);
+        if (product) {
+          if (!totals[item.produse_id]) {
+            totals[item.produse_id] = {
+              name: product.nume,
+              quantity: 0
+            };
+          }
+          totals[item.produse_id].quantity += item.cantitate_produs;
+        }
+      });
+    });
+    
+    return totals;
+  }, [orders, products]);
+
   const handleViewOrder = (order: OrderRead) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
@@ -381,6 +405,35 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           </Card>
         ))}
       </div>
+
+      {/* Order Totals Summary */}
+      {Object.keys(orderTotals).length > 0 && (
+        <Card>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Total Comenzi per Produs
+            </h3>
+            <p className="text-sm text-gray-600">
+              Suma totală comandată pentru fiecare produs din această listă
+            </p>
+            
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {Object.entries(orderTotals)
+                  .sort(([, a], [, b]) => b.quantity - a.quantity) // Sort by quantity descending
+                  .map(([productId, product]) => (
+                    <div key={productId} className="flex justify-between items-center bg-white px-3 py-2 rounded border">
+                      <span className="font-medium text-gray-900">{product.name}</span>
+                      <span className="text-blue-600 font-semibold">
+                        {product.quantity}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Order Details Modal */}
       <Modal
