@@ -66,7 +66,7 @@ const ListTextTab: React.FC<ListTextTabProps> = ({ listId }) => {
     }
 
     // Add products section header
-    listText += `🍞 PRODUSE DISPONIBILE 🍞\n`;
+    listText += `🛒 PRODUSE DISPONIBILE 🛒\n`;
     listText += '═'.repeat(25) + '\n\n';
 
     // Group products by category
@@ -100,7 +100,7 @@ const ListTextTab: React.FC<ListTextTabProps> = ({ listId }) => {
     }
 
     // Add business information section header
-    listText += `🏪 INFORMAȚII 🏪\n`;
+    listText += `ℹ️ INFORMAȚII ℹ️\n`;
     listText += '═'.repeat(25) + '\n\n';
 
     // Add delivery schedule if available
