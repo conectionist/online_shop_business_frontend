@@ -9,12 +9,13 @@ import TabNavigation from '@/components/ui/TabNavigation';
 import ListFormTab from './ListFormTab';
 import ListProductsTab2 from './ListProductsTab2';
 import ListOrdersTab from './ListOrdersTab';
+import ListTextTab from './ListTextTab';
 
 const ListManagement: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const listId = id ? parseInt(id) : 0;
-  const [activeTab, setActiveTab] = useState<'edit' | 'products2' | 'orders'>('edit');
+  const [activeTab, setActiveTab] = useState<'edit' | 'products2' | 'orders' | 'text'>('edit');
 
   // Fetch list data for header
   const { data: list, isLoading: isLoadingList, error: listError } = useList(listId);
@@ -74,6 +75,8 @@ const ListManagement: React.FC = () => {
         return 'Gestionează produsele';
       case 'orders':
         return 'Vezi comenzile pentru această listă';
+      case 'text':
+        return 'Format text pentru partajare';
       default:
         return '';
     }
@@ -115,6 +118,9 @@ const ListManagement: React.FC = () => {
       )}
       {activeTab === 'orders' && (
         <ListOrdersTab listId={listId} />
+      )}
+      {activeTab === 'text' && (
+        <ListTextTab listId={listId} />
       )}
     </div>
   );
