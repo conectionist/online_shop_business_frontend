@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://pcma.akdscloud.eu/sitemap.xml
+Sitemap: https://pcma.ro/sitemap.xml
 
 # Disallow admin areas
 Disallow: /admin/
