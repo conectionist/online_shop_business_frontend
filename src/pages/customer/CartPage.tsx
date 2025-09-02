@@ -5,6 +5,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { Package, Trash2, Plus, Minus, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Link } from 'react-router-dom';
+import { components } from '@/utils/theme';
 
 const CartPage: React.FC = () => {
   const { 
@@ -27,9 +28,9 @@ const CartPage: React.FC = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-12">
+      <div className={components.page.containerLarge}>
         <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 p-8 text-center">
+          <div className={components.card.main + " p-8 text-center"}>
             <ShoppingCart className="h-16 w-16 text-amber-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Coșul tău este gol
@@ -40,7 +41,7 @@ const CartPage: React.FC = () => {
             <Link to="/">
               <Button 
                 variant="primary"
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className={components.button.primary()}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Înapoi la Produse
@@ -53,10 +54,10 @@ const CartPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-8">
+    <div className={components.page.container}>
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 p-6 mb-6">
+        <div className={components.card.header + " p-6 mb-6"}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <ShoppingCart className="h-6 w-6 text-amber-600" />
@@ -68,7 +69,7 @@ const CartPage: React.FC = () => {
               variant="secondary" 
               size="sm"
               onClick={clearCart}
-              className="bg-white/80 backdrop-blur-sm border-amber-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all duration-300"
+              className={components.button.secondaryDanger()}
             >
               Golește coșul
             </Button>
@@ -79,14 +80,14 @@ const CartPage: React.FC = () => {
         </div>
 
         {/* Cart Items */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 p-6 mb-6">
+        <div className={components.card.main + " p-6 mb-6"}>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Produse în coș
           </h2>
           
           <div className="space-y-4">
             {items.map((item) => (
-              <div key={item.id} className="border border-amber-200 rounded-xl p-4 bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all duration-300">
+              <div key={item.id} className={components.card.item + " p-4"}>
                 {/* Product Info Section */}
                 <div className="flex items-start space-x-4 mb-4">
                   {/* Product Image */}
@@ -104,7 +105,7 @@ const CartPage: React.FC = () => {
                       />
                     ) : null}
                     {/* Fallback icon */}
-                    <div className={`w-16 h-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-100 flex items-center justify-center ${item.images && item.images.length > 0 ? 'hidden' : ''}`}>
+                    <div className={`w-16 h-16 ${components.backgrounds.fallback} rounded-xl border-2 ${components.borders.secondary} flex items-center justify-center ${item.images && item.images.length > 0 ? 'hidden' : ''}`}>
                       <Package className="w-6 h-6 text-amber-400" />
                     </div>
                   </div>
@@ -164,7 +165,7 @@ const CartPage: React.FC = () => {
         </div>
 
         {/* Cart Summary */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 p-6 mb-6">
+        <div className={components.card.main + " p-6 mb-6"}>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Sumar comandă
           </h2>
@@ -189,7 +190,7 @@ const CartPage: React.FC = () => {
           <Link to="/" className="flex-1">
             <Button 
               variant="secondary" 
-              className="w-full bg-white/80 backdrop-blur-sm border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
+              className={components.button.secondary("w-full")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Continuă cumpărăturile
@@ -198,7 +199,7 @@ const CartPage: React.FC = () => {
           <Link to="/order-form" className="flex-1">
             <Button 
               variant="primary" 
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              className={components.button.primary("w-full")}
             >
               Finalizează comanda
             </Button>

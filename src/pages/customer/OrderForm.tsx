@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
+import { components } from '@/utils/theme';
 
 interface OrderFormData {
   nume: string;
@@ -63,9 +64,9 @@ const OrderForm: React.FC = () => {
   // Show loading state while fetching data
   if (isLoadingList || isLoadingDeliveryTypes) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className={components.page.containerLarge}>
         <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className={components.card.main + " p-8 text-center"}>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Se încarcă...
             </h1>
@@ -81,16 +82,20 @@ const OrderForm: React.FC = () => {
   // Show error if no published list
   if (!publishedList) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className={components.page.containerLarge}>
         <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className={components.card.main + " p-8 text-center"}>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Nu se poate finaliza comanda
             </h1>
             <p className="text-gray-600 mb-6">
               Nu s-a găsit o listă publicată.
             </p>
-            <Button variant="primary" onClick={() => navigate('/')}>
+            <Button 
+              variant="primary" 
+              onClick={() => navigate('/')}
+              className={components.button.primary()}
+            >
               Înapoi la Produse
             </Button>
           </div>
@@ -111,7 +116,9 @@ const OrderForm: React.FC = () => {
       return;
     }
 
-
+    const subtotal = getTotalPrice();
+    const deliveryTax = getDeliveryTax(selectedDeliveryType, businessDetails);
+    const grandTotal = subtotal + deliveryTax;
     
     // For now, just navigate to confirmation page with order data
     const orderData = {
@@ -124,8 +131,6 @@ const OrderForm: React.FC = () => {
       paymentMethod: paymentMethods?.find(pm => pm.id === data.payment_method_id)
     };
     
-
-    
     // Store order data in sessionStorage for confirmation page
     sessionStorage.setItem('orderData', JSON.stringify(orderData));
     
@@ -136,16 +141,20 @@ const OrderForm: React.FC = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className={components.page.containerLarge}>
         <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className={components.card.main + " p-8 text-center"}>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Coșul tău este gol
             </h1>
             <p className="text-gray-600 mb-6">
               Nu poți finaliza o comandă fără produse în coș.
             </p>
-            <Button variant="primary" onClick={() => navigate('/')}>
+            <Button 
+              variant="primary" 
+              onClick={() => navigate('/')}
+              className={components.button.primary()}
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi la Produse
             </Button>
@@ -160,15 +169,16 @@ const OrderForm: React.FC = () => {
   const grandTotal = subtotal + deliveryTax;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className={components.page.container}>
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className={components.card.header + " p-6 mb-6"}>
           <div className="flex items-center space-x-3 mb-4">
             <Button
               variant="secondary"
               size="sm"
               onClick={() => navigate('/cart')}
+              className={components.interactive.backButton}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi la Coș
@@ -184,7 +194,7 @@ const OrderForm: React.FC = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Customer Information */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className={components.card.main + " p-6"}>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <User className="w-5 h-5 mr-2 text-blue-600" />
               Informații Client
@@ -216,7 +226,7 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Payment Method */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className={components.card.main + " p-6"}>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <CreditCard className="w-5 h-5 mr-2 text-green-600" />
               Metoda de Plată
@@ -244,7 +254,7 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Delivery Method */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className={components.card.main + " p-6"}>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <Truck className="w-5 h-5 mr-2 text-orange-600" />
               Metoda de Livrare
@@ -293,7 +303,7 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Observații (Notes) */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className={components.card.main + " p-6"}>
             <label className="block text-sm font-medium text-gray-700 mb-2">Observații pentru livrare sau comandă</label>
             <textarea
               {...register('observatii')}
@@ -304,7 +314,7 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Order Summary */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className={components.card.main + " p-6"}>
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Sumar Comandă
             </h2>
@@ -346,7 +356,7 @@ const OrderForm: React.FC = () => {
               type="submit"
               variant="primary"
               disabled={isSubmitting}
-              className="px-8 py-3"
+              className={components.button.primary("px-8 py-3")}
             >
               {isSubmitting ? 'Se procesează...' : 'Finalizează Comanda'}
             </Button>
@@ -357,4 +367,4 @@ const OrderForm: React.FC = () => {
   );
 };
 
-export default OrderForm; 
+export default OrderForm;

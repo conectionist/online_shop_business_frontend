@@ -6,6 +6,7 @@ import { usePublishedList } from '@/hooks/useLists';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
 import { requiresAddress } from '@/utils/delivery';
+import { components } from '@/utils/theme';
 
 
 interface OrderData {
@@ -172,16 +173,20 @@ const OrderConfirmation: React.FC = () => {
 
   if (!orderData) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className={components.page.containerLarge}>
         <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className={components.card.main + " p-8 text-center"}>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Comanda nu a fost găsită
             </h1>
             <p className="text-gray-600 mb-6">
               Nu s-a găsit nicio comandă pentru afișare.
             </p>
-            <Button variant="primary" onClick={() => navigate('/')}>
+            <Button 
+              variant="primary" 
+              onClick={() => navigate('/')}
+              className={components.button.primary()}
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi la Produse
             </Button>
@@ -194,10 +199,10 @@ const OrderConfirmation: React.FC = () => {
   const orderText = formatOrderText();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className={components.page.container}>
       <div className="max-w-2xl mx-auto px-4">
         {/* Success Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 text-center">
+        <div className={components.card.header + " p-6 mb-6 text-center"}>
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Comanda a fost finalizată!
@@ -208,7 +213,7 @@ const OrderConfirmation: React.FC = () => {
         </div>
 
         {/* Order Display */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className={components.card.main + " p-6 mb-6"}>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Comanda ta:
           </h2>
@@ -221,7 +226,7 @@ const OrderConfirmation: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className={components.card.main + " p-6 mb-6"}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Acțiuni
           </h3>
@@ -230,7 +235,7 @@ const OrderConfirmation: React.FC = () => {
             <Button
               variant="primary"
               onClick={copyToClipboard}
-              className="w-full"
+              className={components.button.primary("w-full")}
             >
               <Copy className="w-4 h-4 mr-2" />
               {copied ? 'Copiat!' : 'Copiază Comanda'}
@@ -240,7 +245,7 @@ const OrderConfirmation: React.FC = () => {
               variant="secondary"
               onClick={shareOrder}
               disabled={createOrderMutation.isPending}
-              className="w-full"
+              className={components.button.secondary("w-full")}
             >
               <Share2 className="w-4 h-4 mr-2" />
               {createOrderMutation.isPending ? 'Se trimite...' : 'Trimite prin WhatsApp'}

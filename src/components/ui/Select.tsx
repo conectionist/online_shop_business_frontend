@@ -91,7 +91,7 @@ const Select: React.FC<SelectProps> = ({
   };
 
   return (
-    <div ref={selectRef} className={`relative ${className}`}>
+    <div ref={selectRef} className={`relative z-40 ${className}`}>
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -118,7 +118,7 @@ const Select: React.FC<SelectProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
           <ul role="listbox" className="py-1">
             {options.map((option, index) => (
               <li

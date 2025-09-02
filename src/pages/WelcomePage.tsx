@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import { getAppName, getLogoPath } from '@/utils/appConfig';
 import { getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
+import { components } from '@/utils/theme';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
@@ -197,7 +198,7 @@ const WelcomePage: React.FC = () => {
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50" ref={cartIconRef}>
         <Link to="/cart">
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-amber-200 p-3 hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <div className={components.interactive.floatingCart}>
             <ShoppingCart className="h-6 w-6 text-amber-700" />
             {getTotalItems() > 0 && (
               <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
@@ -208,7 +209,7 @@ const WelcomePage: React.FC = () => {
         </Link>
       </div>
       {/* Beautiful Header Section */}
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200 mb-8">
+      <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="text-center">
             {/* Logo and App Name */}
@@ -241,7 +242,7 @@ const WelcomePage: React.FC = () => {
             </div>
             
             {/* Introduction Message */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-amber-200">
+            <div className={`${components.backgrounds.card} rounded-xl p-6 shadow-sm border ${components.borders.primary}`}>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">
                 {publishedList.mesaj_introducere || 'Listă de produse'}
               </h2>
@@ -312,7 +313,7 @@ const WelcomePage: React.FC = () => {
 
               return Object.entries(productsByCategory).map(([categoryName, products]: [string, any]) => (
                 <div key={categoryName} className="space-y-4">
-                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl px-6 py-4 text-center">
+                  <div className={`${components.backgrounds.category} border ${components.borders.primary} rounded-xl px-6 py-4 text-center`}>
                     <h4 className="text-lg font-bold text-amber-800">
                       {categoryName}
                     </h4>
@@ -350,7 +351,7 @@ const WelcomePage: React.FC = () => {
                                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 rounded-xl"></div>
                                 </div>
                               ) : (
-                                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-100 flex items-center justify-center shadow-sm group-hover:border-amber-200 transition-colors duration-300">
+                                <div className={`w-20 h-20 md:w-24 md:h-24 ${components.backgrounds.fallback} rounded-xl border-2 ${components.borders.secondary} flex items-center justify-center shadow-sm group-hover:${components.borders.primary} transition-colors duration-300`}>
                                   <Package className="w-8 h-8 text-amber-400" />
                                 </div>
                               )}
@@ -433,7 +434,7 @@ const WelcomePage: React.FC = () => {
                                     addToCart(product);
                                   }}
                                   disabled={addingToCart[product.id]}
-                                  className={"w-full sm:w-auto font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"}
+                                  className={components.button.primary("w-full sm:w-auto font-medium py-2 px-4 rounded-lg")}
                                 >
                                   {addingToCart[product.id] ? (
                                     <>

@@ -9,6 +9,7 @@ import { useUnits } from '@/hooks/useUnits';
 import { getProductImageUrl } from '@/services/api';
 import SEO from '@/components/SEO';
 import { generateProductSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
+import { components } from '@/utils/theme';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -74,9 +75,9 @@ const ProductPage: React.FC = () => {
           description="Produsul pe care îl cauți nu există sau nu este disponibil."
           robots="noindex, nofollow"
         />
-        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-12">
+        <div className={components.page.containerLarge}>
           <div className="max-w-2xl mx-auto px-4">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 p-8 text-center">
+            <div className={components.card.main + " p-8 text-center"}>
               <Package className="h-16 w-16 text-amber-400 mx-auto mb-4" />
               <h1 className="text-1xl font-bold text-gray-900 mb-4">
                 Produsul nu a fost găsit
@@ -87,7 +88,7 @@ const ProductPage: React.FC = () => {
               <Button 
                 variant="primary" 
                 onClick={() => navigate('/')}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className={components.button.primary()}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Înapoi la Produse
@@ -161,7 +162,7 @@ const ProductPage: React.FC = () => {
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50">
         <Link to="/cart">
-          <div className="relative bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-amber-200 p-3 hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <div className={components.interactive.floatingCart}>
             <ShoppingCart className="h-6 w-6 text-amber-700" />
             {getTotalItems() > 0 && (
               <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
@@ -172,26 +173,26 @@ const ProductPage: React.FC = () => {
         </Link>
       </div>
 
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-8">
+      <div className={components.page.container}>
         <div className="max-w-4xl mx-auto px-4">
           {/* Header with back button */}
           <div className="mb-6">
             <Button
               variant="secondary"
               onClick={() => navigate('/')}
-              className="mb-4 bg-white/80 backdrop-blur-sm border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
+              className={components.interactive.backButton + " mb-4"}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi la Produse
             </Button>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 overflow-hidden">
+          <div className={components.card.main + " overflow-hidden"}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
               {/* Image Gallery */}
               <div className="space-y-6">
                 {/* Main Image */}
-                <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl overflow-hidden shadow-lg border-2 border-amber-100">
+                <div className={components.interactive.imageContainer}>
                   {productImages.length > 0 ? (
                     <img
                       src={getProductImageUrl(product, 'original')}
@@ -205,7 +206,7 @@ const ProductPage: React.FC = () => {
                     />
                   ) : null}
                   {/* Fallback icon */}
-                  <div className={`w-full h-full bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center ${productImages.length > 0 ? 'hidden' : ''}`}>
+                  <div className={`w-full h-full ${components.backgrounds.fallback} flex items-center justify-center ${productImages.length > 0 ? 'hidden' : ''}`}>
                     <Package className="w-20 h-20 text-amber-400" />
                   </div>
                 </div>
@@ -238,7 +239,7 @@ const ProductPage: React.FC = () => {
               <div className="space-y-8">
                 {/* Product Header */}
                 <div className="space-y-4">
-                  <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 text-sm font-medium border border-amber-200">
+                  <div className={components.interactive.categoryBadge}>
                     {getCategoryName(product.category_id)}
                   </div>
                   <h1 className="text-4xl font-bold text-gray-900 leading-tight">
@@ -248,7 +249,7 @@ const ProductPage: React.FC = () => {
 
                 {/* Price Section */}
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+                  <div className={components.interactive.priceCard}>
                     <div className="space-y-2">
                       <p className="text-2xl font-bold text-amber-700">
                         {product.pret} RON
@@ -288,7 +289,7 @@ const ProductPage: React.FC = () => {
                           size="sm"
                           onClick={() => handleQuantityChange(quantity - 1)}
                           disabled={quantity <= 1}
-                          className="w-12 h-12 p-0 rounded-full bg-white/80 backdrop-blur-sm border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
+                          className={components.interactive.quantityButton}
                         >
                           <Minus className="w-5 h-5" />
                         </Button>
@@ -300,7 +301,7 @@ const ProductPage: React.FC = () => {
                           size="sm"
                           onClick={() => handleQuantityChange(quantity + 1)}
                           // disabled={quantity >= product.stoc_produs}
-                          className="w-12 h-12 p-0 rounded-full bg-white/80 backdrop-blur-sm border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
+                          className={components.interactive.quantityButton}
                         >
                           <Plus className="w-5 h-5" />
                         </Button>
@@ -312,7 +313,7 @@ const ProductPage: React.FC = () => {
                   <Button
                     variant="primary"
                     onClick={addToCart}
-                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className={components.button.primary("w-full h-14 text-lg font-semibold")}
                     // disabled={product.stoc_produs === 0}
                   >
                     <Plus className="w-5 h-5 mr-3" />
