@@ -74,17 +74,21 @@ const ProductPage: React.FC = () => {
           description="Produsul pe care îl cauți nu există sau nu este disponibil."
           robots="noindex, nofollow"
         />
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-12">
           <div className="max-w-2xl mx-auto px-4">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 p-8 text-center">
+              <Package className="h-16 w-16 text-amber-400 mx-auto mb-4" />
               <h1 className="text-1xl font-bold text-gray-900 mb-4">
                 Produsul nu a fost găsit
               </h1>
               <p className="text-gray-600 mb-6">
                 Produsul pe care îl cauți nu există sau nu este disponibil.
               </p>
-              <Button variant="primary" onClick={() => navigate('/')}>
+              <Button 
+                variant="primary" 
+                onClick={() => navigate('/')}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Înapoi la Produse
               </Button>
@@ -157,10 +161,10 @@ const ProductPage: React.FC = () => {
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50">
         <Link to="/cart">
-          <div className="relative bg-white rounded-full shadow-lg border border-gray-200 p-3 hover:shadow-xl transition-shadow">
-            <ShoppingCart className="h-6 w-6 text-gray-700" />
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-amber-200 p-3 hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <ShoppingCart className="h-6 w-6 text-amber-700" />
             {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
                 {getTotalItems()}
               </span>
             )}
@@ -168,26 +172,26 @@ const ProductPage: React.FC = () => {
         </Link>
       </div>
 
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
           {/* Header with back button */}
           <div className="mb-6">
             <Button
               variant="secondary"
               onClick={() => navigate('/')}
-              className="mb-4"
+              className="mb-4 bg-white/80 backdrop-blur-sm border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Înapoi la Produse
             </Button>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
               {/* Image Gallery */}
               <div className="space-y-6">
                 {/* Main Image */}
-                <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden shadow-lg">
+                <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl overflow-hidden shadow-lg border-2 border-amber-100">
                   {productImages.length > 0 ? (
                     <img
                       src={getProductImageUrl(product, 'original')}
@@ -201,8 +205,8 @@ const ProductPage: React.FC = () => {
                     />
                   ) : null}
                   {/* Fallback icon */}
-                  <div className={`w-full h-full bg-gray-50 flex items-center justify-center ${productImages.length > 0 ? 'hidden' : ''}`}>
-                    <Package className="w-20 h-20 text-gray-300" />
+                  <div className={`w-full h-full bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center ${productImages.length > 0 ? 'hidden' : ''}`}>
+                    <Package className="w-20 h-20 text-amber-400" />
                   </div>
                 </div>
 
@@ -215,8 +219,8 @@ const ProductPage: React.FC = () => {
                         onClick={() => setSelectedImageIndex(index)}
                         className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
                           selectedImageIndex === index
-                            ? 'border-blue-500 shadow-md scale-105'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-amber-500 shadow-md scale-105'
+                            : 'border-amber-200 hover:border-amber-300'
                         }`}
                       >
                         <img
@@ -233,8 +237,8 @@ const ProductPage: React.FC = () => {
               {/* Product Details */}
               <div className="space-y-8">
                 {/* Product Header */}
-                <div className="space-y-3">
-                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
+                <div className="space-y-4">
+                  <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 text-sm font-medium border border-amber-200">
                     {getCategoryName(product.category_id)}
                   </div>
                   <h1 className="text-4xl font-bold text-gray-900 leading-tight">
@@ -243,14 +247,16 @@ const ProductPage: React.FC = () => {
                 </div>
 
                 {/* Price Section */}
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <p className="text-lg font-medium text-gray-900">
-                      Preț: {product.pret} RON
-                    </p>
-                    <p className="text-lg font-medium text-gray-900">
-                      Cantitate: {product.cantitate} {getUnitName(product.unitati_id)}
-                    </p>
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+                    <div className="space-y-2">
+                      <p className="text-2xl font-bold text-amber-700">
+                        {product.pret} RON
+                      </p>
+                      <p className="text-lg font-medium text-amber-600">
+                        {product.cantitate} {getUnitName(product.unitati_id)}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -260,14 +266,16 @@ const ProductPage: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900">
                       Despre acest produs
                     </h3>
-                    <p className="text-gray-700 leading-relaxed text-base">
-                      {product.description}
-                    </p>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-amber-100">
+                      <p className="text-gray-700 leading-relaxed text-base">
+                        {product.description}
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {/* Add to Cart Section */}
-                <div className="space-y-6 pt-6 border-t border-gray-100">
+                <div className="space-y-6 pt-6 border-t border-amber-100">
                   {/* Quantity Selector */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -280,11 +288,11 @@ const ProductPage: React.FC = () => {
                           size="sm"
                           onClick={() => handleQuantityChange(quantity - 1)}
                           disabled={quantity <= 1}
-                          className="w-12 h-12 p-0 rounded-full"
+                          className="w-12 h-12 p-0 rounded-full bg-white/80 backdrop-blur-sm border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
                         >
                           <Minus className="w-5 h-5" />
                         </Button>
-                        <span className="text-2xl font-bold text-gray-900 w-16 text-center">
+                        <span className="text-2xl font-bold text-amber-700 w-16 text-center">
                           {quantity}
                         </span>
                         <Button
@@ -292,7 +300,7 @@ const ProductPage: React.FC = () => {
                           size="sm"
                           onClick={() => handleQuantityChange(quantity + 1)}
                           // disabled={quantity >= product.stoc_produs}
-                          className="w-12 h-12 p-0 rounded-full"
+                          className="w-12 h-12 p-0 rounded-full bg-white/80 backdrop-blur-sm border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
                         >
                           <Plus className="w-5 h-5" />
                         </Button>
@@ -304,7 +312,7 @@ const ProductPage: React.FC = () => {
                   <Button
                     variant="primary"
                     onClick={addToCart}
-                    className="w-full h-14 text-lg font-semibold"
+                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     // disabled={product.stoc_produs === 0}
                   >
                     <Plus className="w-5 h-5 mr-3" />
