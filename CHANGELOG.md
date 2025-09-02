@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2025-09-02
+
+### Added
+- **Dynamic Sitemap Generation**: Sitemap now generated at runtime with configurable base URL
+  - New `VITE_SITE_URL` environment variable for configurable site base URL
+  - Sitemap automatically generated in docker-entrypoint.sh using environment configuration
+  - Automatic lastmod date updates on each container restart
+  - Absolute URLs generated from environment variable (sitemap protocol compliant)
+  - No more static sitemap files - always fresh and environment-aware
+
+### Technical
+- **Docker Entrypoint Enhancement**: Sitemap generation moved to container startup
+- **Environment Configuration**: Added `VITE_SITE_URL` to docker-compose.yml and env.example
+- **Build Process**: Removed static sitemap copy from Dockerfile
+
 ## [2.6.0] - 2025-09-02
 
 ### Added
