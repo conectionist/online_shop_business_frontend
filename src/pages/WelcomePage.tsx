@@ -197,10 +197,10 @@ const WelcomePage: React.FC = () => {
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50" ref={cartIconRef}>
         <Link to="/cart">
-          <div className="relative bg-white rounded-full shadow-lg border border-gray-200 p-3 hover:shadow-xl transition-shadow">
-            <ShoppingCart className="h-6 w-6 text-gray-700" />
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-amber-200 p-3 hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <ShoppingCart className="h-6 w-6 text-amber-700" />
             {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
                 {getTotalItems()}
               </span>
             )}
