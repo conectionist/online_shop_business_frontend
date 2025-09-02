@@ -250,12 +250,9 @@ const ProductPage: React.FC = () => {
                 {/* Price Section */}
                 <div className="space-y-4">
                   <div className={components.interactive.priceCard}>
-                    <div className="space-y-2">
+                    <div className="text-center">
                       <p className="text-2xl font-bold text-amber-700">
-                        {product.pret} RON
-                      </p>
-                      <p className="text-lg font-medium text-amber-600">
-                        {product.cantitate} {getUnitName(product.unitati_id)}
+                        {product.pret} RON / {product.cantitate} {getUnitName(product.unitati_id)}
                       </p>
                     </div>
                   </div>

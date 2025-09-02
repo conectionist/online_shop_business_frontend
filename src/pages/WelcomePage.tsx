@@ -388,14 +388,10 @@ const WelcomePage: React.FC = () => {
                                 )}
                                 
                                 {/* Price and Quantity - Enhanced */}
-                                <div className="flex items-center space-x-4 pt-2">
-                                  <div className="flex items-center space-x-2">
+                                <div className="pt-2">
+                                  <div>
                                     <span className="text-lg font-bold text-amber-600">
-                                      {product.pret} RON
-                                    </span>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <span className="text-sm text-gray-500">
-                                      {product.cantitate} {getUnitName(product.unitati_id)}
+                                      {product.pret} RON / {product.cantitate} {getUnitName(product.unitati_id)}
                                     </span>
                                   </div>
                                 </div>
