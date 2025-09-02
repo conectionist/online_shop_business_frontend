@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.0] - 2025-01-30
+## [2.6.0] - 2025-09-02
+
+### Added
+- Optional delivery tax support across the app:
+  - Admin can set `Taxă livrare (RON)` in Business Details
+  - Delivery tax displayed in Business Details list
+  - Delivery tax applied and shown in Order Form totals when home delivery is selected
+  - Delivery tax reflected in Order Confirmation and WhatsApp text
+  - Note on Cart page indicating delivery tax may apply
+
+### Technical
+- Added `delivery_tax?: number` to Business Details types
+- Introduced `getDeliveryTax` helper to centralize tax application logic
+
+## [1.3.0] - 2025-09-01
 
 ### Added
 - **Enhanced Orders PDF Printing**: Improved PDF generation and web display for order lists
@@ -64,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic delivery type assignment in both create and update operations
   - Import script integration for bulk delivery type assignment
 
-## [0.19.0] - 2025-01-17
+## [0.19.0] - 2025-08-17
 
 ### Added
 - **List Cloning Feature**: Admins can now clone existing product lists with a single click
@@ -73,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New cloned lists start as drafts for easy customization
   - Seamless navigation to the new cloned list for editing
 
-## [0.18.0] - 2025-01-16
+## [0.18.0] - 2025-08-16
 
 ### Added
 - **Complete Authentication System**: Enterprise-grade JWT-based authentication

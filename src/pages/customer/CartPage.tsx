@@ -1,4 +1,5 @@
 import React from 'react';
+import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { getProductImageUrl } from '@/services/api';
 import { useCartStore } from '@/stores/cartStore';
 import { Package, Trash2, Plus, Minus, ArrowLeft, ShoppingCart } from 'lucide-react';
@@ -14,6 +15,7 @@ const CartPage: React.FC = () => {
     getTotalItems, 
     getTotalPrice 
   } = useCartStore();
+  const { data: businessDetails } = useBusinessDetailsSingle();
 
   const handleQuantityChange = (itemId: number, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -173,6 +175,9 @@ const CartPage: React.FC = () => {
               <span>Total:</span>
               <span className="text-blue-600">{getTotalPrice()} RON</span>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Dacă alegi livrare la domiciliu, se va aplica o taxă de livrare{businessDetails?.delivery_tax ? ` de ${businessDetails.delivery_tax} RON` : ''}.
+            </p>
           </div>
         </div>
 

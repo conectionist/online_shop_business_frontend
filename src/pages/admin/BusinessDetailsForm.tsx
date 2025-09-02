@@ -23,6 +23,7 @@ export default function BusinessDetailsForm() {
     motto: '',
     list_not_available_msg: '',
     alte_detalii: '',
+    delivery_tax: undefined,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -52,6 +53,7 @@ export default function BusinessDetailsForm() {
         motto: existingDetails.motto || '',
         list_not_available_msg: existingDetails.list_not_available_msg || '',
         alte_detalii: existingDetails.alte_detalii || '',
+        delivery_tax: existingDetails.delivery_tax ?? undefined,
       });
     }
   }, [existingDetails]);
@@ -67,12 +69,33 @@ export default function BusinessDetailsForm() {
       newErrors.telefon = 'Telefonul este obligatoriu';
     }
 
+    if (formData.delivery_tax !== undefined && formData.delivery_tax !== null) {
+      const value = Number(formData.delivery_tax);
+      if (Number.isNaN(value)) {
+        newErrors.delivery_tax = 'Valoare invalidă pentru taxă de livrare';
+      } else if (value < 0) {
+        newErrors.delivery_tax = 'Taxa de livrare trebuie să fie >= 0';
+      } else if (!Number.isInteger(value)) {
+        newErrors.delivery_tax = 'Taxa de livrare trebuie să fie un număr întreg';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (field: keyof BusinessDetailsCreate, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'delivery_tax') {
+      const trimmed = value.trim();
+      let parsed: number | undefined = undefined;
+      if (trimmed !== '') {
+        const num = Number(trimmed);
+        if (Number.isFinite(num)) parsed = Math.floor(num);
+      }
+      setFormData(prev => ({ ...prev, delivery_tax: parsed }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -184,6 +207,29 @@ export default function BusinessDetailsForm() {
               <p className="text-sm text-gray-500 mt-1">
                 Sloganul sau motto-ul business-ului
               </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Taxă livrare (RON)
+              </label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
+                value={formData.delivery_tax ?? ''}
+                onChange={(e) => handleInputChange('delivery_tax', e.target.value)}
+                placeholder="Ex: 10"
+                className={errors.delivery_tax ? 'border-red-300' : ''}
+              />
+              {errors.delivery_tax ? (
+                <p className="text-sm text-red-600 mt-1">{errors.delivery_tax}</p>
+              ) : (
+                <p className="text-sm text-gray-500 mt-1">
+                  Opțional. Se aplică pentru livrare la domiciliu. Lasă gol pentru a nu aplica.
+                </p>
+              )}
             </div>
 
             <div>

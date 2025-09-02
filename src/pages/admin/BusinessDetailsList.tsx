@@ -181,6 +181,16 @@ export default function BusinessDetailsList() {
                       </div>
                     )}
                     
+                    {details.delivery_tax !== undefined && details.delivery_tax !== null && (
+                      <div className="flex items-start space-x-2">
+                        <FileText className="h-4 w-4 text-gray-500 mt-0.5" />
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">Taxă livrare:</span>
+                          <p className="text-sm text-gray-600">{details.delivery_tax} RON</p>
+                        </div>
+                      </div>
+                    )}
+
                     {details.alte_detalii && (
                       <div className="flex items-start space-x-2">
                         <FileText className="h-4 w-4 text-gray-500 mt-0.5" />

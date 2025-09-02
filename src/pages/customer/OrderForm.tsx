@@ -9,7 +9,8 @@ import { ArrowLeft, User, CreditCard, Truck, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { requiresAddress } from '@/utils/delivery';
+import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
+import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 
 interface OrderFormData {
   nume: string;
@@ -28,6 +29,7 @@ const OrderForm: React.FC = () => {
   const { data: publishedList, isLoading: isLoadingList } = usePublishedList();
   const { data: listDeliveryTypes, isLoading: isLoadingDeliveryTypes } = useListDeliveryTypes(publishedList?.id || 0);
   const { data: paymentMethods } = usePaymentMethods();
+  const { data: businessDetails } = useBusinessDetailsSingle();
 
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
 
@@ -115,7 +117,9 @@ const OrderForm: React.FC = () => {
     const orderData = {
       ...data,
       items,
-      total: getTotalPrice(),
+      subtotal,
+      delivery_tax: deliveryTax,
+      total: grandTotal,
       deliveryType: selectedDeliveryType,
       paymentMethod: paymentMethods?.find(pm => pm.id === data.payment_method_id)
     };
@@ -150,6 +154,10 @@ const OrderForm: React.FC = () => {
       </div>
     );
   }
+
+  const subtotal = getTotalPrice();
+  const deliveryTax = getDeliveryTax(selectedDeliveryType, businessDetails);
+  const grandTotal = subtotal + deliveryTax;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -315,10 +323,18 @@ const OrderForm: React.FC = () => {
               
               <div className="border-t border-gray-200 pt-3">
                 <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">Subtotal:</span>
+                  <span className="text-sm font-medium">{subtotal} RON</span>
+                </div>
+                {selectedDeliveryType && requiresAddress(selectedDeliveryType) && businessDetails?.delivery_tax !== undefined && (
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-sm text-gray-700">Taxă livrare:</span>
+                    <span className="text-sm font-medium">{deliveryTax} RON</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center mt-2">
                   <span className="text-lg font-semibold">Total:</span>
-                  <span className="text-lg font-bold text-blue-600">
-                    {getTotalPrice()} RON
-                  </span>
+                  <span className="text-lg font-bold text-blue-600">{grandTotal} RON</span>
                 </div>
               </div>
             </div>

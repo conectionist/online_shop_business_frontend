@@ -189,6 +189,7 @@ export interface BusinessDetails {
   motto?: string;
   list_not_available_msg?: string;
   alte_detalii?: string;
+  delivery_tax?: number;
 }
 
 export interface BusinessDetailsCreate {
@@ -198,6 +199,7 @@ export interface BusinessDetailsCreate {
   motto?: string;
   list_not_available_msg?: string;
   alte_detalii?: string;
+  delivery_tax?: number;
 }
 
 export interface BusinessDetailsUpdate {
@@ -207,6 +209,7 @@ export interface BusinessDetailsUpdate {
   motto?: string;
   list_not_available_msg?: string;
   alte_detalii?: string;
+  delivery_tax?: number;
 }
 
 // Product Override Types

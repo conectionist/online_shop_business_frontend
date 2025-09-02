@@ -16,6 +16,8 @@ interface OrderData {
   address?: string;
   observatii?: string;
   items: any[];
+  subtotal?: number;
+  delivery_tax?: number;
   total: number;
   deliveryType: any;
   paymentMethod: any;
@@ -52,7 +54,13 @@ const OrderConfirmation: React.FC = () => {
       orderText += `${item.quantity} x ${item.nume} (${item.quantity * item.pret} RON)\n`;
     });
     
-    // Add total price
+    // Add totals breakdown
+    const subtotal = orderData.subtotal ?? orderData.items.reduce((t, it) => t + it.quantity * it.pret, 0);
+    const deliveryTax = orderData.delivery_tax ?? 0;
+    if (deliveryTax > 0) {
+      orderText += `Subtotal: ${subtotal} RON\n`;
+      orderText += `Taxă livrare: ${deliveryTax} RON\n`;
+    }
     orderText += `Total: ${orderData.total} RON\n`;
     
     // Add payment method
