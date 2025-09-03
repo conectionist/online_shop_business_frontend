@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import AdminLayout from './components/layout/AdminLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import SEO from './components/SEO'
+import ScrollToTop from './components/ScrollToTop'
 import WelcomePage from './pages/WelcomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -46,6 +47,9 @@ function App() {
       <Router>
         {/* Default SEO component for the entire app */}
         <SEO />
+        
+        {/* Scroll to top on route change */}
+        <ScrollToTop />
         
         <Routes>
           {/* Public routes (wrapped with AppLayout for global footer) */}
