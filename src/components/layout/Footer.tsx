@@ -14,6 +14,7 @@ import {
   getLegalReturnPolicy,
   getANPCLink,
   getSOLLink,
+  getSALLink,
   getLegalPageRoutes
 } from '@/utils/businessInfo';
 
@@ -33,6 +34,7 @@ const Footer: React.FC = () => {
   const returnPolicy = getLegalReturnPolicy();
   const anpcLink = getANPCLink();
   const solLink = getSOLLink();
+  const salLink = getSALLink();
   const legalRoutes = getLegalPageRoutes();
 
   return (
@@ -135,10 +137,31 @@ const Footer: React.FC = () => {
                 href={solLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center hover:text-amber-400 transition-colors"
+                className="inline-flex items-center justify-center hover:opacity-90 transition"
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                SOL - Rezolvarea Litigiilor
+                <img
+                  decoding="async"
+                  style={{ width: '250px', height: '50px' }}
+                  src="/anpc-sol.png"
+                  alt="Soluționarea Online a Litigiilor"
+                  title="Soluționarea Online a Litigiilor"
+                  className="rounded shadow-sm"
+                />
+              </a>
+              <a 
+                href={salLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center hover:opacity-90 transition"
+              >
+                <img
+                  decoding="async"
+                  style={{ width: '250px', height: '50px' }}
+                  src="/anpc-sal.png"
+                  alt="Soluționarea Alternativă a Litigiilor"
+                  title="Soluționarea Alternativă a Litigiilor"
+                  className="rounded shadow-sm"
+                />
               </a>
               <div className="text-xs text-gray-400 mt-4 p-3 bg-gray-800 rounded">
                 <p className="font-medium mb-2">Dreptul de retur:</p>

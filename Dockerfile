@@ -35,6 +35,9 @@ COPY --from=builder /app/public/config.js /usr/share/nginx/html/config.js
 # Copy fonts for PDF generation
 COPY --from=builder /app/public/fonts /usr/share/nginx/html/fonts
 
+# Copy ANPC pictograms for legal compliance
+COPY --from=builder /app/public/anpc-*.png /usr/share/nginx/html/
+
 # Copy test data (including logo)
 COPY --from=builder /app/test /usr/share/nginx/html/test
 

@@ -250,6 +250,8 @@ const WelcomePage: React.FC = () => {
                 Comandă produsele tale preferate pentru livrare
               </p>
             </div>
+            
+            
           </div>
         </div>
       </div>

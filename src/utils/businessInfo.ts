@@ -103,6 +103,10 @@ export const getSOLLink = (): string => {
   return 'https://ec.europa.eu/consumers/odr/';
 };
 
+export const getSALLink = (): string => {
+  return 'https://anpc.ro/ce-este-sal/';
+};
+
 // Legal Page Routes
 export const getLegalPageRoutes = () => {
   return {
