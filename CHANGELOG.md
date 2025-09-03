@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.7.0] - 2025-09-02
+## 2.6.0 - 2025-09-03
+### Added
+- Footer component with legal links (ANPC, SOL), legal routes, and business info display.
+- Utility `src/utils/businessInfo.ts` to centralize business data sourcing from `business_details` and config with TODO placeholders.
+
+### Changed
+- Integrated footer across public pages (`WelcomePage`, `CartPage`, `OrderForm`, `OrderConfirmation`, `ProductPage`, `LoginPage`).
+- Updated legal compliance checklist with priorities and progress.
+
+
+## [2.5.1] - 2025-09-02
 
 ### Added
 - **Dynamic Sitemap Generation**: Sitemap now generated at runtime with configurable base URL
@@ -22,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Environment Configuration**: Added `VITE_SITE_URL` to docker-compose.yml and env.example
 - **Build Process**: Removed static sitemap copy from Dockerfile
 
-## [2.6.0] - 2025-09-02
+## [2.5.0] - 2025-09-02
 
 ### Added
 - Optional delivery tax support across the app:

@@ -12,6 +12,7 @@ import Select from '@/components/ui/Select';
 import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { components } from '@/utils/theme';
+import Footer from '@/components/layout/Footer';
 
 interface OrderFormData {
   nume: string;
@@ -363,6 +364,9 @@ const OrderForm: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

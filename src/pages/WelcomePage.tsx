@@ -13,6 +13,7 @@ import { getAppName, getLogoPath } from '@/utils/appConfig';
 import { getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
+import Footer from '@/components/layout/Footer';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
@@ -542,6 +543,9 @@ const WelcomePage: React.FC = () => {
         </div>
       )}
     </div>
+
+      {/* Footer */}
+      <Footer />
     </>
   );
 };

@@ -7,6 +7,7 @@ import { useCreateOrder } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
 import { requiresAddress } from '@/utils/delivery';
 import { components } from '@/utils/theme';
+import Footer from '@/components/layout/Footer';
 
 
 interface OrderData {
@@ -264,6 +265,9 @@ const OrderConfirmation: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

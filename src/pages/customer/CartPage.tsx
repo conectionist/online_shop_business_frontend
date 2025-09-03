@@ -6,6 +6,7 @@ import { Package, Trash2, Plus, Minus, ArrowLeft, ShoppingCart } from 'lucide-re
 import { Button } from '@/components/ui/Button';
 import { Link } from 'react-router-dom';
 import { components } from '@/utils/theme';
+import Footer from '@/components/layout/Footer';
 
 const CartPage: React.FC = () => {
   const { 
@@ -206,6 +207,9 @@ const CartPage: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
