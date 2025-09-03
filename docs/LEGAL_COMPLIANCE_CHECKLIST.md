@@ -11,50 +11,50 @@
 
 ## 🔗 **Link-uri obligatorii** (Conform legislației UE și românești)
 
-- [ ] **ANPC** - Autoritatea Națională pentru Protecția Consumatorilor 🔴 CRITICĂ
-  - [ ] Link către https://anpc.ro 🔴 CRITICĂ
+- [x] **ANPC** - Autoritatea Națională pentru Protecția Consumatorilor 🔴 CRITICĂ
+  - [x] Link către https://anpc.ro 🔴 CRITICĂ
   - [ ] Text explicativ despre drepturile consumatorilor 🟡 ÎNALTĂ
-- [ ] **SOL** - Platforma de soluționare online a litigiilor 🔴 CRITICĂ
-  - [ ] Link către https://ec.europa.eu/consumers/odr/ 🔴 CRITICĂ
+- [x] **SOL** - Platforma de soluționare online a litigiilor 🔴 CRITICĂ
+  - [x] Link către https://ec.europa.eu/consumers/odr/ 🔴 CRITICĂ
   - [ ] Text explicativ despre rezolvarea alternativă a disputelor 🟡 ÎNALTĂ
 - [ ] **Contact direct** - informații clare despre cum să contacteze comerciantul 🔴 CRITICĂ
 
 ## 📄 **Documente legale obligatorii**
 
 ### Termeni și condiții
-- [ ] **Definiții legale** - termeni folosiți în document 🟡 ÎNALTĂ
-- [ ] **Descrierea serviciilor** - ce oferă magazinul online 🟡 ÎNALTĂ
-- [ ] **Drepturile și obligațiile părților** - clare și complete 🟡 ÎNALTĂ
-- [ ] **Politica de livrare** - modalități, costuri, termene 🟡 ÎNALTĂ
+- [x] **Definiții legale** - termeni folosiți în document 🟡 ÎNALTĂ
+- [x] **Descrierea serviciilor** - ce oferă magazinul online 🟡 ÎNALTĂ
+- [x] **Drepturile și obligațiile părților** - clare și complete 🟡 ÎNALTĂ
+- [x] **Politica de livrare** - modalități, costuri, termene 🟡 ÎNALTĂ
 - [ ] **Politica de returnare și rambursare** - conform OUG 34/2014 🔴 CRITICĂ
   - [ ] Dreptul de retur în 14 zile calendaristice 🔴 CRITICĂ
   - [ ] Procedura de retur (formular, e-mail, telefon) 🟡 ÎNALTĂ
   - [ ] Responsabilitatea costurilor de transport 🟡 ÎNALTĂ
   - [ ] Modalitatea și termenul de rambursare (maxim 14 zile) 🟡 ÎNALTĂ
-- [ ] **Limitări de răspundere** - clare și conforme cu legea 🟡 ÎNALTĂ
-- [ ] **Modalități de soluționare a litigiilor** - ANPC, SOL, instanță 🟡 ÎNALTĂ
-- [ ] **Legea aplicabilă** - legislația românească 🟡 ÎNALTĂ
+- [x] **Limitări de răspundere** - clare și conforme cu legea 🟡 ÎNALTĂ
+- [x] **Modalități de soluționare a litigiilor** - ANPC, SOL, instanță 🟡 ÎNALTĂ
+- [x] **Legea aplicabilă** - legislația românească 🟡 ÎNALTĂ
 
 ### Politica de confidențialitate (GDPR)
-- [ ] **Datele colectate** - ce informații se colectează 🔴 CRITICĂ
-- [ ] **Scopul colectării** - pentru ce se folosesc datele 🔴 CRITICĂ
-- [ ] **Stocarea datelor** - unde și cât timp se păstrează 🔴 CRITICĂ
-- [ ] **Transmiterea datelor** - către cine și în ce condiții 🔴 CRITICĂ
-- [ ] **Drepturile utilizatorilor**
-  - [ ] Dreptul de acces la date 🔴 CRITICĂ
-  - [ ] Dreptul de ștergere 🔴 CRITICĂ
-  - [ ] Dreptul de rectificare 🔴 CRITICĂ
-  - [ ] Dreptul la portabilitatea datelor 🔴 CRITICĂ
-- [ ] **Modalități de contact** pentru solicitări GDPR 🔴 CRITICĂ
-- [ ] **Baza legală** pentru fiecare tip de prelucrare 🔴 CRITICĂ
+- [x] **Datele colectate** - ce informații se colectează 🔴 CRITICĂ
+- [x] **Scopul colectării** - pentru ce se folosesc datele 🔴 CRITICĂ
+- [x] **Stocarea datelor** - unde și cât timp se păstrează 🔴 CRITICĂ
+- [x] **Transmiterea datelor** - către cine și în ce condiții 🔴 CRITICĂ
+- [x] **Drepturile utilizatorilor**
+  - [x] Dreptul de acces la date 🔴 CRITICĂ
+  - [x] Dreptul de ștergere 🔴 CRITICĂ
+  - [x] Dreptul de rectificare 🔴 CRITICĂ
+  - [x] Dreptul la portabilitatea datelor 🔴 CRITICĂ
+- [x] **Modalități de contact** pentru solicitări GDPR 🔴 CRITICĂ
+- [x] **Baza legală** pentru fiecare tip de prelucrare 🔴 CRITICĂ
 
 ### Politica de cookie-uri
 - [ ] **Banner de consimțământ** - afișat la prima vizită 🔴 CRITICĂ
 - [ ] **Opțiuni clare** - acceptare/refuzare cookie-uri neesențiale 🔴 CRITICĂ
-- [ ] **Pagina dedicată** cu explicații despre cookie-uri 🟡 ÎNALTĂ
-- [ ] **Tipurile de cookie-uri** utilizate pe site 🟡 ÎNALTĂ
+- [x] **Pagina dedicată** cu explicații despre cookie-uri 🟡 ÎNALTĂ
+- [x] **Tipurile de cookie-uri** utilizate pe site 🟡 ÎNALTĂ
 - [ ] **Durata de viață** a cookie-urilor 🟡 ÎNALTĂ
-- [ ] **Modalitatea de ștergere** a cookie-urilor 🟡 ÎNALTĂ
+- [x] **Modalitatea de ștergere** a cookie-urilor 🟡 ÎNALTĂ
 
 ## 💳 **Mijloace de plată și facturare legală**
 
@@ -110,9 +110,9 @@
 - [ ] **Politica de retur** - pagina cu procedura completă 🟡 ÎNALTĂ
 - [ ] **Contact** - pagina cu toate informațiile de contact 🔴 CRITICĂ
 
-### Routing și navigare
-- [ ] **Rutele pentru paginile legale** - /termeni, /confidentialitate, etc. 🟡 ÎNALTĂ
-- [ ] **Link-uri în footer** către toate paginile legale 🔴 CRITICĂ
+-### Routing și navigare
+- [x] **Rutele pentru paginile legale** - /termeni, /confidentialitate, etc. 🟡 ÎNALTĂ
+- [x] **Link-uri în footer** către toate paginile legale 🔴 CRITICĂ
 - [ ] **Breadcrumbs** pentru navigarea ușoară 🟢 MEDIE
 - [ ] **SEO optimization** pentru paginile legale 🟢 MEDIE
 
