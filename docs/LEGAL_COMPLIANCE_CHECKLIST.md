@@ -42,6 +42,7 @@
   - [x] Link către https://anpc.ro 🔴 CRITICĂ
 - [x] **SOL** - Platforma de soluționare online a litigiilor 🔴 CRITICĂ
   - [x] Link către https://ec.europa.eu/consumers/odr/ 🔴 CRITICĂ
+  - [x] Pictograme SOL pe prima pagină (conform Ordinului ANPC 449/2022) 🔴 CRITICĂ
 - [x] **SAL** - Soluționarea Alternativă a Litigiilor 🔴 CRITICĂ
   - [x] Link către secțiunea SAL de pe site-ul ANPC 🔴 CRITICĂ
   - [x] Pictograme SAL pe prima pagină (conform Ordinului ANPC 449/2022) 🔴 CRITICĂ
@@ -229,10 +230,10 @@
 - 🟡 **ÎNALTĂ** - Necesare pentru funcționarea corectă
 - 🟢 **MEDIE** - Pentru conformitatea completă și optimizare
 
-## 📈 **Status general**: 70% complet (51 din 73 de cerințe implementate)
+## 📈 **Status general**: 71% complet (52 din 73 de cerințe implementate)
 
 ### **Distribuția pe priorități:**
-- 🔴 **CRITICĂ**: 26 din 32 cerințe (81%)
+- 🔴 **CRITICĂ**: 27 din 32 cerințe (84%)
 - 🟡 **ÎNALTĂ**: 25 din 31 cerințe (81%) 
 - 🟢 **MEDIE**: 0 din 8 cerințe (0%)
 
