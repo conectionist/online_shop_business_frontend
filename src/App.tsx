@@ -30,6 +30,7 @@ import CartPage from './pages/customer/CartPage'
 import OrderForm from './pages/customer/OrderForm'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
 import ProductPage from './pages/customer/ProductPage'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 
@@ -88,6 +89,7 @@ function App() {
           <Route path="/order-form" element={<OrderForm />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/product/:productId" element={<ProductPage />} />
+          <Route path="/politica-confidentialitate" element={<PrivacyPolicy />} />
 
           {/* Catch all - redirect to welcome */}
           <Route path="*" element={<Navigate to="/" replace />} />
