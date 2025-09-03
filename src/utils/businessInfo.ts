@@ -7,9 +7,11 @@ import { getAppName } from './appConfig';
  */
 
 // Business Details from API
-export const getBusinessName = (_businessDetails?: BusinessDetails): string => {
-  // TODO: Add business_name field to BusinessDetails API
-  // For now, use app name from config
+export const getBusinessName = (businessDetails?: BusinessDetails): string => {
+  if (businessDetails?.business_name) {
+    return businessDetails.business_name;
+  }
+  // Fallback to app name from config
   return getAppName();
 };
 
@@ -29,35 +31,52 @@ export const getBusinessPhone = (businessDetails?: BusinessDetails): string => {
   return '+40 XXX XXX XXX';
 };
 
-export const getBusinessEmail = (_businessDetails?: BusinessDetails): string => {
-  // TODO: Add email field to BusinessDetails API
-  // For now, use domain from app config
+export const getBusinessEmail = (businessDetails?: BusinessDetails): string => {
+  if (businessDetails?.email) {
+    return businessDetails.email;
+  }
+  // Fallback to domain from app config
   const appName = getAppName().toLowerCase().replace(/\s+/g, '');
   return `contact@${appName}.ro`;
 };
 
-export const getBusinessCUI = (_businessDetails?: BusinessDetails): string => {
-  // TODO: Add CUI field to BusinessDetails API
+export const getBusinessCUI = (businessDetails?: BusinessDetails): string => {
+  if (businessDetails?.CUI) {
+    return businessDetails.CUI;
+  }
   return 'ROXXXXXXXXX';
 };
 
-export const getBusinessRegistrationNumber = (_businessDetails?: BusinessDetails): string => {
-  // TODO: Add registration_number field to BusinessDetails API
+export const getBusinessRegistrationNumber = (businessDetails?: BusinessDetails): string => {
+  if (businessDetails?.registration_number) {
+    return businessDetails.registration_number;
+  }
   return 'JXX/XXXX/XXXX';
 };
 
-export const getBusinessRepresentative = (_businessDetails?: BusinessDetails): string => {
-  // TODO: Add representative field to BusinessDetails API
+export const getBusinessRepresentative = (businessDetails?: BusinessDetails): string => {
+  if (businessDetails?.representative) {
+    return businessDetails.representative;
+  }
   return 'Reprezentantul va fi configurat în setările firmei';
 };
 
 // Business Operating Hours
-export const getBusinessHours = (_businessDetails?: BusinessDetails): {
+export const getBusinessHours = (businessDetails?: BusinessDetails): {
   weekdays: string;
   saturday: string;
   sunday: string;
 } => {
-  // TODO: Add operating_hours field to BusinessDetails API
+  if (businessDetails?.operating_hours) {
+    // Parse the operating_hours string into structured format
+    // For now, return as is - can be enhanced later
+    return {
+      weekdays: businessDetails.operating_hours,
+      saturday: businessDetails.operating_hours,
+      sunday: businessDetails.operating_hours
+    };
+  }
+  // Fallback to default hours
   return {
     weekdays: 'Luni - Vineri: 8:00 - 18:00',
     saturday: 'Sâmbătă: 8:00 - 14:00',

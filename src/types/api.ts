@@ -190,6 +190,12 @@ export interface BusinessDetails {
   list_not_available_msg?: string;
   alte_detalii?: string;
   delivery_tax?: number;
+  business_name?: string;
+  registration_number?: string;
+  CUI?: string;
+  email?: string;
+  operating_hours?: string;
+  representative?: string;
 }
 
 export interface BusinessDetailsCreate {
@@ -200,6 +206,12 @@ export interface BusinessDetailsCreate {
   list_not_available_msg?: string;
   alte_detalii?: string;
   delivery_tax?: number;
+  business_name?: string;
+  registration_number?: string;
+  CUI?: string;
+  email?: string;
+  operating_hours?: string;
+  representative?: string;
 }
 
 export interface BusinessDetailsUpdate {
@@ -210,6 +222,12 @@ export interface BusinessDetailsUpdate {
   list_not_available_msg?: string;
   alte_detalii?: string;
   delivery_tax?: number;
+  business_name?: string;
+  registration_number?: string;
+  CUI?: string;
+  email?: string;
+  operating_hours?: string;
+  representative?: string;
 }
 
 // Product Override Types

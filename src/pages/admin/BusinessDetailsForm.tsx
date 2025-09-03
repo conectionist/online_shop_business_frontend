@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Info } from 'lucide-react';
 import { useBusinessDetails, useCreateBusinessDetails, useUpdateBusinessDetails } from '@/hooks/useBusinessDetails';
 import { BusinessDetailsCreate } from '@/types/api';
 import Card from '@/components/ui/Card';
@@ -10,6 +10,30 @@ import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
 import ErrorDetailsModal from '@/components/ui/ErrorDetailsModal';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+
+// Simple Tooltip component
+const Tooltip = ({ children, content }: { children: React.ReactNode; content: string }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <div className="relative inline-block">
+      <div
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+        className="inline-flex items-center"
+      >
+        {children}
+        <Info className="h-4 w-4 ml-1 text-gray-400 hover:text-gray-600 cursor-help" />
+      </div>
+      {isVisible && (
+        <div className="absolute z-10 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg -top-2 left-full ml-2 w-48">
+          {content}
+          <div className="absolute top-3 -left-1 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function BusinessDetailsForm() {
   const navigate = useNavigate();
@@ -24,6 +48,12 @@ export default function BusinessDetailsForm() {
     list_not_available_msg: '',
     alte_detalii: '',
     delivery_tax: undefined,
+    business_name: '',
+    registration_number: '',
+    CUI: '',
+    email: '',
+    operating_hours: '',
+    representative: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,6 +84,12 @@ export default function BusinessDetailsForm() {
         list_not_available_msg: existingDetails.list_not_available_msg || '',
         alte_detalii: existingDetails.alte_detalii || '',
         delivery_tax: existingDetails.delivery_tax ?? undefined,
+        business_name: existingDetails.business_name || '',
+        registration_number: existingDetails.registration_number || '',
+        CUI: existingDetails.CUI || '',
+        email: existingDetails.email || '',
+        operating_hours: existingDetails.operating_hours || '',
+        representative: existingDetails.representative || '',
       });
     }
   }, [existingDetails]);
@@ -67,6 +103,21 @@ export default function BusinessDetailsForm() {
 
     if (!formData.telefon?.trim()) {
       newErrors.telefon = 'Telefonul este obligatoriu';
+    }
+
+    // Validate email format if provided
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Format email invalid';
+    }
+
+    // Validate CUI format if provided (Romanian format)
+    if (formData.CUI && !/^RO\d{2,10}$/.test(formData.CUI)) {
+      newErrors.CUI = 'Format CUI invalid (ex: RO12345678)';
+    }
+
+    // Validate registration number format if provided
+    if (formData.registration_number && !/^[A-Z]\d{1,2}\/\d{1,4}\/\d{1,4}$/.test(formData.registration_number)) {
+      newErrors.registration_number = 'Format număr de înregistrare invalid (ex: J12/1234/2023)';
     }
 
     if (formData.delivery_tax !== undefined && formData.delivery_tax !== null) {
@@ -162,107 +213,215 @@ export default function BusinessDetailsForm() {
 
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Adresă <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={formData.adresa}
-                onChange={(e) => handleInputChange('adresa', e.target.value)}
-                placeholder="Ex: Strada Test 123, București"
-                className={errors.adresa ? 'border-red-300' : ''}
-                required
-              />
-              {errors.adresa && (
-                <p className="text-sm text-red-600 mt-1">{errors.adresa}</p>
-              )}
+          {/* Informații de identificare comerciant */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Informații de identificare comerciant</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Numele oficial al firmei">
+                    Nume business
+                  </Tooltip>
+                </label>
+                <Input
+                  value={formData.business_name}
+                  onChange={(e) => handleInputChange('business_name', e.target.value)}
+                  placeholder="Ex: PCMA SRL"
+                  maxLength={100}
+                />
+
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Numărul de înregistrare la Registrul Comerțului">
+                    Număr de înregistrare
+                  </Tooltip>
+                </label>
+                <Input
+                  value={formData.registration_number}
+                  onChange={(e) => handleInputChange('registration_number', e.target.value)}
+                  placeholder="Ex: J12/1234/2023"
+                  maxLength={20}
+                />
+
+                {errors.registration_number && (
+                  <p className="text-sm text-red-600 mt-1">{errors.registration_number}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Codul Unic de Identificare fiscală">
+                    CUI
+                  </Tooltip>
+                </label>
+                <Input
+                  value={formData.CUI}
+                  onChange={(e) => handleInputChange('CUI', e.target.value)}
+                  placeholder="Ex: RO12345678"
+                  maxLength={16}
+                />
+
+                {errors.CUI && (
+                  <p className="text-sm text-red-600 mt-1">{errors.CUI}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Email-ul oficial al firmei">
+                    Email
+                  </Tooltip>
+                </label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="Ex: contact@firma.ro"
+                  maxLength={100}
+                />
+
+                {errors.email && (
+                  <p className="text-sm text-red-600 mt-1">{errors.email}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Adresa oficială a firmei">
+                    Adresă <span className="text-red-500">*</span>
+                  </Tooltip>
+                </label>
+                <Input
+                  value={formData.adresa}
+                  onChange={(e) => handleInputChange('adresa', e.target.value)}
+                  placeholder="Ex: Strada Test 123, București"
+                  className={errors.adresa ? 'border-red-300' : ''}
+                  required
+                />
+                {errors.adresa && (
+                  <p className="text-sm text-red-600 mt-1">{errors.adresa}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Numărul de telefon oficial al firmei">
+                    Telefon <span className="text-red-500">*</span>
+                  </Tooltip>
+                </label>
+                <Input
+                  value={formData.telefon}
+                  onChange={(e) => handleInputChange('telefon', e.target.value)}
+                  placeholder="Ex: +40712345678"
+                  className={errors.telefon ? 'border-red-300' : ''}
+                  required
+                />
+                {errors.telefon && (
+                  <p className="text-sm text-red-600 mt-1">{errors.telefon}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Numele reprezentantului legal">
+                    Reprezentant
+                  </Tooltip>
+                </label>
+                <Input
+                  value={formData.representative}
+                  onChange={(e) => handleInputChange('representative', e.target.value)}
+                  placeholder="Ex: Popescu Ion"
+                  maxLength={100}
+                />
+
+              </div>
             </div>
 
-            <div>
+            <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Telefon <span className="text-red-500">*</span>
+                <Tooltip content="Programul de funcționare al firmei">
+                  Program de funcționare
+                </Tooltip>
               </label>
-              <Input
-                value={formData.telefon}
-                onChange={(e) => handleInputChange('telefon', e.target.value)}
-                placeholder="Ex: +40712345678"
-                className={errors.telefon ? 'border-red-300' : ''}
-                required
+              <textarea
+                value={formData.operating_hours}
+                onChange={(e) => handleInputChange('operating_hours', e.target.value)}
+                placeholder="Ex: Luni-Vineri: 8:00 - 18:00&#10;Sâmbătă: 8:00 - 14:00&#10;Duminică: Închis"
+                maxLength={150}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
               />
-              {errors.telefon && (
-                <p className="text-sm text-red-600 mt-1">{errors.telefon}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Motto
-              </label>
-              <Input
-                value={formData.motto}
-                onChange={(e) => handleInputChange('motto', e.target.value)}
-                placeholder="Ex: Calitate și preț bun"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Sloganul sau motto-ul business-ului
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Taxă livrare (RON)
-              </label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={1}
-                value={formData.delivery_tax ?? ''}
-                onChange={(e) => handleInputChange('delivery_tax', e.target.value)}
-                placeholder="Ex: 10"
-                className={errors.delivery_tax ? 'border-red-300' : ''}
-              />
-              {errors.delivery_tax ? (
-                <p className="text-sm text-red-600 mt-1">{errors.delivery_tax}</p>
-              ) : (
-                <p className="text-sm text-gray-500 mt-1">
-                  Opțional. Se aplică pentru livrare la domiciliu. Lasă gol pentru a nu aplica.
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mesaj când lista nu este disponibilă
-              </label>
-              <Input
-                value={formData.list_not_available_msg}
-                onChange={(e) => handleInputChange('list_not_available_msg', e.target.value)}
-                placeholder="Ex: Lista va fi disponibilă mâine"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Mesaj afișat când nu există liste active
-              </p>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Alte detalii
-            </label>
-            <textarea
-              value={formData.alte_detalii}
-              onChange={(e) => handleInputChange('alte_detalii', e.target.value)}
-              placeholder="Ex: Livrare gratuită pentru comenzi peste 100 lei"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.alte_detalii ? 'border-red-300' : 'border-gray-300'
-              }`}
-              rows={4}
-            />
-            <p className="text-sm text-gray-500 mt-1">
-              Informații suplimentare despre business
-            </p>
+          {/* Informații business generale */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Informații business generale</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Mesaj afișat când nu există liste active">
+                    Mesaj când lista nu este disponibilă
+                  </Tooltip>
+                </label>
+                <Input
+                  value={formData.list_not_available_msg}
+                  onChange={(e) => handleInputChange('list_not_available_msg', e.target.value)}
+                  placeholder="Ex: Lista va fi disponibilă mâine"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Opțional. Se aplică pentru livrare la domiciliu. Lasă gol pentru a nu aplica.">
+                    Taxă livrare (RON)
+                  </Tooltip>
+                </label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={formData.delivery_tax ?? ''}
+                  onChange={(e) => handleInputChange('delivery_tax', e.target.value)}
+                  placeholder="Ex: 10"
+                  className={errors.delivery_tax ? 'border-red-300' : ''}
+                />
+                {errors.delivery_tax && (
+                  <p className="text-sm text-red-600 mt-1">{errors.delivery_tax}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tooltip content="Sloganul sau motto-ul business-ului">
+                    Motto
+                  </Tooltip>
+                </label>
+                <Input
+                  value={formData.motto}
+                  onChange={(e) => handleInputChange('motto', e.target.value)}
+                  placeholder="Ex: Calitate și preț bun"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Tooltip content="Informații suplimentare despre business">
+                  Alte detalii
+                </Tooltip>
+              </label>
+              <textarea
+                value={formData.alte_detalii}
+                onChange={(e) => handleInputChange('alte_detalii', e.target.value)}
+                placeholder="Ex: Livrare gratuită pentru comenzi peste 100 lei"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
+              />
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3">
