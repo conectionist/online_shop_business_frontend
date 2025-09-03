@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getApiBaseUrl } from '@/services/api';
 
 import { useAuthStore } from '@/stores/authStore';
-import Footer from '@/components/layout/Footer';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -223,9 +222,6 @@ const LoginPage: React.FC = () => {
           </form>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

@@ -31,6 +31,8 @@ import OrderForm from './pages/customer/OrderForm'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
 import ProductPage from './pages/customer/ProductPage'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsAndConditions from './pages/TermsAndConditions'
+import AppLayout from './components/layout/AppLayout'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 
@@ -43,9 +45,17 @@ function App() {
         <SEO />
         
         <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<WelcomePage />} />
-          <Route path="/login" element={<LoginPage />} />
+          {/* Public routes (wrapped with AppLayout for global footer) */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<WelcomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/order-form" element={<OrderForm />} />
+            <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/product/:productId" element={<ProductPage />} />
+            <Route path="/politica-confidentialitate" element={<PrivacyPolicy />} />
+            <Route path="/termeni-si-conditii" element={<TermsAndConditions />} />
+          </Route>
 
           {/* Protected admin routes */}
           <Route path="/admin" element={
@@ -84,12 +94,7 @@ function App() {
             {/* Future admin routes will go here */}
           </Route>
 
-          {/* Cart and Order routes */}
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/order-form" element={<OrderForm />} />
-          <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          <Route path="/product/:productId" element={<ProductPage />} />
-          <Route path="/politica-confidentialitate" element={<PrivacyPolicy />} />
+          {/* Admin routes are already handled above */}
 
           {/* Catch all - redirect to welcome */}
           <Route path="*" element={<Navigate to="/" replace />} />

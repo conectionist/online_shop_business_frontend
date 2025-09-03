@@ -10,7 +10,6 @@ import { getProductImageUrl } from '@/services/api';
 import SEO from '@/components/SEO';
 import { generateProductSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
-import Footer from '@/components/layout/Footer';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -324,9 +323,6 @@ const ProductPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer />
     </>
   );
 };
