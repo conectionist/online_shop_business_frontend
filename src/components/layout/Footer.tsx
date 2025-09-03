@@ -198,7 +198,7 @@ const Footer: React.FC = () => {
               </Link>
               <div className="text-xs text-gray-400 mt-4 p-3 bg-gray-800 rounded">
                 <p className="font-medium mb-2">Program:</p>
-                <p>{businessHours}</p>
+                <p className="whitespace-pre-line">{businessHours}</p>
               </div>
             </div>
           </div>

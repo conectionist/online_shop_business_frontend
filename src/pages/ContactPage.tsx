@@ -49,7 +49,7 @@ const ContactPage: React.FC = () => {
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Program</h2>
             <div className="text-gray-700">
-              <p>{businessHours}</p>
+              <p className="whitespace-pre-line">{businessHours}</p>
             </div>
           </div>
         </div>
