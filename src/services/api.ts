@@ -72,7 +72,8 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     // Handle 401 Unauthorized errors with automatic token refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // IMPORTANT: Don't retry refresh token requests to avoid infinite loops
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
       originalRequest._retry = true;
 
       try {
