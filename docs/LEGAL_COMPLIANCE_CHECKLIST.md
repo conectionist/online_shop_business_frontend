@@ -104,10 +104,10 @@
 - [x] **Design responsive** - funcționează pe toate dispozitivele 🟡 ÎNALTĂ
 
 ### Pagini legale
-- [ ] **Termeni și condiții** - pagina completă cu toate informațiile 🟡 ÎNALTĂ
-- [ ] **Politica de confidențialitate** - pagina GDPR completă 🔴 CRITICĂ
-- [ ] **Politica de cookie-uri** - pagina cu banner de consimțământ 🔴 CRITICĂ
-- [ ] **Politica de retur** - pagina cu procedura completă 🟡 ÎNALTĂ
+- [x] **Termeni și condiții** - pagina completă cu toate informațiile 🟡 ÎNALTĂ
+- [x] **Politica de confidențialitate** - pagina GDPR completă 🔴 CRITICĂ
+- [x] **Politica de cookie-uri** - pagina cu banner de consimțământ 🔴 CRITICĂ
+- [x] **Politica de retur** - pagina cu procedura completă 🟡 ÎNALTĂ
 - [ ] **Contact** - pagina cu toate informațiile de contact 🔴 CRITICĂ
 
 -### Routing și navigare

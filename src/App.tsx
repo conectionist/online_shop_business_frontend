@@ -34,6 +34,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import AppLayout from './components/layout/AppLayout'
 import CookiesPolicy from './pages/CookiesPolicy'
+import ReturnsPolicy from './pages/ReturnsPolicy'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 
@@ -56,6 +57,7 @@ function App() {
             <Route path="/product/:productId" element={<ProductPage />} />
             <Route path="/politica-confidentialitate" element={<PrivacyPolicy />} />
             <Route path="/politica-cookie-uri" element={<CookiesPolicy />} />
+            <Route path="/politica-retur" element={<ReturnsPolicy />} />
             <Route path="/termeni-si-conditii" element={<TermsAndConditions />} />
           </Route>
 
