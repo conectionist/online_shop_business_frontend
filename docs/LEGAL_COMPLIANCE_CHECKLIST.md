@@ -17,7 +17,7 @@
 - [x] **SOL** - Platforma de soluționare online a litigiilor 🔴 CRITICĂ
   - [x] Link către https://ec.europa.eu/consumers/odr/ 🔴 CRITICĂ
   - [ ] Text explicativ despre rezolvarea alternativă a disputelor 🟡 ÎNALTĂ
-- [ ] **Contact direct** - informații clare despre cum să contacteze comerciantul 🔴 CRITICĂ
+- [x] **Contact direct** - informații clare despre cum să contacteze comerciantul 🔴 CRITICĂ
 
 ## 📄 **Documente legale obligatorii**
 
@@ -108,7 +108,7 @@
 - [x] **Politica de confidențialitate** - pagina GDPR completă 🔴 CRITICĂ
 - [x] **Politica de cookie-uri** - pagina cu banner de consimțământ 🔴 CRITICĂ
 - [x] **Politica de retur** - pagina cu procedura completă 🟡 ÎNALTĂ
-- [ ] **Contact** - pagina cu toate informațiile de contact 🔴 CRITICĂ
+- [x] **Contact** - pagina cu toate informațiile de contact 🔴 CRITICĂ
 
 -### Routing și navigare
 - [x] **Rutele pentru paginile legale** - /termeni, /confidentialitate, etc. 🟡 ÎNALTĂ
