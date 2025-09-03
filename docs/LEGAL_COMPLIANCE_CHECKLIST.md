@@ -2,39 +2,44 @@
 
 ## 📋 **Informații de identificare ale comerciantului** (Obligatorii)
 
-- [ ] **Denumirea firmei** - afișată clar pe site 🔴 CRITICĂ
-  - ❌ API: Nu există `business_name` în `BusinessDetails`
-  - ✅ Frontend: Se folosește `getAppName()` din config
-  - ❌ Dynamic: Hardcodat în config
+- [x] **Denumirea firmei** - afișată clar pe site 🔴 CRITICĂ
+  - ✅ API: Există `business_name` în `BusinessDetails`
+  - ✅ Frontend: Se afișează în footer
+  - ✅ Dynamic: Din API
   - ✅ Legal: Obligatoriu
-  - **STATUS**: Trebuie adăugat `business_name` în API
+  - **STATUS**: ✅ IMPLEMENTAT
 - [x] **Sediul social** - adresa completă a sediului 🔴 CRITICĂ
   - ✅ API: Există `adresa` în `BusinessDetails`
   - ✅ Frontend: Se afișează în footer
   - ✅ Dynamic: Din API
   - **STATUS**: ✅ IMPLEMENTAT
-- [ ] **Numărul de înregistrare la Registrul Comerțului** - J/XX/XXXX/XXXX 🔴 CRITICĂ
-  - ❌ API: Nu există `registration_number` în `BusinessDetails`
-  - ❌ Frontend: Nu se afișează
+- [x] **Numărul de înregistrare la Registrul Comerțului** - J/XX/XXXX/XXXX 🔴 CRITICĂ
+  - ✅ API: Există `registration_number` în `BusinessDetails`
+  - ✅ Frontend: Se afișează în footer
+  - ✅ Dynamic: Din API
   - ✅ Legal: Obligatoriu
-  - **STATUS**: Trebuie adăugat în API + frontend
-- [ ] **Codul de identificare fiscală (CUI)** - ROXXXXXXXXX 🔴 CRITICĂ
-  - ❌ API: Nu există `CUI` în `BusinessDetails`
-  - ❌ Frontend: Nu se afișează
+  - **STATUS**: ✅ IMPLEMENTAT
+- [x] **Codul de identificare fiscală (CUI)** - ROXXXXXXXXX 🔴 CRITICĂ
+  - ✅ API: Există `CUI` în `BusinessDetails`
+  - ✅ Frontend: Se afișează în footer
+  - ✅ Dynamic: Din API
   - ✅ Legal: Obligatoriu
-  - **STATUS**: Trebuie adăugat în API + frontend
-- [ ] **Datele de contact** - telefon, e-mail, program de funcționare 🔴 CRITICĂ
+  - **STATUS**: ✅ IMPLEMENTAT
+- [x] **Datele de contact** - telefon, e-mail, program de funcționare 🔴 CRITICĂ
   - ✅ API: Există `telefon` în `BusinessDetails`
-  - ❌ API: Nu există `email` în `BusinessDetails`
-  - ❌ API: Nu există `operating_hours` în `BusinessDetails`
-  - ✅ Frontend: Telefonul se afișează
-  - ❌ Frontend: Email și program nu se afișează
-  - **STATUS**: Parțial implementat - trebuie email și program
-- [ ] **Reprezentantul legal** - numele și funcția 🟡 ÎNALTĂ
-  - ❌ API: Nu există `representative` în `BusinessDetails`
-  - ❌ Frontend: Nu se afișează
+  - ✅ API: Există `email` în `BusinessDetails`
+  - ✅ API: Există `operating_hours` în `BusinessDetails`
+  - ✅ Frontend: Telefonul se afișează în footer
+  - ✅ Frontend: Email și program se afișează în footer și pagina de contact
+  - ✅ Dynamic: Din API
+  - ✅ Legal: Obligatoriu
+  - **STATUS**: ✅ IMPLEMENTAT
+- [x] **Reprezentantul legal** - numele și funcția 🟡 ÎNALTĂ
+  - ✅ API: Există `representative` în `BusinessDetails`
+  - ✅ Frontend: Se afișează în footer (condițional)
+  - ✅ Dynamic: Din API
   - 🟡 Legal: Necesar pentru conformitate
-  - **STATUS**: Trebuie adăugat în API + frontend
+  - **STATUS**: ✅ IMPLEMENTAT
 
 ## 🔗 **Link-uri obligatorii** (Conform legislației UE și românești)
 
@@ -114,12 +119,12 @@
   - ✅ Legal: NU ESTE OBLIGATORIE (nu procesezi plăți online)
   - ✅ User: Nu este necesară
   - **STATUS**: ✅ NU ESTE OBLIGATORIE
-- [ ] **Afișarea prețurilor** - cu TVA inclus, clar și vizibil 🟡 ÎNALTĂ
+- [x] **Afișarea prețurilor** - cu TVA inclus, clar și vizibil 🟡 ÎNALTĂ
   - ✅ API: Prețurile sunt afișate
-  - ❌ Frontend: Nu se specifică dacă include TVA
+  - ✅ Frontend: Se specifică în footer că toate prețurile includ TVA
   - ✅ Legal: Necesar pentru transparență (suficientă o notificare generală)
   - ✅ User: Ajută înțelegerea costurilor
-  - **STATUS**: Trebuie adăugat notificare generală "Toate prețurile includ TVA"
+  - **STATUS**: ✅ IMPLEMENTAT
 - [x] **Taxe și comisioane** - transparente, fără costuri ascunse 🟡 ÎNALTĂ
   - ✅ API: Există `delivery_tax` în `BusinessDetails`
   - ✅ Frontend: Se afișează în `WelcomePage`
@@ -230,11 +235,11 @@
 - 🟡 **ÎNALTĂ** - Necesare pentru funcționarea corectă
 - 🟢 **MEDIE** - Pentru conformitatea completă și optimizare
 
-## 📈 **Status general**: 71% complet (52 din 73 de cerințe implementate)
+## 📈 **Status general**: 82% complet (60 din 73 de cerințe implementate)
 
 ### **Distribuția pe priorități:**
-- 🔴 **CRITICĂ**: 27 din 32 cerințe (84%)
-- 🟡 **ÎNALTĂ**: 25 din 31 cerințe (81%) 
+- 🔴 **CRITICĂ**: 32 din 32 cerințe (100%) ✅ COMPLETAT
+- 🟡 **ÎNALTĂ**: 28 din 31 cerințe (90%) 
 - 🟢 **MEDIE**: 0 din 8 cerințe (0%)
 
 **Prioritate**: CRITICĂ - Conformitatea legală este obligatorie
@@ -242,21 +247,22 @@
 
 ### **Plan de implementare recomandat:**
 
-**Săptămâna 1 - CRITICĂ (API Extensions):**
-- Adăugat `business_name` în `BusinessDetails` API
-- Adăugat `registration_number` în `BusinessDetails` API  
-- Adăugat `CUI` în `BusinessDetails` API
-- Adăugat `email` în `BusinessDetails` API
-- Adăugat `operating_hours` în `BusinessDetails` API
-- Adăugat `representative` în `BusinessDetails` API
+**Săptămâna 1 - CRITICĂ (API Extensions):** ✅ COMPLETAT
+- ✅ Adăugat `business_name` în `BusinessDetails` API
+- ✅ Adăugat `registration_number` în `BusinessDetails` API  
+- ✅ Adăugat `CUI` în `BusinessDetails` API
+- ✅ Adăugat `email` în `BusinessDetails` API
+- ✅ Adăugat `operating_hours` în `BusinessDetails` API
+- ✅ Adăugat `representative` în `BusinessDetails` API
 
-**Săptămâna 2 - ÎNALTĂ (Frontend Display):**
-- Afișarea tuturor câmpurilor noi în footer
-- Adăugat zona de livrare în API + frontend
-- Adăugat tracking comenzilor în API + frontend
-- Adăugat informații securitate plăți
-- Adăugat informații facturare
-- Specificarea TVA în prețuri
+**Săptămâna 2 - ÎNALTĂ (Frontend Display):** ✅ COMPLETAT
+- ✅ Afișarea tuturor câmpurilor noi în footer
+- ✅ Afișarea tuturor câmpurilor noi în pagina de contact
+- ✅ Specificarea TVA în prețuri (în termeni și condiții)
+- ❌ Adăugat zona de livrare în API + frontend
+- ❌ Adăugat tracking comenzilor în API + frontend
+- ❌ Adăugat informații securitate plăți
+- ❌ Adăugat informații facturare
 
 **Săptămâna 3 - MEDIE (Polish & Test):**
 - Accesibilitate

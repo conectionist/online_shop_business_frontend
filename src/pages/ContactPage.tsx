@@ -17,7 +17,7 @@ const ContactPage: React.FC = () => {
   const address = getBusinessAddress(businessDetails || undefined);
   const phone = getBusinessPhone(businessDetails || undefined);
   const email = getBusinessEmail(businessDetails || undefined);
-  const hours = getBusinessHours(businessDetails || undefined);
+  const businessHours = getBusinessHours(businessDetails || undefined);
 
   return (
     <div className={components.page.containerLarge}>
@@ -49,9 +49,7 @@ const ContactPage: React.FC = () => {
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Program</h2>
             <div className="text-gray-700">
-              <p>{hours.weekdays}</p>
-              <p>{hours.saturday}</p>
-              <p>{hours.sunday}</p>
+              <p>{businessHours}</p>
             </div>
           </div>
         </div>

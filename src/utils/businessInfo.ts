@@ -62,26 +62,13 @@ export const getBusinessRepresentative = (businessDetails?: BusinessDetails): st
 };
 
 // Business Operating Hours
-export const getBusinessHours = (businessDetails?: BusinessDetails): {
-  weekdays: string;
-  saturday: string;
-  sunday: string;
-} => {
+export const getBusinessHours = (businessDetails?: BusinessDetails): string => {
   if (businessDetails?.operating_hours) {
-    // Parse the operating_hours string into structured format
-    // For now, return as is - can be enhanced later
-    return {
-      weekdays: businessDetails.operating_hours,
-      saturday: businessDetails.operating_hours,
-      sunday: businessDetails.operating_hours
-    };
+    // Return the operating hours exactly as written by the business
+    return businessDetails.operating_hours;
   }
   // Fallback to default hours
-  return {
-    weekdays: 'Luni - Vineri: 8:00 - 18:00',
-    saturday: 'Sâmbătă: 8:00 - 14:00',
-    sunday: 'Duminică: Închis'
-  };
+  return 'Luni - Vineri: 8:00 - 18:00';
 };
 
 // Business Motto/Slogan

@@ -9,6 +9,7 @@ import {
   getBusinessEmail,
   getBusinessCUI,
   getBusinessRegistrationNumber,
+  getBusinessRepresentative,
   getBusinessHours,
   getBusinessDescription,
   getLegalReturnPolicy,
@@ -29,6 +30,7 @@ const Footer: React.FC = () => {
   const businessEmail = getBusinessEmail(businessDetails || undefined);
   const businessCUI = getBusinessCUI(businessDetails || undefined);
   const businessRegistrationNumber = getBusinessRegistrationNumber(businessDetails || undefined);
+  const businessRepresentative = getBusinessRepresentative(businessDetails || undefined);
   const businessHours = getBusinessHours(businessDetails || undefined);
   const businessDescription = getBusinessDescription(businessDetails || undefined);
   const returnPolicy = getLegalReturnPolicy();
@@ -69,6 +71,11 @@ const Footer: React.FC = () => {
               <p className="text-xs text-gray-400">
                 {businessRegistrationNumber}
               </p>
+              {businessRepresentative && businessRepresentative !== 'Reprezentantul va fi configurat în setările firmei' && (
+                <p className="text-xs text-gray-400">
+                  Reprezentant: {businessRepresentative}
+                </p>
+              )}
             </div>
           </div>
 
@@ -191,9 +198,7 @@ const Footer: React.FC = () => {
               </Link>
               <div className="text-xs text-gray-400 mt-4 p-3 bg-gray-800 rounded">
                 <p className="font-medium mb-2">Program:</p>
-                <p>{businessHours.weekdays}</p>
-                <p>{businessHours.saturday}</p>
-                <p>{businessHours.sunday}</p>
+                <p>{businessHours}</p>
               </div>
             </div>
           </div>
