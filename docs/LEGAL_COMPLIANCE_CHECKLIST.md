@@ -26,11 +26,11 @@
 - [x] **Descrierea serviciilor** - ce oferă magazinul online 🟡 ÎNALTĂ
 - [x] **Drepturile și obligațiile părților** - clare și complete 🟡 ÎNALTĂ
 - [x] **Politica de livrare** - modalități, costuri, termene 🟡 ÎNALTĂ
-- [ ] **Politica de returnare și rambursare** - conform OUG 34/2014 🔴 CRITICĂ
-  - [ ] Dreptul de retur în 14 zile calendaristice 🔴 CRITICĂ
-  - [ ] Procedura de retur (formular, e-mail, telefon) 🟡 ÎNALTĂ
-  - [ ] Responsabilitatea costurilor de transport 🟡 ÎNALTĂ
-  - [ ] Modalitatea și termenul de rambursare (maxim 14 zile) 🟡 ÎNALTĂ
+- [x] **Politica de returnare și rambursare** - conform OUG 34/2014 🔴 CRITICĂ
+  - [x] Dreptul de retur în 14 zile calendaristice 🔴 CRITICĂ
+  - [x] Procedura de retur (formular, e-mail, telefon) 🟡 ÎNALTĂ
+  - [x] Responsabilitatea costurilor de transport 🟡 ÎNALTĂ
+  - [x] Modalitatea și termenul de rambursare (maxim 14 zile) 🟡 ÎNALTĂ
 - [x] **Limitări de răspundere** - clare și conforme cu legea 🟡 ÎNALTĂ
 - [x] **Modalități de soluționare a litigiilor** - ANPC, SOL, instanță 🟡 ÎNALTĂ
 - [x] **Legea aplicabilă** - legislația românească 🟡 ÎNALTĂ
@@ -110,7 +110,7 @@
 - [x] **Politica de retur** - pagina cu procedura completă 🟡 ÎNALTĂ
 - [x] **Contact** - pagina cu toate informațiile de contact 🔴 CRITICĂ
 
--### Routing și navigare
+### Routing și navigare
 - [x] **Rutele pentru paginile legale** - /termeni, /confidentialitate, etc. 🟡 ÎNALTĂ
 - [x] **Link-uri în footer** către toate paginile legale 🔴 CRITICĂ
 - [ ] **Breadcrumbs** pentru navigarea ușoară 🟢 MEDIE
@@ -143,12 +143,12 @@
 - 🟡 **ÎNALTĂ** - Necesare pentru funcționarea corectă
 - 🟢 **MEDIE** - Pentru conformitatea completă și optimizare
 
-## 📈 **Status general**: 4% complet (4 din 89 de cerințe implementate)
+## 📈 **Status general**: 40% complet (36 din 89 de cerințe implementate)
 
 ### **Distribuția pe priorități:**
-- 🔴 **CRITICĂ**: 4 din 35 cerințe (11%)
-- 🟡 **ÎNALTĂ**: 0 din 35 cerințe (0%) 
-- 🟢 **MEDIE**: 0 din 19 cerințe (0%)
+- 🔴 **CRITICĂ**: 12 din 35 cerințe (34%)
+- 🟡 **ÎNALTĂ**: 16 din 35 cerințe (46%) 
+- 🟢 **MEDIE**: 8 din 19 cerințe (42%)
 
 **Prioritate**: CRITICĂ - Conformitatea legală este obligatorie
 **Estimare timp**: 2-3 săptămâni de dezvoltare
