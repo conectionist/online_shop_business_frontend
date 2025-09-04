@@ -209,6 +209,7 @@ const OrderForm: React.FC = () => {
                   {...register('prenume', { required: 'Prenumele este obligatoriu' })}
                   placeholder="Prenumele tău"
                   error={errors.prenume?.message}
+                  autoComplete="given-name"
                 />
               </div>
               
@@ -220,6 +221,7 @@ const OrderForm: React.FC = () => {
                   {...register('nume', { required: 'Numele este obligatoriu' })}
                   placeholder="Numele tău"
                   error={errors.nume?.message}
+                  autoComplete="family-name"
                 />
               </div>
             </div>
@@ -296,6 +298,7 @@ const OrderForm: React.FC = () => {
                     })}
                     placeholder="Strada, numărul, orașul, codul poștal"
                     error={errors.address?.message}
+                    autoComplete="street-address"
                   />
                 </div>
               )}
