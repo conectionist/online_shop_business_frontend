@@ -1,0 +1,195 @@
+#!/bin/bash
+
+# Production Rollback Script
+# Usage: ./rollback.sh [TAG] [OPTIONS]
+# 
+# Examples:
+#   ./rollback.sh                    # List available versions
+#   ./rollback.sh master-abc123      # Rollback to specific commit
+#   ./rollback.sh 2024-01-15-14-30  # Rollback to specific timestamp
+#   ./rollback.sh --latest           # Rollback to latest version
+#   ./rollback.sh --previous         # Rollback to previous version
+
+set -e
+
+# Configuration
+REGISTRY="ghcr.io"
+REPOSITORY="your-username/online_shop_business_frontend"  # Update this with your actual repository
+IMAGE_NAME="$REGISTRY/$REPOSITORY"
+COMPOSE_FILE="docker-compose.yml"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Functions
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+show_help() {
+    echo "Production Rollback Script"
+    echo ""
+    echo "Usage: $0 [TAG] [OPTIONS]"
+    echo ""
+    echo "Arguments:"
+    echo "  TAG                 Specific tag to rollback to (commit SHA, timestamp, etc.)"
+    echo ""
+    echo "Options:"
+    echo "  --latest           Rollback to latest version"
+    echo "  --previous         Rollback to previous version"
+    echo "  --list             List available versions"
+    echo "  --help             Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0                           # List available versions"
+    echo "  $0 master-abc123             # Rollback to specific commit"
+    echo "  $0 2024-01-15-14-30          # Rollback to specific timestamp"
+    echo "  $0 --latest                  # Rollback to latest version"
+    echo "  $0 --previous                # Rollback to previous version"
+}
+
+list_available_versions() {
+    log_info "Fetching available image versions..."
+    
+    # Get available tags from GitHub Container Registry
+    if command -v gh >/dev/null 2>&1; then
+        log_info "Using GitHub CLI to fetch versions..."
+        TAGS=$(gh api repos/$REPOSITORY/packages/container/$REPOSITORY/versions --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
+    else
+        log_warning "GitHub CLI not found. Using docker to fetch tags..."
+        TAGS=$(docker search $IMAGE_NAME --limit 10 2>/dev/null | grep -v "NAME" | awk '{print $1}' | sed "s/$IMAGE_NAME://" || echo "")
+    fi
+    
+    if [ -z "$TAGS" ]; then
+        log_error "No versions found or unable to fetch versions"
+        return 1
+    fi
+    
+    echo ""
+    log_info "Available versions:"
+    echo "$TAGS" | sort -r | while read tag; do
+        if [ -n "$tag" ]; then
+            echo "  - $tag"
+        fi
+    done
+    echo ""
+}
+
+get_previous_version() {
+    log_info "Finding previous version..."
+    
+    if command -v gh >/dev/null 2>&1; then
+        TAGS=$(gh api repos/$REPOSITORY/packages/container/$REPOSITORY/versions --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
+    else
+        TAGS=$(docker search $IMAGE_NAME --limit 10 2>/dev/null | grep -v "NAME" | awk '{print $1}' | sed "s/$IMAGE_NAME://" || echo "")
+    fi
+    
+    # Get the second most recent tag (skip latest)
+    PREVIOUS=$(echo "$TAGS" | grep -v "latest" | sort -r | head -2 | tail -1)
+    
+    if [ -z "$PREVIOUS" ]; then
+        log_error "No previous version found"
+        return 1
+    fi
+    
+    echo "$PREVIOUS"
+}
+
+rollback_to_version() {
+    local target_tag="$1"
+    local full_image_name="$IMAGE_NAME:$target_tag"
+    
+    log_info "Starting rollback to version: $target_tag"
+    
+    # Check if docker-compose file exists
+    if [ ! -f "$COMPOSE_FILE" ]; then
+        log_error "Docker compose file not found: $COMPOSE_FILE"
+        return 1
+    fi
+    
+    # Pull the target image
+    log_info "Pulling image: $full_image_name"
+    if ! docker pull "$full_image_name"; then
+        log_error "Failed to pull image: $full_image_name"
+        return 1
+    fi
+    
+    # Tag the target image as latest
+    log_info "Tagging $full_image_name as latest"
+    docker tag "$full_image_name" "$IMAGE_NAME:latest"
+    
+    # Stop current containers
+    log_info "Stopping current containers..."
+    docker-compose down
+    
+    # Start with new image
+    log_info "Starting containers with rolled back image..."
+    docker-compose up -d
+    
+    # Verify deployment
+    log_info "Verifying deployment..."
+    sleep 5
+    
+    if docker-compose ps | grep -q "Up"; then
+        log_success "Rollback completed successfully!"
+        log_info "Current version: $target_tag"
+        log_info "Containers status:"
+        docker-compose ps
+    else
+        log_error "Rollback failed - containers are not running"
+        log_info "Container status:"
+        docker-compose ps
+        return 1
+    fi
+}
+
+# Main script logic
+main() {
+    case "${1:-}" in
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        --list)
+            list_available_versions
+            exit 0
+            ;;
+        --latest)
+            log_info "Rolling back to latest version..."
+            rollback_to_version "latest"
+            ;;
+        --previous)
+            PREVIOUS_VERSION=$(get_previous_version)
+            if [ -n "$PREVIOUS_VERSION" ]; then
+                rollback_to_version "$PREVIOUS_VERSION"
+            else
+                exit 1
+            fi
+            ;;
+        "")
+            list_available_versions
+            ;;
+        *)
+            rollback_to_version "$1"
+            ;;
+    esac
+}
+
+# Run main function with all arguments
+main "$@"
