@@ -70,14 +70,40 @@ list_available_versions() {
     # Get available tags from GitHub Container Registry
     if command -v gh >/dev/null 2>&1; then
         log_info "Using GitHub CLI to fetch versions..."
-        TAGS=$(gh api repos/$REPOSITORY/packages/container/$REPOSITORY/versions --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
+        # List all container packages for the authenticated user
+        log_info "Listing all container packages for user..."
+        PACKAGES=$(gh api "/user/packages?package_type=container" --jq '.[].name' 2>/dev/null || echo "")
+        log_info "Available container packages: $PACKAGES"
+        
+        if [ -n "$PACKAGES" ]; then
+            # Find the package that matches our repository name
+            PACKAGE_NAME=$(echo "$PACKAGES" | grep -i "online_shop_business_frontend" | head -1)
+            if [ -z "$PACKAGE_NAME" ]; then
+                # If exact match not found, use the first package
+                PACKAGE_NAME=$(echo "$PACKAGES" | head -1)
+            fi
+            log_info "Using package: $PACKAGE_NAME"
+            TAGS=$(gh api "/user/packages/container/$PACKAGE_NAME/versions" --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
+        else
+            log_error "No container packages found for user"
+            TAGS=""
+        fi
     else
-        log_warning "GitHub CLI not found. Using docker to fetch tags..."
-        TAGS=$(docker search $IMAGE_NAME --limit 10 2>/dev/null | grep -v "NAME" | awk '{print $1}' | sed "s|$IMAGE_NAME:||" || echo "")
+        log_warning "GitHub CLI not found. Cannot fetch private registry tags without it."
+        log_info "Please install GitHub CLI or use manual rollback with known tags."
+        log_info ""
+        log_info "Manual rollback example:"
+        log_info "  ./rollback.sh master-abc123"
+        log_info "  ./rollback.sh 2024-01-15-14-30"
+        return 1
     fi
     
     if [ -z "$TAGS" ]; then
         log_error "No versions found or unable to fetch versions"
+        log_info "This might be because:"
+        log_info "  1. GitHub CLI is not authenticated (run: gh auth login)"
+        log_info "  2. Repository is private and you don't have access"
+        log_info "  3. No images have been built yet"
         return 1
     fi
     
@@ -92,22 +118,39 @@ list_available_versions() {
 }
 
 get_previous_version() {
-    log_info "Finding previous version..."
-    
     if command -v gh >/dev/null 2>&1; then
-        TAGS=$(gh api repos/$REPOSITORY/packages/container/$REPOSITORY/versions --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
+        # Get container packages silently
+        PACKAGES=$(gh api "/user/packages?package_type=container" --jq '.[].name' 2>/dev/null || echo "")
+        
+        if [ -n "$PACKAGES" ]; then
+            # Find the package that matches our repository name
+            PACKAGE_NAME=$(echo "$PACKAGES" | grep -i "online_shop_business_frontend" | head -1)
+            if [ -z "$PACKAGE_NAME" ]; then
+                # If exact match not found, use the first package
+                PACKAGE_NAME=$(echo "$PACKAGES" | head -1)
+            fi
+            
+            # Get tags silently
+            TAGS=$(gh api "/user/packages/container/$PACKAGE_NAME/versions" --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
+        else
+            return 1
+        fi
     else
-        TAGS=$(docker search $IMAGE_NAME --limit 10 2>/dev/null | grep -v "NAME" | awk '{print $1}' | sed "s|$IMAGE_NAME:||" || echo "")
+        return 1
+    fi
+    
+    if [ -z "$TAGS" ]; then
+        return 1
     fi
     
     # Get the second most recent tag (skip latest)
     PREVIOUS=$(echo "$TAGS" | grep -v "latest" | sort -r | head -2 | tail -1)
     
     if [ -z "$PREVIOUS" ]; then
-        log_error "No previous version found"
         return 1
     fi
     
+    # Return only the version tag, no logging
     echo "$PREVIOUS"
 }
 
@@ -116,12 +159,18 @@ rollback_to_version() {
     local full_image_name="$IMAGE_NAME:$target_tag"
     
     log_info "Starting rollback to version: $target_tag"
+    log_info "Full image name: $full_image_name"
+    log_info "Current working directory: $(pwd)"
     
     # Check if docker-compose file exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         log_error "Docker compose file not found: $COMPOSE_FILE"
+        log_info "Available files in current directory:"
+        ls -la
         return 1
     fi
+    
+    log_info "Found docker-compose file: $COMPOSE_FILE"
     
     # Pull the target image
     log_info "Pulling image: $full_image_name"
@@ -161,12 +210,19 @@ rollback_to_version() {
 
 # Main script logic
 main() {
+    log_info "Rollback script started with arguments: $*"
+    log_info "Repository: $REPOSITORY"
+    log_info "Image name: $IMAGE_NAME"
+    log_info "Compose file: $COMPOSE_FILE"
+    
     case "${1:-}" in
         --help|-h)
+            log_info "Showing help..."
             show_help
             exit 0
             ;;
         --list)
+            log_info "Listing available versions..."
             list_available_versions
             exit 0
             ;;
@@ -175,17 +231,25 @@ main() {
             rollback_to_version "latest"
             ;;
         --previous)
+            log_info "Rolling back to previous version..."
             PREVIOUS_VERSION=$(get_previous_version)
+            log_info "get_previous_version() returned: '$PREVIOUS_VERSION'"
             if [ -n "$PREVIOUS_VERSION" ]; then
+                log_info "Previous version found: $PREVIOUS_VERSION"
                 rollback_to_version "$PREVIOUS_VERSION"
             else
+                log_error "Failed to get previous version - function returned empty"
+                log_info "Let's try listing versions manually..."
+                list_available_versions
                 exit 1
             fi
             ;;
         "")
+            log_info "No arguments provided, listing available versions..."
             list_available_versions
             ;;
         *)
+            log_info "Rolling back to specific version: $1"
             rollback_to_version "$1"
             ;;
     esac
