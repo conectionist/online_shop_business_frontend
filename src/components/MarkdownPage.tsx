@@ -1,6 +1,16 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { components as themeComponents } from '@/utils/theme';
+import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
+import {
+  getBusinessName,
+  getBusinessAddress,
+  getBusinessPhone,
+  getBusinessEmail,
+  getBusinessCUI,
+  getBusinessRegistrationNumber,
+  getBusinessRepresentative
+} from '@/utils/businessInfo';
 
 type MarkdownPageProps = {
   title?: string;
@@ -11,6 +21,28 @@ type MarkdownPageProps = {
 export const MarkdownPage: React.FC<MarkdownPageProps> = ({ title, icon, src }) => {
   const [content, setContent] = React.useState<string>('');
   const [error, setError] = React.useState<string | null>(null);
+  const { data: businessDetails } = useBusinessDetailsSingle();
+
+  // Get business information for variable replacement
+  const businessName = getBusinessName(businessDetails || undefined);
+  const businessAddress = getBusinessAddress(businessDetails || undefined);
+  const businessPhone = getBusinessPhone(businessDetails || undefined);
+  const businessEmail = getBusinessEmail(businessDetails || undefined);
+  const businessCUI = getBusinessCUI(businessDetails || undefined);
+  const businessRegistrationNumber = getBusinessRegistrationNumber(businessDetails || undefined);
+  const businessRepresentative = getBusinessRepresentative(businessDetails || undefined);
+
+  // Function to replace variables in content
+  const replaceVariables = (text: string): string => {
+    return text
+      .replace(/\{nume_firma\}/g, businessName)
+      .replace(/\{email\}/g, businessEmail)
+      .replace(/\{telefon\}/g, businessPhone)
+      .replace(/\{adresa\}/g, businessAddress)
+      .replace(/\{CUI\}/g, businessCUI)
+      .replace(/\{numar_inregistrare\}/g, businessRegistrationNumber)
+      .replace(/\{reprezentant\}/g, businessRepresentative);
+  };
 
   React.useEffect(() => {
     let isMounted = true;
@@ -20,7 +52,10 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({ title, icon, src }) 
           throw new Error(`Nu s-a putut încărca documentul: ${res.status}`);
         }
         const text = await res.text();
-        if (isMounted) setContent(text);
+        if (isMounted) {
+          const processedContent = replaceVariables(text);
+          setContent(processedContent);
+        }
       })
       .catch((e) => {
         if (isMounted) setError(e.message ?? 'Eroare la încărcarea documentului');
@@ -28,7 +63,7 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({ title, icon, src }) 
     return () => {
       isMounted = false;
     };
-  }, [src]);
+  }, [src, businessName, businessEmail, businessPhone, businessAddress, businessCUI, businessRegistrationNumber, businessRepresentative]);
 
   return (
     <div className={themeComponents.page.containerLarge}>
