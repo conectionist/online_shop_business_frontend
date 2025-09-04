@@ -14,7 +14,7 @@ set -e
 
 # Configuration
 REGISTRY="ghcr.io"
-REPOSITORY="your-username/online_shop_business_frontend"  # Update this with your actual repository
+REPOSITORY="conectionist/online_shop_business_frontend"
 IMAGE_NAME="$REGISTRY/$REPOSITORY"
 COMPOSE_FILE="docker-compose.yml"
 
@@ -73,7 +73,7 @@ list_available_versions() {
         TAGS=$(gh api repos/$REPOSITORY/packages/container/$REPOSITORY/versions --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
     else
         log_warning "GitHub CLI not found. Using docker to fetch tags..."
-        TAGS=$(docker search $IMAGE_NAME --limit 10 2>/dev/null | grep -v "NAME" | awk '{print $1}' | sed "s/$IMAGE_NAME://" || echo "")
+        TAGS=$(docker search $IMAGE_NAME --limit 10 2>/dev/null | grep -v "NAME" | awk '{print $1}' | sed "s|$IMAGE_NAME:||" || echo "")
     fi
     
     if [ -z "$TAGS" ]; then
@@ -97,7 +97,7 @@ get_previous_version() {
     if command -v gh >/dev/null 2>&1; then
         TAGS=$(gh api repos/$REPOSITORY/packages/container/$REPOSITORY/versions --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
     else
-        TAGS=$(docker search $IMAGE_NAME --limit 10 2>/dev/null | grep -v "NAME" | awk '{print $1}' | sed "s/$IMAGE_NAME://" || echo "")
+        TAGS=$(docker search $IMAGE_NAME --limit 10 2>/dev/null | grep -v "NAME" | awk '{print $1}' | sed "s|$IMAGE_NAME:||" || echo "")
     fi
     
     # Get the second most recent tag (skip latest)
