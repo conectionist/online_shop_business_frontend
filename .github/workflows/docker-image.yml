@@ -46,9 +46,19 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}}
           type=raw,value={{date 'YYYY-MM-DD-HH-mm'}},enable={{is_default_branch}}
         
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
       with:
+        install: true
+
+    - name: Create Builder Instance
+      run: |
+        docker buildx create --use --name mybuilder
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
