@@ -12,7 +12,6 @@ import {
   getBusinessRepresentative,
   getBusinessHours,
   getBusinessDescription,
-  getLegalReturnPolicy,
   getANPCLink,
   getSOLLink,
   getSALLink,
@@ -33,7 +32,6 @@ const Footer: React.FC = () => {
   const businessRepresentative = getBusinessRepresentative(businessDetails || undefined);
   const businessHours = getBusinessHours(businessDetails || undefined);
   const businessDescription = getBusinessDescription(businessDetails || undefined);
-  const returnPolicy = getLegalReturnPolicy();
   const anpcLink = getANPCLink();
   const solLink = getSOLLink();
   const salLink = getSALLink();
@@ -170,10 +168,6 @@ const Footer: React.FC = () => {
                   className="rounded shadow-sm"
                 />
               </a>
-              <div className="text-xs text-gray-400 mt-4 p-3 bg-gray-800 rounded">
-                <p className="font-medium mb-2">Dreptul de retur:</p>
-                <p>{returnPolicy}</p>
-              </div>
             </div>
           </div>
 
@@ -206,31 +200,10 @@ const Footer: React.FC = () => {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-gray-400">
+          <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0">
+            <div className="text-sm text-gray-400 text-center">
               <p>&copy; {currentYear} {businessName}. Toate drepturile rezervate.</p>
               <p className="mt-1">{businessDescription}</p>
-            </div>
-            
-            <div className="flex space-x-6 text-sm">
-              <Link 
-                to={legalRoutes.terms} 
-                className="hover:text-amber-400 transition-colors"
-              >
-                Termeni
-              </Link>
-              <Link 
-                to={legalRoutes.privacy} 
-                className="hover:text-amber-400 transition-colors"
-              >
-                Confidențialitate
-              </Link>
-              <Link 
-                to={legalRoutes.cookies} 
-                className="hover:text-amber-400 transition-colors"
-              >
-                Cookie-uri
-              </Link>
             </div>
           </div>
         </div>
