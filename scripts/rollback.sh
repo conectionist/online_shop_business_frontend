@@ -138,8 +138,18 @@ get_previous_version() {
         return 1
     fi
     
-    # Get the second most recent tag (skip latest)
-    PREVIOUS=$(echo "$TAGS" | grep -v "latest" | sort -r | head -2 | tail -1)
+    # Get the second most recent tag (skip latest and master)
+    # Prefer timestamp-based tags for chronological sorting
+    TIMESTAMP_TAGS=$(echo "$TAGS" | grep -E "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}$" | sort -r)
+    COMMIT_TAGS=$(echo "$TAGS" | grep -E "^master-[a-f0-9]+$" | sort -r)
+    
+    if [ -n "$TIMESTAMP_TAGS" ]; then
+        # Use timestamp-based tags (they sort chronologically)
+        PREVIOUS=$(echo "$TIMESTAMP_TAGS" | head -2 | tail -1)
+    else
+        # Fallback to commit tags (alphabetical sort)
+        PREVIOUS=$(echo "$COMMIT_TAGS" | head -2 | tail -1)
+    fi
     
     if [ -z "$PREVIOUS" ]; then
         return 1
