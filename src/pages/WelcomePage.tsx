@@ -467,6 +467,15 @@ const WelcomePage: React.FC = () => {
         )}
       </div>
 
+      {/* VAT Information */}
+      <div className="mb-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+          <p className="text-amber-800 font-medium text-sm">
+            Toate produsele includ TVA
+          </p>
+        </div>
+      </div>
+
       {/* Additional Details */}
       {publishedList.alte_detalii && (
         <div className="mb-6">
