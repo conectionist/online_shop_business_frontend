@@ -15,3 +15,4 @@ services:
       - .env
     volumes:
       - ./assets/logo.jpg:/usr/share/nginx/html/assets/logo.jpg 
+      - ./public/legal:/usr/share/nginx/html/legal:ro
