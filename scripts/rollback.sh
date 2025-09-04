@@ -69,11 +69,7 @@ list_available_versions() {
     
     # Get available tags from GitHub Container Registry
     if command -v gh >/dev/null 2>&1; then
-        log_info "Using GitHub CLI to fetch versions..."
-        # List all container packages for the authenticated user
-        log_info "Listing all container packages for user..."
         PACKAGES=$(gh api "/user/packages?package_type=container" --jq '.[].name' 2>/dev/null || echo "")
-        log_info "Available container packages: $PACKAGES"
         
         if [ -n "$PACKAGES" ]; then
             # Find the package that matches our repository name
@@ -82,7 +78,6 @@ list_available_versions() {
                 # If exact match not found, use the first package
                 PACKAGE_NAME=$(echo "$PACKAGES" | head -1)
             fi
-            log_info "Using package: $PACKAGE_NAME"
             TAGS=$(gh api "/user/packages/container/$PACKAGE_NAME/versions" --jq '.[].metadata.container.tags[]' 2>/dev/null || echo "")
         else
             log_error "No container packages found for user"
@@ -159,18 +154,12 @@ rollback_to_version() {
     local full_image_name="$IMAGE_NAME:$target_tag"
     
     log_info "Starting rollback to version: $target_tag"
-    log_info "Full image name: $full_image_name"
-    log_info "Current working directory: $(pwd)"
     
     # Check if docker-compose file exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         log_error "Docker compose file not found: $COMPOSE_FILE"
-        log_info "Available files in current directory:"
-        ls -la
         return 1
     fi
-    
-    log_info "Found docker-compose file: $COMPOSE_FILE"
     
     # Pull the target image
     log_info "Pulling image: $full_image_name"
@@ -211,9 +200,6 @@ rollback_to_version() {
 # Main script logic
 main() {
     log_info "Rollback script started with arguments: $*"
-    log_info "Repository: $REPOSITORY"
-    log_info "Image name: $IMAGE_NAME"
-    log_info "Compose file: $COMPOSE_FILE"
     
     case "${1:-}" in
         --help|-h)
@@ -233,12 +219,11 @@ main() {
         --previous)
             log_info "Rolling back to previous version..."
             PREVIOUS_VERSION=$(get_previous_version)
-            log_info "get_previous_version() returned: '$PREVIOUS_VERSION'"
             if [ -n "$PREVIOUS_VERSION" ]; then
                 log_info "Previous version found: $PREVIOUS_VERSION"
                 rollback_to_version "$PREVIOUS_VERSION"
             else
-                log_error "Failed to get previous version - function returned empty"
+                log_error "Failed to get previous version"
                 log_info "Let's try listing versions manually..."
                 list_available_versions
                 exit 1
