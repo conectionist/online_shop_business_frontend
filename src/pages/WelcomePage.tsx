@@ -336,26 +336,36 @@ const WelcomePage: React.FC = () => {
                             {/* Product Image - Enhanced */}
                             <div className="flex-shrink-0">
                               {product.images && product.images.length > 0 ? (
-                                <div className="relative">
-                                  <img
-                                    src={getProductImageUrl(product, 'thumbnail')}
-                                    alt={product.nume}
-                                    className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-xl border-2 border-amber-100 shadow-sm group-hover:border-amber-200 transition-colors duration-300"
-                                    ref={el => { imageRefs.current[product.id] = el; }}
-                                    onError={(e) => {
-                                      // Fallback to package icon if image fails to load
-                                      const target = e.target as HTMLImageElement;
-                                      target.style.display = 'none';
-                                      target.nextElementSibling?.classList.remove('hidden');
-                                    }}
-                                  />
-                                  {/* Subtle overlay on hover */}
-                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 rounded-xl"></div>
-                                </div>
+                                <Link 
+                                  to={`/product/${product.id}`}
+                                  className="hover:bg-amber-50 rounded-xl p-1 -m-1 transition-colors block"
+                                >
+                                  <div className="relative">
+                                    <img
+                                      src={getProductImageUrl(product, 'thumbnail')}
+                                      alt={product.nume}
+                                      className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-xl border-2 border-amber-100 shadow-sm group-hover:border-amber-200 transition-colors duration-300"
+                                      ref={el => { imageRefs.current[product.id] = el; }}
+                                      onError={(e) => {
+                                        // Fallback to package icon if image fails to load
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        target.nextElementSibling?.classList.remove('hidden');
+                                      }}
+                                    />
+                                    {/* Subtle overlay on hover */}
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 rounded-xl"></div>
+                                  </div>
+                                </Link>
                               ) : (
-                                <div className={`w-20 h-20 md:w-24 md:h-24 ${components.backgrounds.fallback} rounded-xl border-2 ${components.borders.secondary} flex items-center justify-center shadow-sm group-hover:${components.borders.primary} transition-colors duration-300`}>
-                                  <Package className="w-8 h-8 text-amber-400" />
-                                </div>
+                                <Link 
+                                  to={`/product/${product.id}`}
+                                  className="hover:bg-amber-50 rounded-xl p-1 -m-1 transition-colors block"
+                                >
+                                  <div className={`w-20 h-20 md:w-24 md:h-24 ${components.backgrounds.fallback} rounded-xl border-2 ${components.borders.secondary} flex items-center justify-center shadow-sm group-hover:${components.borders.primary} transition-colors duration-300`}>
+                                    <Package className="w-8 h-8 text-amber-400" />
+                                  </div>
+                                </Link>
                               )}
                             </div>
                             

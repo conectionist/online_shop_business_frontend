@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.10.0 - 2025-09-05
+
+### Added
+- **Clickable Product Images**: Product images on the welcome page are now clickable and navigate to product detail pages
+  - Both product images and fallback package icons are now interactive
+  - Added hover effects for better user experience
+  - Consistent navigation behavior with product titles
+
 ## 2.9.0 - 2025-09-05
 
 ### Added
