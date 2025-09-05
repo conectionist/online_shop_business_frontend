@@ -1,11 +1,14 @@
 import { z } from 'zod';
 
+// Common validation patterns
+export const PHONE_REGEX = /^\+?[0-9]\d{6,19}$/;
+
 // Common validation schemas
 export const emailSchema = z.string().email('Invalid email address');
 
 export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters');
 
-export const phoneSchema = z.string().regex(/^\+?[0-9]{10,15}$/, 'Invalid phone number');
+export const phoneSchema = z.string().regex(PHONE_REGEX, 'Numărul de telefon trebuie să conțină 7-20 cifre cu prefix opțional +');
 
 export const priceSchema = z.number().positive('Price must be positive');
 
@@ -42,6 +45,20 @@ export const listSchema = z.object({
 });
 
 export type ListFormData = z.infer<typeof listSchema>;
+
+// Order validation schema
+export const orderSchema = z.object({
+  nume_client: z.string().min(1, 'Numele clientului este obligatoriu'),
+  data_plasarii: z.string().min(1, 'Data plasării este obligatorie'),
+  liste_id: z.number().min(1, 'Lista este obligatorie'),
+  delivery_type_id: z.number().min(1, 'Tipul de livrare este obligatoriu'),
+  payment_method_id: z.number().min(1, 'Metoda de plată este obligatorie'),
+  delivery_address: z.string().optional(),
+  order_notes: z.string().optional(),
+  phone_number: phoneSchema.optional().or(z.literal('')),
+});
+
+export type OrderFormData = z.infer<typeof orderSchema>;
 
 // Helper function to format validation errors
 export const formatValidationErrors = (errors: z.ZodError): Record<string, string> => {

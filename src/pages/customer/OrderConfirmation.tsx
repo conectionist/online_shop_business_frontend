@@ -16,6 +16,7 @@ interface OrderData {
   delivery_type_id: number;
   address?: string;
   observatii?: string;
+  phone_number?: string | null;
   items: any[];
   subtotal?: number;
   delivery_tax?: number;
@@ -49,6 +50,11 @@ const OrderConfirmation: React.FC = () => {
     if (!orderData) return '';
 
     let orderText = `${orderData.prenume} ${orderData.nume}\n`;
+    
+    // Add phone number if provided
+    if (orderData.phone_number) {
+      orderText += `Telefon: ${orderData.phone_number}\n`;
+    }
     
     // Add items
     orderData.items.forEach(item => {
@@ -143,6 +149,7 @@ const OrderConfirmation: React.FC = () => {
         payment_method_id: orderData.payment_method_id,
         delivery_address: orderData.address || undefined,
         order_notes: orderData.observatii || undefined,
+        phone_number: orderData.phone_number || undefined,
         items: orderData.items.map(item => ({
           produse_id: item.id,
           pret_produs: item.pret,

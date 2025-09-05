@@ -71,6 +71,7 @@ export const orderService = {
     delivery_type_id?: number;
     payment_method_id?: number;
     delivery_address?: string;
+    phone_number?: string;
   }): Promise<OrderRead> => {
     const response = await apiClient.patch(`/orders/${id}`, orderData);
     return response.data;

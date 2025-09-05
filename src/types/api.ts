@@ -284,6 +284,7 @@ export interface Order {
   payment_method_id: number;
   delivery_address?: string;
   order_notes?: string;
+  phone_number?: string;
   created_at: string;
   updated_at: string;
   items?: OrderItem[];
@@ -305,6 +306,7 @@ export interface OrderCreate {
   payment_method_id: number;
   delivery_address?: string;
   order_notes?: string;
+  phone_number?: string;
   items?: OrderItemBase[];
 }
 
@@ -321,6 +323,7 @@ export interface OrderUpdate {
   delivery_type_id?: number;
   payment_method_id?: number;
   delivery_address?: string;
+  phone_number?: string;
 }
 
 export interface OrderRead extends Order {

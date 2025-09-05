@@ -5,13 +5,14 @@ import { usePublishedList } from '@/hooks/useLists';
 import { useListDeliveryTypes } from '@/hooks/useLists';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useCartStore } from '@/stores/cartStore';
-import { ArrowLeft, User, CreditCard, Truck, MapPin } from 'lucide-react';
+import { ArrowLeft, User, CreditCard, Truck, MapPin, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { components } from '@/utils/theme';
+import { PHONE_REGEX } from '@/utils/validation';
 
 interface OrderFormData {
   nume: string;
@@ -20,6 +21,7 @@ interface OrderFormData {
   delivery_type_id: number | null;
   address?: string;
   observatii?: string;
+  phone_number?: string;
 }
 
 const OrderForm: React.FC = () => {
@@ -46,7 +48,8 @@ const OrderForm: React.FC = () => {
       prenume: '',
       payment_method_id: null,
       delivery_type_id: null,
-      address: ''
+      address: '',
+      phone_number: ''
     }
   });
 
@@ -123,6 +126,8 @@ const OrderForm: React.FC = () => {
     // For now, just navigate to confirmation page with order data
     const orderData = {
       ...data,
+      // Convert empty string to null for phone_number as per backend requirements
+      phone_number: data.phone_number?.trim() || null,
       items,
       subtotal,
       delivery_tax: deliveryTax,
@@ -224,6 +229,24 @@ const OrderForm: React.FC = () => {
                   autoComplete="family-name"
                 />
               </div>
+            </div>
+            
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <Phone className="w-4 h-4 mr-1" />
+                Număr de telefon (opțional)
+              </label>
+              <Input
+                {...register('phone_number', {
+                  pattern: {
+                    value: PHONE_REGEX,
+                    message: 'Numărul de telefon trebuie să conțină 7-20 cifre cu prefix opțional +'
+                  }
+                })}
+                placeholder="0741234567 sau +40741234567"
+                error={errors.phone_number?.message}
+                autoComplete="tel"
+              />
             </div>
           </div>
 

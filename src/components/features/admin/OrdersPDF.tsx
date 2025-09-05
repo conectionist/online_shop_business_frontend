@@ -66,6 +66,11 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
   const formatOrderText = (order: OrderRead) => {
     let orderText = `${order.nume_client}\n`;
     
+    // Add phone number if provided
+    if (order.phone_number) {
+      orderText += `Telefon: ${order.phone_number}\n`;
+    }
+    
     // Add items
     order.items?.forEach(item => {
       const productName = getProductName(item.produse_id);

@@ -130,6 +130,11 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const formatOrderText = (order: OrderRead) => {
     let orderText = `${order.nume_client}\n`;
     
+    // Add phone number if provided
+    if (order.phone_number) {
+      orderText += `Telefon: ${order.phone_number}\n`;
+    }
+    
     // Add items
     order.items?.forEach(item => {
       const productName = getProductName(item.produse_id);
@@ -469,6 +474,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 <span className="font-medium text-gray-700">Metoda de livrare:</span>
                 <p className="text-gray-900">{getDeliveryTypeName(selectedOrder.delivery_type_id)}</p>
               </div>
+              {selectedOrder.phone_number && (
+                <div>
+                  <span className="font-medium text-gray-700">Telefon:</span>
+                  <p className="text-gray-900">{selectedOrder.phone_number}</p>
+                </div>
+              )}
             </div>
 
             {selectedOrder.delivery_address && (
