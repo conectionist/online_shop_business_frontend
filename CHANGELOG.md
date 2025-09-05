@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.8.0 - 2025-09-05
+### Added
+- Optional phone number field for customer orders
+- Phone number validation with backend-consistent regex pattern
+- Phone number display in order confirmations and admin interface
+
 ## 2.6.0 - 2025-09-03
 ### Added
 - Footer component with legal links (ANPC, SOL), legal routes, and business info display.
