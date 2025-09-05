@@ -36,13 +36,27 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const deleteOrderMutation = useDeleteOrder();
   const { showToast } = useToast();
 
-  // Sort orders by creation date (oldest first)
+  // Group orders by delivery type, then sort by customer name within each group
   const sortedOrders = React.useMemo(() => {
-    if (!orders) return [];
-    return [...orders].sort((a, b) => 
-      new Date(a.data_plasarii).getTime() - new Date(b.data_plasarii).getTime()
-    );
-  }, [orders]);
+    if (!orders || !deliveryTypes) return [];
+    
+    return [...orders].sort((a, b) => {
+      // First, group by delivery type
+      const deliveryTypeA = deliveryTypes.find(dt => dt.id === a.delivery_type_id);
+      const deliveryTypeB = deliveryTypes.find(dt => dt.id === b.delivery_type_id);
+      
+      const deliveryNameA = deliveryTypeA?.denumire || '';
+      const deliveryNameB = deliveryTypeB?.denumire || '';
+      
+      // If delivery types are different, sort by delivery type name
+      if (deliveryNameA !== deliveryNameB) {
+        return deliveryNameA.localeCompare(deliveryNameB, 'ro-RO');
+      }
+      
+      // If delivery types are the same, sort by customer name
+      return a.nume_client.localeCompare(b.nume_client, 'ro-RO');
+    });
+  }, [orders, deliveryTypes]);
 
   // Calculate total quantities for each product across all orders
   const orderTotals = React.useMemo(() => {
@@ -181,6 +195,18 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const handlePrintList = () => {
     closeDropdown();
     
+    // Group orders by delivery type (same logic as display and PDF)
+    const groupedOrders = sortedOrders.reduce((groups, order) => {
+      const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+      const deliveryName = deliveryType?.denumire || 'Necunoscut';
+      
+      if (!groups[deliveryName]) {
+        groups[deliveryName] = [];
+      }
+      groups[deliveryName].push(order);
+      return groups;
+    }, {} as Record<string, typeof sortedOrders>);
+
     // Create a formatted print view
     const printContent = `
       <!DOCTYPE html>
@@ -191,6 +217,10 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
             .header h1 { margin: 0; color: #333; }
+            .delivery-group { margin-bottom: 40px; }
+            .delivery-header { border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px; }
+            .delivery-title { font-size: 18px; font-weight: bold; color: #333; margin: 0; }
+            .delivery-count { font-size: 12px; color: #666; margin: 2px 0 0 0; }
             .order { margin-bottom: 30px; page-break-inside: avoid; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
             .order-content { background: #f9f9f9; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-line; }
             @media print {
@@ -204,11 +234,21 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             <h1>Lista Comenzi ${new Date().toLocaleDateString('ro-RO')}</h1>
           </div>
           
-          ${sortedOrders?.map((order) => `
-            <div class="order">
-              <div class="order-content">${formatOrderText(order)}</div>
-            </div>
-          `).join('') || '<p>Nu există comenzi pentru această listă.</p>'}
+          ${sortedOrders && sortedOrders.length > 0 ? 
+            Object.entries(groupedOrders).map(([deliveryName, deliveryOrders]) => `
+              <div class="delivery-group">
+                <div class="delivery-header">
+                  <h2 class="delivery-title">${deliveryName}</h2>
+                  <p class="delivery-count">${deliveryOrders.length} ${deliveryOrders.length === 1 ? 'comandă' : 'comenzi'}</p>
+                </div>
+                ${deliveryOrders.map((order) => `
+                  <div class="order">
+                    <div class="order-content">${formatOrderText(order)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            `).join('') : 
+            '<p>Nu există comenzi pentru această listă.</p>'}
         </body>
       </html>
     `;
@@ -375,40 +415,71 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       </div>
 
       {/* Orders List */}
-      <div className="space-y-4">
-        {sortedOrders.map((order) => (
-          <Card key={order.id} className="p-6">
-            <div className="space-y-4">
-              {/* Order Display - Similar to OrderConfirmation */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
-                  {formatOrderText(order)}
-                </pre>
+      <div className="space-y-6">
+        {(() => {
+          // Group orders by delivery type
+          const groupedOrders = sortedOrders.reduce((groups, order) => {
+            const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+            const deliveryName = deliveryType?.denumire || 'Necunoscut';
+            
+            if (!groups[deliveryName]) {
+              groups[deliveryName] = [];
+            }
+            groups[deliveryName].push(order);
+            return groups;
+          }, {} as Record<string, typeof sortedOrders>);
+
+          return Object.entries(groupedOrders).map(([deliveryName, orders]) => (
+            <div key={deliveryName} className="space-y-4">
+              {/* Delivery Type Header */}
+              <div className="border-b border-gray-200 pb-2">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {deliveryName}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {orders.length} {orders.length === 1 ? 'comandă' : 'comenzi'}
+                </p>
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex items-center justify-start space-x-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleViewOrder(order)}
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Vezi
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleDeleteOrder(order)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Șterge
-                </Button>
+              {/* Orders for this delivery type */}
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <Card key={order.id} className="p-6">
+                    <div className="space-y-4">
+                      {/* Order Display - Similar to OrderConfirmation */}
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
+                          {formatOrderText(order)}
+                        </pre>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-start space-x-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleViewOrder(order)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Vezi
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleDeleteOrder(order)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Șterge
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
             </div>
-          </Card>
-        ))}
+          ));
+        })()}
       </div>
 
       {/* Order Totals Summary */}

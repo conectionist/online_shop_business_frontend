@@ -46,6 +46,28 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontFamily: 'Roboto',
   },
+  deliveryHeader: {
+    marginTop: 20,
+    marginBottom: 15,
+    paddingBottom: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: '#333333',
+  },
+  deliveryTitle: {
+    fontSize: 14,
+    fontFamily: 'Roboto',
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 2,
+  },
+  deliveryCount: {
+    fontSize: 10,
+    fontFamily: 'Roboto',
+    color: '#666666',
+  },
+  groupSeparator: {
+    height: 15,
+  },
 });
 
 interface OrdersPDFProps {
@@ -105,6 +127,18 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
     return orderText.trim();
   };
 
+  // Group orders by delivery type
+  const groupedOrders = orders.reduce((groups, order) => {
+    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+    const deliveryName = deliveryType?.denumire || 'Necunoscut';
+    
+    if (!groups[deliveryName]) {
+      groups[deliveryName] = [];
+    }
+    groups[deliveryName].push(order);
+    return groups;
+  }, {} as Record<string, typeof orders>);
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -113,14 +147,32 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
         </Text>
         
         {orders && orders.length > 0 ? (
-          orders.map((order, index) => (
-            <View key={order.id}>
-              <View style={styles.order}>
-                <Text style={styles.orderText}>
-                  {formatOrderText(order)}
+          Object.entries(groupedOrders).map(([deliveryName, deliveryOrders]) => (
+            <View key={deliveryName}>
+              {/* Delivery Type Header */}
+              <View style={styles.deliveryHeader}>
+                <Text style={styles.deliveryTitle}>
+                  {deliveryName}
+                </Text>
+                <Text style={styles.deliveryCount}>
+                  {deliveryOrders.length} {deliveryOrders.length === 1 ? 'comandă' : 'comenzi'}
                 </Text>
               </View>
-              {index < orders.length - 1 && <View style={styles.separator} />}
+              
+              {/* Orders for this delivery type */}
+              {deliveryOrders.map((order, index) => (
+                <View key={order.id}>
+                  <View style={styles.order}>
+                    <Text style={styles.orderText}>
+                      {formatOrderText(order)}
+                    </Text>
+                  </View>
+                  {index < deliveryOrders.length - 1 && <View style={styles.separator} />}
+                </View>
+              ))}
+              
+              {/* Add space between delivery groups */}
+              <View style={styles.groupSeparator} />
             </View>
           ))
         ) : (
