@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.9.0 - 2025-09-05
+
+### Added
+- **Enhanced Order Organization**: Orders now grouped by delivery type with clear subtitles
+  - Delivery method names displayed as section headers in admin interface
+  - Order counts shown for each delivery type group
+  - Consistent grouping across web display, PDF export, and print output
+  - Orders sorted alphabetically by customer name within each delivery group
+
+### Changed
+- **Order Sorting**: Changed from chronological to delivery-type-first, then alphabetical by customer name
+- **Print Output**: Print function now matches display and PDF grouping with delivery type headers
+
 ## 2.8.0 - 2025-09-05
 ### Added
 - Optional phone number field for customer orders
