@@ -172,14 +172,29 @@ const OrderConfirmation: React.FC = () => {
   };
 
   const shareOrder = async () => {
-    // First submit the order to the server
-    await submitOrderToServer();
-    
-    // Then proceed with WhatsApp sharing (existing functionality)
+    // Open WhatsApp immediately while we have the user gesture
     const orderText = formatOrderText();
     const whatsappText = encodeURIComponent(orderText);
     const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
-    window.open(whatsappUrl, '_blank');
+    
+    // For iOS Safari compatibility, we need to open the URL immediately
+    // within the user gesture context
+    const whatsappWindow = window.open(whatsappUrl, '_blank');
+    
+    // Check if the window was blocked (common on mobile)
+    if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
+      // Fallback: redirect in the same window
+      window.location.href = whatsappUrl;
+    }
+    
+    // Then submit the order to the server
+    try {
+      await submitOrderToServer();
+    } catch (error) {
+      // If the order submission fails, we could close the WhatsApp window
+      // or show an error message, but the user has already started the WhatsApp flow
+      console.error('Failed to submit order:', error);
+    }
   };
 
   if (!orderData) {
