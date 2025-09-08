@@ -76,6 +76,8 @@ interface OrdersPDFProps {
   getProductName: (productId: number) => string;
   getPaymentMethodName: (paymentMethodId: number) => string;
   requiresAddress: (deliveryType: any) => boolean;
+  getDeliveryTax: (deliveryType: any, businessDetails: any) => number;
+  businessDetails: any;
 }
 
 const OrdersPDF: React.FC<OrdersPDFProps> = ({
@@ -84,6 +86,8 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
   getProductName,
   getPaymentMethodName,
   requiresAddress,
+  getDeliveryTax,
+  businessDetails,
 }) => {
   const formatOrderText = (order: OrderRead) => {
     let orderText = `${order.nume_client}\n`;
@@ -99,23 +103,30 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
       orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
     });
     
-    // Add total price
-    const total = order.items?.reduce((sum, item) => sum + (item.pret_produs * item.cantitate_produs), 0) || 0;
-    orderText += `Total: ${total} RON\n`;
+    // Add totals breakdown
+    const subtotal = order.items?.reduce((sum, item) => sum + (item.pret_produs * item.cantitate_produs), 0) || 0;
+    const pdfDeliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+    const deliveryTax = getDeliveryTax(pdfDeliveryType, businessDetails);
+    
+    if (deliveryTax > 0) {
+      orderText += `Subtotal: ${subtotal} RON\n`;
+      orderText += `Taxă livrare: ${deliveryTax} RON\n`;
+    }
+    orderText += `Total: ${subtotal + deliveryTax} RON\n`;
     
     // Add payment method
     const paymentMethodName = getPaymentMethodName(order.payment_method_id);
     orderText += `Plata ${paymentMethodName.toLowerCase()}.\n`;
     
     // Add delivery method and address
-    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-    if (deliveryType) {
-      if (order.delivery_address && requiresAddress(deliveryType)) {
+    const addressDeliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+    if (addressDeliveryType) {
+      if (order.delivery_address && requiresAddress(addressDeliveryType)) {
         // If address is provided, show clean delivery message
         orderText += `Livrare la adresa: ${order.delivery_address}\n`;
       } else {
         // If no address, show the original delivery method description
-        orderText += `${deliveryType.denumire}.\n`;
+        orderText += `${addressDeliveryType.denumire}.\n`;
       }
     }
     

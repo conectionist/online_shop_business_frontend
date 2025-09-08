@@ -5,6 +5,7 @@ import { useDeleteOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { OrderRead } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -12,7 +13,7 @@ import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
-import { requiresAddress } from '@/utils/delivery';
+import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
 import OrdersPDF from '@/components/features/admin/OrdersPDF';
 import { pdf } from '@react-pdf/renderer';
 
@@ -33,6 +34,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const { data: products } = useProducts(); // For product names
   const { data: deliveryTypes } = useDeliveryTypes(); // For delivery method names
   const { data: paymentMethods } = usePaymentMethods(); // For payment method names
+  const { data: businessDetails } = useBusinessDetailsSingle(); // For delivery tax calculation
   const deleteOrderMutation = useDeleteOrder();
   const { showToast } = useToast();
 
@@ -123,7 +125,10 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   };
 
   const calculateTotal = (order: OrderRead) => {
-    return order.items?.reduce((total, item) => total + (item.pret_produs * item.cantitate_produs), 0) || 0;
+    const subtotal = order.items?.reduce((total, item) => total + (item.pret_produs * item.cantitate_produs), 0) || 0;
+    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+    const deliveryTax = getDeliveryTax(deliveryType, businessDetails);
+    return subtotal + deliveryTax;
   };
 
   const getProductName = (productId: number) => {
@@ -155,8 +160,16 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
     });
     
-    // Add total price
-    orderText += `Total: ${calculateTotal(order)} RON\n`;
+    // Add totals breakdown
+    const subtotal = order.items?.reduce((total, item) => total + (item.pret_produs * item.cantitate_produs), 0) || 0;
+    const orderDeliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
+    const deliveryTax = getDeliveryTax(orderDeliveryType, businessDetails);
+    
+    if (deliveryTax > 0) {
+      orderText += `Subtotal: ${subtotal} RON\n`;
+      orderText += `Taxă livrare: ${deliveryTax} RON\n`;
+    }
+    orderText += `Total: ${subtotal + deliveryTax} RON\n`;
     
     // Add payment method
     const paymentMethodName = getPaymentMethodName(order.payment_method_id);
@@ -283,6 +296,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           getProductName={getProductName}
           getPaymentMethodName={getPaymentMethodName}
           requiresAddress={requiresAddress}
+          getDeliveryTax={getDeliveryTax}
+          businessDetails={businessDetails}
         />
       );
       
@@ -551,6 +566,37 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                   <p className="text-gray-900">{selectedOrder.phone_number}</p>
                 </div>
               )}
+            </div>
+
+            {/* Order Totals Breakdown */}
+            <div className="border-t border-gray-200 pt-4">
+              <h4 className="font-medium text-gray-700 mb-2">Detalii preț:</h4>
+              <div className="space-y-1 text-sm">
+                {(() => {
+                  const subtotal = selectedOrder.items?.reduce((total, item) => total + (item.pret_produs * item.cantitate_produs), 0) || 0;
+                  const modalDeliveryType = deliveryTypes?.find(dt => dt.id === selectedOrder.delivery_type_id);
+                  const deliveryTax = getDeliveryTax(modalDeliveryType, businessDetails);
+                  
+                  return (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Subtotal produse:</span>
+                        <span className="font-medium">{subtotal} RON</span>
+                      </div>
+                      {deliveryTax > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Taxă livrare:</span>
+                          <span className="font-medium">{deliveryTax} RON</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t border-gray-200 pt-1">
+                        <span className="font-semibold text-gray-900">Total:</span>
+                        <span className="font-bold text-gray-900">{subtotal + deliveryTax} RON</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
 
             {selectedOrder.delivery_address && (
