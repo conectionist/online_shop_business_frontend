@@ -97,6 +97,10 @@ const OrderConfirmation: React.FC = () => {
   };
 
   const copyToClipboard = async () => {
+    // First submit the order to the server
+    await submitOrderToServer();
+    
+    // Then proceed with copying to clipboard
     const orderText = formatOrderText();
     try {
       // Try modern clipboard API first
