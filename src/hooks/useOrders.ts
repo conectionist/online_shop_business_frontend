@@ -66,6 +66,79 @@ export const useUpdateOrder = () => {
       // Invalidate specific order and orders list
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.list() });
+      // Also invalidate all orders queries to ensure immediate refresh
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+    },
+  });
+};
+
+// Hook to add item to order
+export const useAddOrderItem = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ orderId, item }: { 
+      orderId: number; 
+      item: { 
+        produse_id: number;
+        pret_produs: number;
+        cantitate_produs: number;
+        unitati_id: number;
+      } 
+    }) =>
+      orderService.addOrderItem(orderId, item),
+    onSuccess: (_, { orderId }) => {
+      // Invalidate specific order and orders list
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.list() });
+      // Also invalidate all orders queries to ensure immediate refresh
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+    },
+  });
+};
+
+// Hook to update item in order
+export const useUpdateOrderItem = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ orderId, productId, item }: { 
+      orderId: number; 
+      productId: number;
+      item: { 
+        produse_id: number;
+        pret_produs: number;
+        cantitate_produs: number;
+        unitati_id: number;
+      } 
+    }) =>
+      orderService.updateOrderItem(orderId, productId, item),
+    onSuccess: (_, { orderId }) => {
+      // Invalidate specific order and orders list
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.list() });
+      // Also invalidate all orders queries to ensure immediate refresh
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+    },
+  });
+};
+
+// Hook to remove item from order
+export const useRemoveOrderItem = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ orderId, productId }: { 
+      orderId: number; 
+      productId: number;
+    }) =>
+      orderService.removeOrderItem(orderId, productId),
+    onSuccess: (_, { orderId }) => {
+      // Invalidate specific order and orders list
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.list() });
+      // Also invalidate all orders queries to ensure immediate refresh
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
     },
   });
 };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Package, Eye, Trash2, MoreVertical, Printer, FileText } from 'lucide-react';
+import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
-import { useDeleteOrder } from '@/hooks/useOrders';
+import { useDeleteOrder, useUpdateOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
@@ -15,6 +15,7 @@ import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
 import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
 import OrdersPDF from '@/components/features/admin/OrdersPDF';
+import { EditOrderForm } from '@/components/features/admin/EditOrderForm';
 import { pdf } from '@react-pdf/renderer';
 
 
@@ -28,6 +29,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<OrderRead | null>(null);
   const [openDropdown, setOpenDropdown] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState<OrderRead | null>(null);
 
   // Fetch orders for this specific list
   const { data: orders, isLoading, error } = useOrders({ liste_id: listId });
@@ -36,6 +39,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const { data: paymentMethods } = usePaymentMethods(); // For payment method names
   const { data: businessDetails } = useBusinessDetailsSingle(); // For delivery tax calculation
   const deleteOrderMutation = useDeleteOrder();
+  const updateOrderMutation = useUpdateOrder();
   const { showToast } = useToast();
 
   // Group orders by delivery type, then sort by customer name within each group
@@ -92,6 +96,11 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const handleDeleteOrder = (order: OrderRead) => {
     setOrderToDelete(order);
     setShowDeleteModal(true);
+  };
+
+  const handleEditOrder = (order: OrderRead) => {
+    setOrderToEdit(order);
+    setShowEditModal(true);
   };
 
   const confirmDeleteOrder = async () => {
@@ -481,6 +490,15 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                         <Button
                           variant="secondary"
                           size="sm"
+                          onClick={() => handleEditOrder(order)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editează
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => handleDeleteOrder(order)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
@@ -664,6 +682,45 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Edit Order Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title={`Editează Comanda ${orderToEdit?.id}`}
+        size="lg"
+      >
+        {orderToEdit && (
+          <EditOrderForm
+            order={orderToEdit}
+            deliveryTypes={deliveryTypes || []}
+            paymentMethods={paymentMethods || []}
+            products={products || []}
+            businessDetails={businessDetails}
+            onSave={async (updatedData) => {
+              try {
+                await updateOrderMutation.mutateAsync({
+                  id: orderToEdit.id,
+                  data: updatedData
+                });
+                showToast({
+                  type: 'success',
+                  title: 'Comanda a fost actualizată cu succes'
+                });
+                setShowEditModal(false);
+              } catch (error) {
+                console.error('Error updating order:', error);
+                showToast({
+                  type: 'error',
+                  title: 'Eroare la actualizarea comenzii'
+                });
+              }
+            }}
+            onCancel={() => setShowEditModal(false)}
+            isLoading={updateOrderMutation.isPending}
+          />
+        )}
       </Modal>
     </div>
   );

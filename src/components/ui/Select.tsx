@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
 export interface SelectOption {
@@ -28,7 +29,9 @@ const Select: React.FC<SelectProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const selectRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const sizeClasses = {
     sm: 'text-sm px-3 py-1.5',
@@ -38,16 +41,41 @@ const Select: React.FC<SelectProps> = ({
 
   const selectedOption = options.find(option => option.value === value);
 
+  const updateDropdownPosition = () => {
+    if (selectRef.current) {
+      const rect = selectRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isClickOnSelect = selectRef.current && selectRef.current.contains(target);
+      const isClickOnDropdown = dropdownRef.current && dropdownRef.current.contains(target);
+      
+      if (!isClickOnSelect && !isClickOnDropdown) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isOpen) {
+      updateDropdownPosition();
+      document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('resize', updateDropdownPosition);
+      window.addEventListener('scroll', updateDropdownPosition);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', updateDropdownPosition);
+      window.removeEventListener('scroll', updateDropdownPosition);
+    };
+  }, [isOpen]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (disabled) return;
@@ -94,7 +122,14 @@ const Select: React.FC<SelectProps> = ({
     <div ref={selectRef} className={`relative z-40 ${className}`}>
       <button
         type="button"
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!disabled) {
+            if (!isOpen) {
+              updateDropdownPosition();
+            }
+            setIsOpen(!isOpen);
+          }
+        }}
         onKeyDown={handleKeyDown}
         disabled={disabled}
         className={`
@@ -117,8 +152,16 @@ const Select: React.FC<SelectProps> = ({
         </span>
       </button>
 
-      {isOpen && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+      {isOpen && createPortal(
+        <div 
+          ref={dropdownRef}
+          className="fixed z-[9999] bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+          style={{
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width
+          }}
+        >
           <ul role="listbox" className="py-1">
             {options.map((option, index) => (
               <li
@@ -148,7 +191,8 @@ const Select: React.FC<SelectProps> = ({
               </li>
             ))}
           </ul>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

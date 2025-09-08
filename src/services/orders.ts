@@ -81,4 +81,33 @@ export const orderService = {
   deleteOrder: async (id: number): Promise<void> => {
     await apiClient.delete(`/orders/${id}`);
   },
+
+  // Order Items Management (PROTECTED - requires auth)
+  
+  // Add item to order
+  addOrderItem: async (orderId: number, item: {
+    produse_id: number;
+    pret_produs: number;
+    cantitate_produs: number;
+    unitati_id: number;
+  }): Promise<any> => {
+    const response = await apiClient.post(`/orders/${orderId}/products`, item);
+    return response.data;
+  },
+
+  // Update item in order
+  updateOrderItem: async (orderId: number, productId: number, item: {
+    produse_id: number;
+    pret_produs: number;
+    cantitate_produs: number;
+    unitati_id: number;
+  }): Promise<any> => {
+    const response = await apiClient.patch(`/orders/${orderId}/products/${productId}`, item);
+    return response.data;
+  },
+
+  // Remove item from order
+  removeOrderItem: async (orderId: number, productId: number): Promise<void> => {
+    await apiClient.delete(`/orders/${orderId}/products/${productId}`);
+  },
 };
