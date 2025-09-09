@@ -1,5 +1,5 @@
 // Version information for the application
-export const APP_VERSION = (globalThis as any).__APP_VERSION__ || '2.14.0';
+export const APP_VERSION = (globalThis as any).__APP_VERSION__ || '2.15.0';
 
 // Build information (useful for debugging)
 export const BUILD_INFO = {
