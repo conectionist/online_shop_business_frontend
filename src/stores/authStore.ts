@@ -48,7 +48,7 @@ export const useAuthStore = create<AuthStore>()(
         
         // Store token in localStorage for backward compatibility
         localStorage.setItem('access_token', token);
-        localStorage.setItem('refresh_token', token); // Temporary, should be separate
+        // Note: refresh_token is stored separately by authService.login()
       },
 
       logout: () => {
@@ -89,6 +89,13 @@ export const useAuthStore = create<AuthStore>()(
           return false;
         }
 
+        // Check if we have a refresh token before attempting refresh
+        const refreshToken = authService.getRefreshToken();
+        if (!refreshToken) {
+          console.log('No refresh token available, skipping validation');
+          return false;
+        }
+
         try {
           // Check if token is expiring soon
           if (authService.isTokenExpiringSoon()) {
@@ -99,7 +106,7 @@ export const useAuthStore = create<AuthStore>()(
           return true;
         } catch (error) {
           console.error('Token validation failed on init:', error);
-          // If validation fails, logout
+          // Only logout if we actually had a refresh token but it failed
           get().logout();
           return false;
         }
