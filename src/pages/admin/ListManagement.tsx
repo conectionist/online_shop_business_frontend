@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useList } from '@/hooks/useLists';
 import { Button } from '@/components/ui/Button';
@@ -15,11 +15,32 @@ import ListTextTab from './ListTextTab';
 const ListManagement: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const listId = id ? parseInt(id) : 0;
-  const [activeTab, setActiveTab] = useState<'edit' | 'products2' | 'products3' | 'orders' | 'text'>('edit');
+  
+  // Get initial tab from URL parameter, default to 'edit'
+  const getInitialTab = (): 'edit' | 'products2' | 'products3' | 'orders' | 'text' => {
+    const tabParam = searchParams.get('tab');
+    const validTabs = ['edit', 'products2', 'products3', 'orders', 'text'];
+    return validTabs.includes(tabParam || '') ? (tabParam as any) : 'edit';
+  };
+  
+  const [activeTab, setActiveTab] = useState<'edit' | 'products2' | 'products3' | 'orders' | 'text'>(getInitialTab);
+
+  // Update tab when URL changes (browser back/forward)
+  useEffect(() => {
+    const newTab = getInitialTab();
+    setActiveTab(newTab);
+  }, [searchParams]);
 
   // Fetch list data for header
   const { data: list, isLoading: isLoadingList, error: listError } = useList(listId);
+
+  // Handle tab change and update URL
+  const handleTabChange = (tab: 'edit' | 'products2' | 'products3' | 'orders' | 'text') => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   // Handle successful save from edit tab
   const handleSaveSuccess = () => {
@@ -110,7 +131,7 @@ const ListManagement: React.FC = () => {
       </div>
 
       {/* Tab Navigation */}
-      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Tab Content */}
       {activeTab === 'edit' && (
