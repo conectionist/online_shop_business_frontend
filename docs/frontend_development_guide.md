@@ -1781,13 +1781,19 @@ curl -X POST "http://localhost:8001/api/v1/tipuri-livrare/" \
 **Response Example**:
 ```json
 {
+  "id": 15,
   "denumire": "Livrare express",
-  "id": 15
+  "description": "Express delivery within 2 hours",
+  "order_index": 1
 }
 ```
 
 **Required Fields**:
 - `denumire` (string): Delivery type name/description (e.g., "Livrare la domiciliu", "Ridicare de la sediu")
+- `order_index` (integer): Order index for custom ordering (1-127, unique)
+
+**Optional Fields**:
+- `description` (string): Additional description for delivery type (max 150 characters)
 
 #### 4. Update Delivery Type (Full Replacement)
 
@@ -1808,8 +1814,10 @@ curl -X PUT "http://localhost:8001/api/v1/tipuri-livrare/15" \
 **Response Example**:
 ```json
 {
+  "id": 15,
   "denumire": "Livrare rapida",
-  "id": 15
+  "description": "Fast delivery within 4 hours",
+  "order_index": 2
 }
 ```
 
@@ -1835,15 +1843,53 @@ curl -X PATCH "http://localhost:8001/api/v1/tipuri-livrare/15" \
 **Response Example**:
 ```json
 {
+  "id": 15,
   "denumire": "Livrare super rapida",
-  "id": 15
+  "description": "Ultra fast delivery within 1 hour",
+  "order_index": 3
 }
 ```
 
 **Optional Fields** (all fields are optional for PATCH):
 - `denumire` (string): Delivery type name/description
+- `description` (string): Additional description for delivery type (max 150 characters)
+- `order_index` (integer): Order index for custom ordering (1-127, unique)
 
-#### 6. Delete Delivery Type
+#### 6. Bulk Reorder Delivery Types
+
+**Use Case**: Admin reordering delivery types with atomic operation
+
+**API**: `PUT /api/v1/tipuri-livrare/reorder`
+
+**Description**: Atomically reorders all delivery types by providing a complete ordered list of delivery type IDs. The backend assigns new order_index values (1..N) based on the array position.
+
+**cURL Example**:
+```bash
+curl -X PUT "http://localhost:8001/api/v1/tipuri-livrare/reorder" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '[3, 1, 2]'
+```
+
+**Request Body**: Array of delivery type IDs in desired order
+```json
+[3, 1, 2]
+```
+
+**Response Example**:
+```json
+[
+  { "id": 3, "denumire": "Ridicare de la sediu", "description": "Pickup from HQ desk", "order_index": 1 },
+  { "id": 1, "denumire": "Ridicare de la punct fix", "description": null, "order_index": 2 },
+  { "id": 2, "denumire": "Livrare la domiciliu", "description": "Home delivery", "order_index": 3 }
+]
+```
+
+**Error Responses**:
+- **422 Unprocessable Entity**: Invalid permutation (missing/duplicate IDs)
+- **404 Not Found**: One or more IDs not found
+
+#### 7. Delete Delivery Type
 
 **Use Case**: Admin removing delivery types (hard delete)
 
@@ -1876,13 +1922,22 @@ curl -X POST "http://localhost:8001/api/v1/tipuri-livrare/" \
 # Response: 422 {"detail":[{"type":"missing","loc":["body","denumire"],"msg":"Field required","input":{}}]}
 ```
 
-**400 Bad Request** (duplicate delivery type name):
+**409 Conflict** (duplicate delivery type name or order_index):
 ```bash
 curl -X POST "http://localhost:8001/api/v1/tipuri-livrare/" \
   -H "accept: application/json" \
   -H "Content-Type: application/json" \
-  -d '{"denumire": "Ridicare de la sediu"}'
-# Response: 400 {"detail":"A delivery type with the name 'Ridicare de la sediu' already exists"}
+  -d '{"denumire": "Ridicare de la sediu", "order_index": 1}'
+# Response: 409 {"detail":"Numele sau indexul este deja folosit."}
+```
+
+**422 Unprocessable Entity** (invalid order_index):
+```bash
+curl -X POST "http://localhost:8001/api/v1/tipuri-livrare/" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{"denumire": "Test", "order_index": 200}'
+# Response: 422 {"detail":"Indexul de ordine trebuie să fie între 1 și 127"}
 ```
 
 ### Modalitati Plata

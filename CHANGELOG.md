@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.14.0 - 2025-09-09
+
+### Added
+- **Enhanced Delivery Methods Management**: Complete overhaul of delivery methods with new ordering system
+  - Added description field for delivery methods (optional, max 150 characters)
+  - Implemented order_index field for custom ordering (1-127 range)
+  - Added arrow-based reordering UI in admin interface for intuitive drag-and-drop experience
+  - Auto-assignment of order_index on creation to prevent conflicts
+  - New bulk reorder API integration for efficient server-side ordering
+
+### Changed
+- **Delivery Methods Ordering**: All delivery methods now display in custom admin-defined order instead of alphabetical
+  - Customer order form respects admin-defined delivery method order
+  - Welcome page displays delivery methods in admin-defined order
+  - Admin list forms show delivery methods in admin-defined order
+- **Error Handling**: Improved error messages for delivery method conflicts (409 errors) with user-friendly Romanian messages
+- **Form Validation**: Enhanced validation for delivery method fields with proper constraints
+
+### Technical Improvements
+- **API Integration**: Implemented new bulk reorder endpoint for atomic delivery method reordering
+- **Performance**: Replaced 3-step PATCH operations with single bulk reorder API call
+- **User Experience**: Eliminated flickering and conflicts during delivery method reordering
+- **Code Quality**: Simplified reordering logic with optimistic UI updates and proper error rollback
+
 ## 2.10.0 - 2025-09-05
 
 ### Added
