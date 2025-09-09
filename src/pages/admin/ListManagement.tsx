@@ -8,6 +8,7 @@ import Alert from '@/components/ui/Alert';
 import TabNavigation from '@/components/ui/TabNavigation';
 import ListFormTab from './ListFormTab';
 import ListProductsTab2 from './ListProductsTab2';
+import ListProductsTab3 from './ListProductsTab3';
 import ListOrdersTab from './ListOrdersTab';
 import ListTextTab from './ListTextTab';
 
@@ -15,7 +16,7 @@ const ListManagement: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const listId = id ? parseInt(id) : 0;
-  const [activeTab, setActiveTab] = useState<'edit' | 'products2' | 'orders' | 'text'>('edit');
+  const [activeTab, setActiveTab] = useState<'edit' | 'products2' | 'products3' | 'orders' | 'text'>('edit');
 
   // Fetch list data for header
   const { data: list, isLoading: isLoadingList, error: listError } = useList(listId);
@@ -73,6 +74,8 @@ const ListManagement: React.FC = () => {
         return 'Modifică detaliile listei';
       case 'products2':
         return 'Gestionează produsele';
+      case 'products3':
+        return 'Gestionează produsele cu selector dual';
       case 'orders':
         return 'Vezi comenzile pentru această listă';
       case 'text':
@@ -115,6 +118,9 @@ const ListManagement: React.FC = () => {
       )}
       {activeTab === 'products2' && (
         <ListProductsTab2 listId={listId} />
+      )}
+      {activeTab === 'products3' && (
+        <ListProductsTab3 listId={listId} />
       )}
       {activeTab === 'orders' && (
         <ListOrdersTab listId={listId} />

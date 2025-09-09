@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface TabNavigationProps {
-  activeTab: 'edit' | 'products2' | 'orders' | 'text';
-  onTabChange: (tab: 'edit' | 'products2' | 'orders' | 'text') => void;
+  activeTab: 'edit' | 'products2' | 'products3' | 'orders' | 'text';
+  onTabChange: (tab: 'edit' | 'products2' | 'products3' | 'orders' | 'text') => void;
 }
 
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
@@ -28,6 +28,16 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
           }`}
         >
           Produse
+        </button>
+        <button
+          onClick={() => onTabChange('products3')}
+          className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            activeTab === 'products3'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          Produse3
         </button>
         <button
           onClick={() => onTabChange('orders')}
