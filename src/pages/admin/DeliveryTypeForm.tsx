@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { useCreateDeliveryType, useUpdateDeliveryType, useDeliveryType } from '@/hooks/useDeliveryTypes';
+import { useCreateDeliveryType, useUpdateDeliveryType, useDeliveryType, useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { DeliveryTypeCreate } from '@/types/api';
 import { Button } from '@/components/ui/Button';
@@ -28,6 +28,7 @@ const DeliveryTypeForm: React.FC = () => {
   const { data: deliveryType, isLoading: isLoadingDeliveryType } = useDeliveryType(Number(id));
   const createDeliveryTypeMutation = useCreateDeliveryType();
   const updateDeliveryTypeMutation = useUpdateDeliveryType();
+  const { data: allDeliveryTypes } = useDeliveryTypes();
   
   // Error handling
   const { handleError, errorDetails, showErrorModal, hideErrorModal } = useErrorHandler();
@@ -60,11 +61,7 @@ const DeliveryTypeForm: React.FC = () => {
       newErrors.description = 'Descrierea trebuie să aibă cel mult 150 de caractere';
     }
 
-    if (formData.order_index === undefined || formData.order_index === null) {
-      newErrors.order_index = 'Indexul de ordine este obligatoriu';
-    } else if (!Number.isInteger(formData.order_index) || formData.order_index < 1 || formData.order_index > 127) {
-      newErrors.order_index = 'Indexul trebuie să fie un număr întreg între 1 și 127';
-    }
+    // order_index is auto-assigned on create; no manual validation needed
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -85,7 +82,14 @@ const DeliveryTypeForm: React.FC = () => {
           data: formData,
         });
       } else {
-        await createDeliveryTypeMutation.mutateAsync(formData);
+        // Auto-assign next order_index based on current max
+        const nextIndex = (allDeliveryTypes && allDeliveryTypes.length > 0)
+          ? Math.min(127, Math.max(...allDeliveryTypes.map(t => t.order_index || 0)) + 1)
+          : 1;
+        await createDeliveryTypeMutation.mutateAsync({
+          ...formData,
+          order_index: nextIndex,
+        });
       }
 
       // Navigate back to delivery types list
@@ -114,13 +118,7 @@ const DeliveryTypeForm: React.FC = () => {
     }
   };
 
-  const handleOrderIndexChange = (value: string) => {
-    const parsed = parseInt(value, 10);
-    setFormData(prev => ({ ...prev, order_index: isNaN(parsed) ? (undefined as unknown as number) : parsed }));
-    if (errors.order_index) {
-      setErrors(prev => ({ ...prev, order_index: '' }));
-    }
-  };
+  // order_index is computed automatically on create; no input handler needed
 
   if (isEditing && isLoadingDeliveryType) {
     return (
@@ -182,21 +180,7 @@ const DeliveryTypeForm: React.FC = () => {
             <p className="text-sm text-gray-500 mt-1">Maxim 150 de caractere</p>
           </div>
 
-          {/* Order Index Field */}
-          <div>
-            <Input
-              label="Index de ordine (1–127)"
-              type="number"
-              min={1}
-              max={127}
-              value={String(formData.order_index ?? '')}
-              onChange={(e) => handleOrderIndexChange(e.target.value)}
-              placeholder="Ex: 1"
-              error={errors.order_index}
-              required
-            />
-            <p className="text-sm text-gray-500 mt-1">Folosit pentru ordonare în listă</p>
-          </div>
+          {/* Indexul de ordine este atribuit automat la creare */}
 
           {/* Error Display */}
           {(createDeliveryTypeMutation.error || updateDeliveryTypeMutation.error || errors.submit) && (

@@ -46,5 +46,13 @@ export const deliveryTypeService = {
     return authService.makeAuthenticatedRequest(async () => {
       await apiClient.delete(`${BASE_URL}/${id}`);
     });
+  },
+
+  // Bulk reorder delivery types (PROTECTED - requires auth)
+  async reorder(deliveryTypeIds: number[]): Promise<DeliveryType[]> {
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.put<DeliveryType[]>(`${BASE_URL}/reorder`, deliveryTypeIds);
+      return response.data;
+    });
   }
 }; 

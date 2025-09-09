@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Truck } from 'lucide-react';
-import { useDeliveryTypes, useDeleteDeliveryType } from '@/hooks/useDeliveryTypes';
+import { Plus, Search, Edit, Trash2, Truck, ArrowUp, ArrowDown } from 'lucide-react';
+import { useDeliveryTypes, useDeleteDeliveryType, useReorderDeliveryTypes } from '@/hooks/useDeliveryTypes';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { DeliveryType } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -20,19 +21,66 @@ const DeliveryTypesList: React.FC = () => {
   // Fetch all delivery types
   const { data: deliveryTypes, isLoading, error } = useDeliveryTypes();
 
+  // Local ordered list for reordering UI
+  const [orderedTypes, setOrderedTypes] = useState<DeliveryType[] | null>(null);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+
+  useEffect(() => {
+    if (deliveryTypes) {
+      setOrderedTypes(deliveryTypes);
+    }
+  }, [deliveryTypes]);
+
   // Filter delivery types based on search term
   const filteredDeliveryTypes = useMemo(() => {
-    if (!deliveryTypes || !searchTerm.trim()) {
-      return deliveryTypes;
+    const source = orderedTypes || deliveryTypes;
+    if (!source || !searchTerm.trim()) {
+      return source;
     }
     
     const searchLower = searchTerm.toLowerCase();
-    return deliveryTypes.filter(type => 
+    return source.filter(type => 
       type.denumire.toLowerCase().includes(searchLower) ||
       (type.description ? type.description.toLowerCase().includes(searchLower) : false) ||
       String(type.order_index).includes(searchLower)
     );
-  }, [deliveryTypes, searchTerm]);
+  }, [orderedTypes, deliveryTypes, searchTerm]);
+
+  // Bulk reorder mutation
+  const reorderDeliveryTypes = useReorderDeliveryTypes();
+  const { handleError } = useErrorHandler();
+
+
+  const moveItem = async (id: number, direction: 'up' | 'down') => {
+    if (isSavingOrder || !deliveryTypes || !orderedTypes) return;
+
+    const currentIndex = orderedTypes.findIndex(t => t.id === id);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= orderedTypes.length) return;
+
+    // 1. Reorder the 2 affected cards in the UI immediately
+    const newOrder = [...orderedTypes];
+    [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
+    
+    setOrderedTypes(newOrder);
+    setIsSavingOrder(true);
+
+    try {
+      // 2. Send the complete ordered array of IDs to the backend
+      const deliveryTypeIds = newOrder.map(item => item.id);
+      await reorderDeliveryTypes.mutateAsync(deliveryTypeIds);
+      
+      // The mutation's onSuccess will automatically update the cache with the server response
+    } catch (error: any) {
+      // 3. If request fails, revert the order back to the way it was
+      setOrderedTypes(deliveryTypes || null);
+      handleError(error, 'Reordonare tipuri de livrare');
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
 
   // Delete delivery type mutation
   const deleteDeliveryTypeMutation = useDeleteDeliveryType();
@@ -102,37 +150,54 @@ const DeliveryTypesList: React.FC = () => {
         </Button>
       </AdminPageHeader>
 
-      {/* Delivery Types Grid */}
+      {/* Delivery Types Reorderable List */}
       {filteredDeliveryTypes && filteredDeliveryTypes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDeliveryTypes.map((type) => (
+        <div className="space-y-3">
+          {filteredDeliveryTypes.map((type, idx) => (
             <Card key={type.id} className="hover:shadow-lg transition-shadow">
-              <div className="space-y-4">
-                {/* Delivery Type Info */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Truck className="h-5 w-5 text-blue-600" />
-                      <h3 className="text-lg font-semibold text-gray-900">
+              <div className="p-4">
+                {/* Top row: info on left, arrows on right */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Truck className="h-5 w-5 text-blue-600 shrink-0" />
+                      <h3 className="text-base font-semibold text-gray-900 whitespace-normal break-words">
                         {type.denumire}
                       </h3>
                     </div>
-                    <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                      #{type.order_index}
-                    </span>
+                    {type.description && (
+                      <p className="text-sm text-gray-600 truncate">
+                        {type.description}
+                      </p>
+                    )}
                   </div>
-                  {type.description && (
-                    <p className="text-sm text-gray-600">{type.description}</p>
-                  )}
+
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveItem(type.id, 'up')}
+                      disabled={isSavingOrder || !!searchTerm || idx === 0}
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveItem(type.id, 'down')}
+                      disabled={isSavingOrder || !!searchTerm || idx === filteredDeliveryTypes.length - 1}
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t border-gray-100">
+                {/* Actions row (same style as before) */}
+                <div className="flex items-center gap-2 pt-2 mt-3 border-t border-gray-100">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/admin/delivery-types/${type.id}/edit`)}
-                    className="flex-1"
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Editează
@@ -141,15 +206,20 @@ const DeliveryTypesList: React.FC = () => {
                     variant="danger"
                     size="sm"
                     onClick={() => handleDeleteClick(type)}
-                    className="flex-1"
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
                     Șterge
                   </Button>
+                  <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 ml-auto">
+                    #{type.order_index}
+                  </span>
                 </div>
               </div>
             </Card>
           ))}
+          {searchTerm && (
+            <p className="text-xs text-gray-500 px-1">Reordonarea este dezactivată în modul de căutare.</p>
+          )}
         </div>
       ) : (
         <Card className="text-center py-12">

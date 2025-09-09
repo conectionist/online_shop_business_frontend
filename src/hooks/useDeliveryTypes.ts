@@ -70,4 +70,19 @@ export const useDeleteDeliveryType = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.deliveryTypes.all });
     },
   });
+};
+
+// Bulk reorder delivery types
+export const useReorderDeliveryTypes = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (deliveryTypeIds: number[]) => deliveryTypeService.reorder(deliveryTypeIds),
+    onSuccess: (updatedDeliveryTypes) => {
+      // Update the cache with the new order
+      queryClient.setQueryData(queryKeys.deliveryTypes.all, updatedDeliveryTypes);
+      // Also invalidate to ensure consistency
+      queryClient.invalidateQueries({ queryKey: queryKeys.deliveryTypes.all });
+    },
+  });
 }; 
