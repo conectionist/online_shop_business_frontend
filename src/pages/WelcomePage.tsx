@@ -18,6 +18,7 @@ const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
   const { data: publishedList, isLoading, error } = usePublishedList();
   
+  
   // Fetch data for the published list
   const { data: listProductsData, isLoading: isLoadingListProducts } = useListProductsOrdered(publishedList?.id || 0);
   const { data: categories } = useCategories();
@@ -519,8 +520,18 @@ const WelcomePage: React.FC = () => {
               <div className="text-sm text-gray-600">
                 {listDeliveryTypes && listDeliveryTypes.length > 0 
                   ? listDeliveryTypes.map(dt => (
-                      <div key={dt.id} className="mb-1 last:mb-0">
-                        {dt.denumire}
+                      <div key={dt.id} className="mb-2 last:mb-0">
+                        <div className="font-medium text-gray-900 text-sm">
+                          {dt.denumire}
+                        </div>
+                        {dt.description && (
+                          <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                            {dt.description.length > 80 
+                              ? `${dt.description.substring(0, 80)}...` 
+                              : dt.description
+                            }
+                          </div>
+                        )}
                       </div>
                     ))
                   : 'Metode de livrare nedefinite'
@@ -563,6 +574,7 @@ const WelcomePage: React.FC = () => {
         </div>
       )}
     </div>
+
 
     </>
   );

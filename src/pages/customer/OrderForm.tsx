@@ -293,7 +293,7 @@ const OrderForm: React.FC = () => {
                 <Select
                   options={listDeliveryTypes?.map(dt => ({
                     value: dt.id.toString(),
-                    label: dt.description ? `${dt.denumire} — ${dt.description}` : dt.denumire
+                    label: dt.denumire
                   })) || []}
                   value={watchedDeliveryType?.toString() || ''}
                   onChange={(value) => {
