@@ -217,17 +217,18 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const handlePrintList = () => {
     closeDropdown();
     
-    // Group orders by delivery type (same logic as display and PDF)
-    const groupedOrders = sortedOrders.reduce((groups, order) => {
-      const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-      const deliveryName = deliveryType?.denumire || 'Necunoscut';
-      
-      if (!groups[deliveryName]) {
-        groups[deliveryName] = [];
+    // Group orders by delivery type ID
+    const ordersByDeliveryTypeId = sortedOrders.reduce((groups, order) => {
+      const key = order.delivery_type_id;
+      if (!groups[key]) {
+        groups[key] = [] as typeof sortedOrders;
       }
-      groups[deliveryName].push(order);
+      (groups[key] as typeof sortedOrders).push(order);
       return groups;
-    }, {} as Record<string, typeof sortedOrders>);
+    }, {} as Record<number, typeof sortedOrders>);
+
+    // Sort delivery types by order_index
+    const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a, b) => a.order_index - b.order_index);
 
     // Create a formatted print view
     const printContent = `
@@ -257,13 +258,15 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           </div>
           
           ${sortedOrders && sortedOrders.length > 0 ? 
-            Object.entries(groupedOrders).map(([deliveryName, deliveryOrders]) => `
+            sortedDeliveryTypes
+              .filter(dt => ordersByDeliveryTypeId[dt.id] && ordersByDeliveryTypeId[dt.id].length > 0)
+              .map(dt => `
               <div class="delivery-group">
                 <div class="delivery-header">
-                  <h2 class="delivery-title">${deliveryName}</h2>
-                  <p class="delivery-count">${deliveryOrders.length} ${deliveryOrders.length === 1 ? 'comandă' : 'comenzi'}</p>
+                  <h2 class="delivery-title">${dt.denumire}</h2>
+                  <p class="delivery-count">${ordersByDeliveryTypeId[dt.id].length} ${ordersByDeliveryTypeId[dt.id].length === 1 ? 'comandă' : 'comenzi'}</p>
                 </div>
-                ${deliveryOrders.map((order) => `
+                ${ordersByDeliveryTypeId[dt.id].map((order) => `
                   <div class="order">
                     <div class="order-content">${formatOrderText(order)}</div>
                   </div>
@@ -441,33 +444,35 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       {/* Orders List */}
       <div className="space-y-6">
         {(() => {
-          // Group orders by delivery type
-          const groupedOrders = sortedOrders.reduce((groups, order) => {
-            const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-            const deliveryName = deliveryType?.denumire || 'Necunoscut';
-            
-            if (!groups[deliveryName]) {
-              groups[deliveryName] = [];
+          // Group orders by delivery type ID and iterate delivery types in backend order
+          const ordersByDeliveryTypeId = sortedOrders.reduce((groups, order) => {
+            const key = order.delivery_type_id;
+            if (!groups[key]) {
+              groups[key] = [] as typeof sortedOrders;
             }
-            groups[deliveryName].push(order);
+            (groups[key] as typeof sortedOrders).push(order);
             return groups;
-          }, {} as Record<string, typeof sortedOrders>);
+          }, {} as Record<number, typeof sortedOrders>);
 
-          return Object.entries(groupedOrders).map(([deliveryName, orders]) => (
-            <div key={deliveryName} className="space-y-4">
+          const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a, b) => a.order_index - b.order_index);
+
+          return sortedDeliveryTypes
+            .filter(dt => ordersByDeliveryTypeId[dt.id] && ordersByDeliveryTypeId[dt.id].length > 0)
+            .map(dt => (
+            <div key={dt.id} className="space-y-4">
               {/* Delivery Type Header */}
               <div className="border-b border-gray-200 pb-2">
                 <h3 className="text-lg font-semibold text-gray-800">
-                  {deliveryName}
+                  {dt.denumire}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {orders.length} {orders.length === 1 ? 'comandă' : 'comenzi'}
+                  {ordersByDeliveryTypeId[dt.id].length} {ordersByDeliveryTypeId[dt.id].length === 1 ? 'comandă' : 'comenzi'}
                 </p>
               </div>
               
               {/* Orders for this delivery type */}
               <div className="space-y-4">
-                {orders.map((order) => (
+                {ordersByDeliveryTypeId[dt.id].map((order) => (
                   <Card key={order.id} className="p-6">
                     <div className="space-y-4">
                       {/* Order Display - Similar to OrderConfirmation */}

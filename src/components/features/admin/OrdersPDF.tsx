@@ -138,17 +138,18 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
     return orderText.trim();
   };
 
-  // Group orders by delivery type
-  const groupedOrders = orders.reduce((groups, order) => {
-    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-    const deliveryName = deliveryType?.denumire || 'Necunoscut';
-    
-    if (!groups[deliveryName]) {
-      groups[deliveryName] = [];
+  // Group orders by delivery type ID for stable ordering independent of names
+  const ordersByDeliveryTypeId = orders.reduce((groups, order) => {
+    const key = order.delivery_type_id;
+    if (!groups[key]) {
+      groups[key] = [] as OrderRead[];
     }
-    groups[deliveryName].push(order);
+    groups[key].push(order);
     return groups;
-  }, {} as Record<string, typeof orders>);
+  }, {} as Record<number, OrderRead[]>);
+
+  // Sort delivery types by order_index and render only those that have orders
+  const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a: any, b: any) => a.order_index - b.order_index);
 
   return (
     <Document>
@@ -158,12 +159,16 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
         </Text>
         
         {orders && orders.length > 0 ? (
-          Object.entries(groupedOrders).map(([deliveryName, deliveryOrders]) => (
-            <View key={deliveryName}>
+          sortedDeliveryTypes
+            .filter((dt: any) => ordersByDeliveryTypeId[dt.id] && ordersByDeliveryTypeId[dt.id].length > 0)
+            .map((dt: any) => {
+              const deliveryOrders = ordersByDeliveryTypeId[dt.id];
+              return (
+            <View key={dt.id}>
               {/* Delivery Type Header */}
               <View style={styles.deliveryHeader}>
                 <Text style={styles.deliveryTitle}>
-                  {deliveryName}
+                  {dt.denumire}
                 </Text>
                 <Text style={styles.deliveryCount}>
                   {deliveryOrders.length} {deliveryOrders.length === 1 ? 'comandă' : 'comenzi'}
@@ -185,7 +190,8 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
               {/* Add space between delivery groups */}
               <View style={styles.groupSeparator} />
             </View>
-          ))
+              );
+            })
         ) : (
           <Text style={styles.noOrders}>
             Nu există comenzi pentru această listă.
