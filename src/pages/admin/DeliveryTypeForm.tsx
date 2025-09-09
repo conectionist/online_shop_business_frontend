@@ -19,6 +19,8 @@ const DeliveryTypeForm: React.FC = () => {
   // Form state
   const [formData, setFormData] = useState<DeliveryTypeCreate>({
     denumire: '',
+    description: '',
+    order_index: 1,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -35,6 +37,9 @@ const DeliveryTypeForm: React.FC = () => {
     if (deliveryType && isEditing) {
       setFormData({
         denumire: deliveryType.denumire,
+        description: deliveryType.description || '',
+        // Keep current order_index when editing; default to 1 if absent
+        order_index: deliveryType.order_index ?? 1,
       });
     }
   }, [deliveryType, isEditing]);
@@ -49,6 +54,16 @@ const DeliveryTypeForm: React.FC = () => {
 
     if (formData.denumire.length > 100) {
       newErrors.denumire = 'Denumirea tipului de livrare trebuie să aibă mai puțin de 100 de caractere';
+    }
+
+    if (formData.description && formData.description.length > 150) {
+      newErrors.description = 'Descrierea trebuie să aibă cel mult 150 de caractere';
+    }
+
+    if (formData.order_index === undefined || formData.order_index === null) {
+      newErrors.order_index = 'Indexul de ordine este obligatoriu';
+    } else if (!Number.isInteger(formData.order_index) || formData.order_index < 1 || formData.order_index > 127) {
+      newErrors.order_index = 'Indexul trebuie să fie un număr întreg între 1 și 127';
     }
 
     setErrors(newErrors);
@@ -81,7 +96,7 @@ const DeliveryTypeForm: React.FC = () => {
       
       if (isFriendlyError) {
         // For friendly errors, show the specific message in the form
-        const errorMessage = error?.response?.data?.detail || 'Acest tip de livrare există deja. Vă rugăm să folosiți o denumire diferită.';
+        const errorMessage = error?.response?.data?.detail || 'Numele sau indexul este deja folosit.';
         setErrors(prev => ({ ...prev, submit: errorMessage }));
       } else {
         // For other errors, use the error handler
@@ -96,6 +111,14 @@ const DeliveryTypeForm: React.FC = () => {
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleOrderIndexChange = (value: string) => {
+    const parsed = parseInt(value, 10);
+    setFormData(prev => ({ ...prev, order_index: isNaN(parsed) ? (undefined as unknown as number) : parsed }));
+    if (errors.order_index) {
+      setErrors(prev => ({ ...prev, order_index: '' }));
     }
   };
 
@@ -145,6 +168,34 @@ const DeliveryTypeForm: React.FC = () => {
             <p className="text-sm text-gray-500 mt-1">
               Exemple: "Livrare la domiciliu", "Ridicare de la sediu", "Curier", "Punct de ridicare"
             </p>
+          </div>
+
+          {/* Description Field */}
+          <div>
+            <Input
+              label="Descriere (opțional)"
+              value={formData.description || ''}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Ex: Ridicare de la sediu"
+              error={errors.description}
+            />
+            <p className="text-sm text-gray-500 mt-1">Maxim 150 de caractere</p>
+          </div>
+
+          {/* Order Index Field */}
+          <div>
+            <Input
+              label="Index de ordine (1–127)"
+              type="number"
+              min={1}
+              max={127}
+              value={String(formData.order_index ?? '')}
+              onChange={(e) => handleOrderIndexChange(e.target.value)}
+              placeholder="Ex: 1"
+              error={errors.order_index}
+              required
+            />
+            <p className="text-sm text-gray-500 mt-1">Folosit pentru ordonare în listă</p>
           </div>
 
           {/* Error Display */}

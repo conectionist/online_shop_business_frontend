@@ -33,6 +33,15 @@ export const categorySchema = z.object({
 
 export type CategoryFormData = z.infer<typeof categorySchema>;
 
+// Delivery Type validation schema
+export const deliveryTypeSchema = z.object({
+  denumire: z.string().min(1, 'Denumirea tipului de livrare este obligatorie').max(100, 'Denumirea tipului de livrare trebuie să aibă mai puțin de 100 de caractere'),
+  description: z.string().max(150, 'Descrierea trebuie să aibă cel mult 150 de caractere').optional(),
+  order_index: z.number().int('Indexul trebuie să fie un număr întreg').min(1, 'Indexul trebuie să fie un număr întreg între 1 și 127').max(127, 'Indexul trebuie să fie un număr întreg între 1 și 127'),
+});
+
+export type DeliveryTypeFormData = z.infer<typeof deliveryTypeSchema>;
+
 // List validation schema
 export const listSchema = z.object({
   data: z.string().min(1, 'Date is required'),

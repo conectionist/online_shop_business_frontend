@@ -33,6 +33,14 @@ export const deliveryTypeService = {
     });
   },
 
+  // Patch delivery type (partial update) (PROTECTED - requires auth)
+  async patch(id: number, data: DeliveryTypeUpdate): Promise<DeliveryType> {
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.patch<DeliveryType>(`${BASE_URL}/${id}`, data);
+      return response.data;
+    });
+  },
+
   // Delete delivery type (PROTECTED - requires auth)
   async delete(id: number): Promise<void> {
     return authService.makeAuthenticatedRequest(async () => {

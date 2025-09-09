@@ -139,14 +139,20 @@ export interface UnitUpdate {
 export interface DeliveryType {
   id: number;
   denumire: string;
+  description?: string;
+  order_index: number;
 }
 
 export interface DeliveryTypeCreate {
   denumire: string;
+  description?: string;
+  order_index: number;
 }
 
 export interface DeliveryTypeUpdate {
   denumire?: string;
+  description?: string;
+  order_index?: number;
 }
 
 // Payment Method Types

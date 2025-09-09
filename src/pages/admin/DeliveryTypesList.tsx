@@ -28,7 +28,9 @@ const DeliveryTypesList: React.FC = () => {
     
     const searchLower = searchTerm.toLowerCase();
     return deliveryTypes.filter(type => 
-      type.denumire.toLowerCase().includes(searchLower)
+      type.denumire.toLowerCase().includes(searchLower) ||
+      (type.description ? type.description.toLowerCase().includes(searchLower) : false) ||
+      String(type.order_index).includes(searchLower)
     );
   }, [deliveryTypes, searchTerm]);
 
@@ -108,12 +110,20 @@ const DeliveryTypesList: React.FC = () => {
               <div className="space-y-4">
                 {/* Delivery Type Info */}
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Truck className="h-5 w-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {type.denumire}
-                    </h3>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Truck className="h-5 w-5 text-blue-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {type.denumire}
+                      </h3>
+                    </div>
+                    <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                      #{type.order_index}
+                    </span>
                   </div>
+                  {type.description && (
+                    <p className="text-sm text-gray-600">{type.description}</p>
+                  )}
                 </div>
 
                 {/* Actions */}

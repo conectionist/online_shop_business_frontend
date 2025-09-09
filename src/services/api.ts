@@ -133,14 +133,14 @@ export const handleApiError = (error: any): ApiError => {
       // Handle 409 Conflict (duplicate resource)
       if (status === 409) {
         return {
-          detail: data?.detail || 'This item already exists. Please use a different name.'
+          detail: data?.detail || 'Numele sau indexul este deja folosit.'
         };
       }
       
       // Handle 422 Validation Error
       if (status === 422) {
         return {
-          detail: data?.detail || 'The provided data is invalid. Please check your input and try again.'
+          detail: data?.detail || 'Date invalide. Verificați câmpurile și încercați din nou.'
         };
       }
       
