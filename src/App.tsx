@@ -39,11 +39,13 @@ import ReturnsPolicy from './pages/ReturnsPolicy'
 import ContactPage from './pages/ContactPage'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
+import AuthInitializer from './components/AuthInitializer'
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
+      <AuthInitializer>
       <Router>
         {/* Default SEO component for the entire app */}
         <SEO />
@@ -110,6 +112,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </AuthInitializer>
       
       {/* React Query Devtools - only in development */}
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}

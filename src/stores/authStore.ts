@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authService } from '@/services/authService';
 
 export interface User {
   id: number;
@@ -22,6 +23,7 @@ export interface AuthActions {
   updateUser: (user: User) => void;
   updateToken: (token: string) => void;
   getCurrentToken: () => string | null;
+  validateTokenOnInit: () => Promise<boolean>;
 }
 
 export type AuthStore = AuthState & AuthActions;
@@ -78,6 +80,29 @@ export const useAuthStore = create<AuthStore>()(
 
       getCurrentToken: () => {
         return get().token;
+      },
+
+      // Validate token on store initialization
+      validateTokenOnInit: async () => {
+        const state = get();
+        if (!state.isAuthenticated || !state.token) {
+          return false;
+        }
+
+        try {
+          // Check if token is expiring soon
+          if (authService.isTokenExpiringSoon()) {
+            console.log('Token is expiring soon, refreshing...');
+            await authService.refreshAccessToken();
+            return true;
+          }
+          return true;
+        } catch (error) {
+          console.error('Token validation failed on init:', error);
+          // If validation fails, logout
+          get().logout();
+          return false;
+        }
       },
     }),
     {
