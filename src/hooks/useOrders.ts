@@ -10,8 +10,8 @@ export const useCreateOrder = () => {
   return useMutation({
     mutationFn: (orderData: OrderCreate) => orderService.createOrder(orderData),
     onSuccess: () => {
-      // Invalidate orders list to refresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.list() });
+      // Invalidate all orders queries to refresh data, including filtered lists
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
     },
   });
 };
@@ -150,8 +150,8 @@ export const useDeleteOrder = () => {
   return useMutation({
     mutationFn: (id: number) => orderService.deleteOrder(id),
     onSuccess: () => {
-      // Invalidate orders list to refresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.list() });
+      // Invalidate all orders queries to refresh data, including filtered lists
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
     },
   });
 };
