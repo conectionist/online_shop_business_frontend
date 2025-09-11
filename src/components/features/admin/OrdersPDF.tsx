@@ -177,9 +177,9 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
               
               {/* Orders for this delivery type */}
               {deliveryOrders.map((order, index) => (
-                <View key={order.id}>
-                  <View style={styles.order}>
-                    <Text style={styles.orderText}>
+                <View key={order.id} wrap={false}>
+                  <View style={styles.order} wrap={false}>
+                    <Text style={styles.orderText} wrap>
                       {formatOrderText(order)}
                     </Text>
                   </View>
