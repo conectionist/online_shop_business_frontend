@@ -248,6 +248,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
             .header h1 { margin: 0; color: #333; }
             .delivery-group { margin-bottom: 40px; break-inside: avoid; page-break-inside: avoid; }
+            .delivery-group + .delivery-group { break-before: page; page-break-before: always; }
+            .delivery-group.first-group { break-before: auto; page-break-before: auto; }
             .delivery-header { border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px; }
             .delivery-title { font-size: 18px; font-weight: bold; color: #333; margin: 0; }
             .delivery-count { font-size: 12px; color: #666; margin: 2px 0 0 0; }
@@ -264,8 +266,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           ${sortedOrders && sortedOrders.length > 0 ? 
             sortedDeliveryTypes
               .filter(dt => ordersByDeliveryTypeId[dt.id] && ordersByDeliveryTypeId[dt.id].length > 0)
-              .map(dt => `
-              <div class="delivery-group">
+              .map((dt, groupIndex) => `
+              <div class="delivery-group ${groupIndex === 0 ? 'first-group' : ''}">
                 <div class="delivery-header">
                   <h2 class="delivery-title">${dt.denumire}</h2>
                   <p class="delivery-count">${ordersByDeliveryTypeId[dt.id].length} ${ordersByDeliveryTypeId[dt.id].length === 1 ? 'comandă' : 'comenzi'}</p>

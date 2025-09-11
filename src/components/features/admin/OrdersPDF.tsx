@@ -161,10 +161,10 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
         {orders && orders.length > 0 ? (
           sortedDeliveryTypes
             .filter((dt: any) => ordersByDeliveryTypeId[dt.id] && ordersByDeliveryTypeId[dt.id].length > 0)
-            .map((dt: any) => {
+            .map((dt: any, index: number) => {
               const deliveryOrders = ordersByDeliveryTypeId[dt.id];
               return (
-            <View key={dt.id}>
+            <View key={dt.id} break={index > 0}>
               {/* Delivery Type Header */}
               <View style={styles.deliveryHeader}>
                 <Text style={styles.deliveryTitle}>
