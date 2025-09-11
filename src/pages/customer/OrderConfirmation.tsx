@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle, ArrowLeft, Copy, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { usePublishedList } from '@/hooks/useLists';
-import { useCreateOrder } from '@/hooks/useOrders';
+import { useCreateOrder, useOrders } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
 import { requiresAddress } from '@/utils/delivery';
 import { components } from '@/utils/theme';
@@ -34,6 +34,13 @@ const OrderConfirmation: React.FC = () => {
   // Get the current published list for the order
   const { data: publishedList } = usePublishedList();
   const createOrderMutation = useCreateOrder();
+  // Preload existing orders for the current published list and current customer
+  const normalizedClientName = orderData ? `${orderData.prenume} ${orderData.nume}`.trim() : undefined;
+  const { data: existingOrders } = useOrders(
+    publishedList && normalizedClientName
+      ? { liste_id: publishedList.id, nume_client: normalizedClientName }
+      : undefined
+  );
 
   useEffect(() => {
     const storedOrderData = sessionStorage.getItem('orderData');
@@ -162,7 +169,53 @@ const OrderConfirmation: React.FC = () => {
         })),
       };
 
-      await createOrderMutation.mutateAsync(orderCreateData);
+      // Duplicate guard: skip if identical order exists for this list
+      const isSameString = (a?: string | null, b?: string | null) => (a || '') === (b || '');
+      const itemsSignature = (items?: { produse_id: number; pret_produs: number; cantitate_produs: number; unitati_id: number; }[]) =>
+        JSON.stringify(
+          (items || [])
+            .map(i => ({ produse_id: i.produse_id, pret_produs: i.pret_produs, cantitate_produs: i.cantitate_produs, unitati_id: i.unitati_id }))
+            .sort((a, b) => a.produse_id - b.produse_id || a.unitati_id - b.unitati_id || a.pret_produs - b.pret_produs)
+        );
+
+      const newSignature = {
+        nume_client: orderCreateData.nume_client,
+        liste_id: orderCreateData.liste_id,
+        delivery_type_id: orderCreateData.delivery_type_id,
+        payment_method_id: orderCreateData.payment_method_id,
+        delivery_address: orderCreateData.delivery_address || '',
+        order_notes: orderCreateData.order_notes || '',
+        phone_number: orderCreateData.phone_number || '',
+        items: itemsSignature(orderCreateData.items),
+      };
+
+      // Check against fetched existing orders (filtered by list and client name)
+      const duplicateExists = (existingOrders || []).some(o => {
+        const existingSig = {
+          nume_client: o.nume_client,
+          liste_id: o.liste_id,
+          delivery_type_id: o.delivery_type_id,
+          payment_method_id: o.payment_method_id,
+          delivery_address: o.delivery_address || '',
+          order_notes: o.order_notes || '',
+          phone_number: o.phone_number || '',
+          items: itemsSignature(o.items),
+        };
+        return (
+          isSameString(existingSig.nume_client, newSignature.nume_client) &&
+          existingSig.liste_id === newSignature.liste_id &&
+          existingSig.delivery_type_id === newSignature.delivery_type_id &&
+          existingSig.payment_method_id === newSignature.payment_method_id &&
+          isSameString(existingSig.delivery_address, newSignature.delivery_address) &&
+          isSameString(existingSig.order_notes, newSignature.order_notes) &&
+          isSameString(existingSig.phone_number, newSignature.phone_number) &&
+          existingSig.items === newSignature.items
+        );
+      });
+
+      if (!duplicateExists) {
+        await createOrderMutation.mutateAsync(orderCreateData);
+      }
       console.log('Order submitted successfully to server');
     } catch (error) {
       console.error('Failed to submit order to server:', error);

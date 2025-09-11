@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.18.3 - 2025-09-11
+
+### Changed
+- Customer order confirmation: added client-side duplicate guard to prevent creating identical orders when users click "Copy" or "Send via WhatsApp" multiple times for the same published list.
+
+
 ## 2.14.0 - 2025-09-09
 
 ### Added
