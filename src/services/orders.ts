@@ -26,6 +26,7 @@ export const orderService = {
     limit?: number;
     sort_by?: 'data_plasarii' | 'nume_client' | 'liste_id' | 'delivery_type_id' | 'payment_method_id';
     sort_order?: 'asc' | 'desc';
+    merge_similar?: boolean;
   }): Promise<OrderRead[]> => {
     const params = new URLSearchParams();
     
@@ -58,6 +59,9 @@ export const orderService = {
     }
     if (filters?.sort_order) {
       params.append('sort_order', filters.sort_order);
+    }
+    if (filters?.merge_similar) {
+      params.append('merge_similar', filters.merge_similar.toString());
     }
 
     const response = await apiClient.get(`/orders?${params.toString()}`);

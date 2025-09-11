@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit, Info } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { useDeleteOrder, useUpdateOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
@@ -32,8 +32,15 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState<OrderRead | null>(null);
 
+  // Local UI state
+  const [mergeSimilar, setMergeSimilar] = useState(false);
+  const [showMergeInfo, setShowMergeInfo] = useState(false);
+  const mergeInfoRef = useRef<HTMLDivElement | null>(null);
+
   // Fetch orders for this specific list
-  const { data: orders, isLoading, error } = useOrders({ liste_id: listId });
+  const { data: orders, isLoading, error } = useOrders(
+    mergeSimilar ? { liste_id: listId, merge_similar: true } : { liste_id: listId }
+  );
   const { data: products } = useProducts(); // For product names
   const { data: deliveryTypes } = useDeliveryTypes(); // For delivery method names
   const { data: paymentMethods } = usePaymentMethods(); // For payment method names
@@ -351,11 +358,27 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           closeDropdown();
         }
       }
+      // Close merge info popover when clicking outside
+      if (showMergeInfo) {
+        const target = event.target as Node;
+        if (mergeInfoRef.current && !mergeInfoRef.current.contains(target)) {
+          setShowMergeInfo(false);
+        }
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openDropdown]);
+  }, [openDropdown, showMergeInfo]);
+
+  // Close popover on Escape
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowMergeInfo(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   if (isLoading) {
     return (
@@ -403,7 +426,9 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             {orders.length} {orders.length === 1 ? 'comandă găsită' : 'comenzi găsite'}
           </p>
         </div>
+
         
+
         {/* 3-dot Menu */}
         <div className="relative">
           <button
@@ -439,6 +464,37 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Merge similar toggle positioned below header */}
+      <div className="flex items-center space-x-2 -mt-2 mb-2" ref={mergeInfoRef}>
+        <input
+          id="merge-similar-toggle"
+          type="checkbox"
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          checked={mergeSimilar}
+          onChange={(e) => setMergeSimilar(e.target.checked)}
+        />
+        <label htmlFor="merge-similar-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
+          unește comenzile acelorași clienți
+        </label>
+        <button
+          type="button"
+          onClick={() => setShowMergeInfo((v) => !v)}
+          className="inline-flex items-center justify-center p-0.5 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Deschide explicația pentru unirea comenzilor"
+        >
+          <Info className="w-4 h-4 text-gray-400" />
+        </button>
+        {showMergeInfo && (
+          <div className="relative">
+            <div className="absolute z-50 mt-2 w-96 max-w-[28rem] rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-700 shadow-lg">
+              Dacă un client dă o comandă și apoi își amintește că mai vrea un produs sau mai multe și mai plasează o comandă, vor apărea două comenzi listate aici.
+              <br />
+              Bifând această căsuță, comenzile care aparțin aceluiași client pot fi unite într-una singură.
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Orders List */}

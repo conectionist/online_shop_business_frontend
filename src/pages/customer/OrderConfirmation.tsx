@@ -38,7 +38,7 @@ const OrderConfirmation: React.FC = () => {
   const normalizedClientName = orderData ? `${orderData.prenume} ${orderData.nume}`.trim() : undefined;
   const { data: existingOrders } = useOrders(
     publishedList && normalizedClientName
-      ? { liste_id: publishedList.id, nume_client: normalizedClientName }
+      ? { liste_id: publishedList.id, nume_client: normalizedClientName, merge_similar: true }
       : undefined
   );
 

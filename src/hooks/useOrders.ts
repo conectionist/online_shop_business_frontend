@@ -38,6 +38,7 @@ export const useOrders = (filters?: {
   limit?: number;
   sort_by?: 'data_plasarii' | 'nume_client' | 'liste_id' | 'delivery_type_id' | 'payment_method_id';
   sort_order?: 'asc' | 'desc';
+  merge_similar?: boolean;
 }) => {
   return useQuery({
     queryKey: queryKeys.orders.list(filters),
