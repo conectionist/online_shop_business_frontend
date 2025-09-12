@@ -48,6 +48,8 @@ const WelcomePage: React.FC = () => {
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
   // Quantity state for each product
   const [quantities, setQuantities] = React.useState<{ [key: number]: number }>({});
+  // Description expansion state for each product
+  const [expandedDescriptions, setExpandedDescriptions] = React.useState<{ [key: number]: boolean }>({});
 
   // Refs for animation
   const cartIconRef = useRef<HTMLDivElement>(null);
@@ -150,6 +152,20 @@ const WelcomePage: React.FC = () => {
     if (newQuantity >= 1) {
       setQuantities(prev => ({ ...prev, [productId]: newQuantity }));
     }
+  };
+
+  // Handle description toggle
+  const toggleDescription = (productId: number) => {
+    setExpandedDescriptions(prev => ({ ...prev, [productId]: !prev[productId] }));
+  };
+
+  // Truncate helper to cut at word boundary
+  const truncateText = (text: string, limit: number): string => {
+    if (!text || text.length <= limit) return text;
+    const slice = text.slice(0, limit);
+    const lastSpace = slice.lastIndexOf(' ');
+    const cut = lastSpace > 0 ? slice.slice(0, lastSpace) : slice;
+    return cut + '…';
   };
 
   if (isLoading) {
@@ -332,46 +348,37 @@ const WelcomePage: React.FC = () => {
                           animationFillMode: 'both'
                         }}
                       >
-                        <div className="p-6">
-                          <div className="flex space-x-4">
-                            {/* Product Image - Enhanced */}
-                            <div className="flex-shrink-0">
+                        {/* Large Top Image */}
+                        <Link 
+                          to={`/product/${product.id}`}
+                          className="block"
+                        >
+                          <div className="p-4">
+                            <div className={components.interactive.imageContainer}>
                               {product.images && product.images.length > 0 ? (
-                                <Link 
-                                  to={`/product/${product.id}`}
-                                  className="hover:bg-amber-50 rounded-xl p-1 -m-1 transition-colors block"
-                                >
-                                  <div className="relative">
-                                    <img
-                                      src={getProductImageUrl(product, 'thumbnail')}
-                                      alt={product.nume}
-                                      className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-xl border-2 border-amber-100 shadow-sm group-hover:border-amber-200 transition-colors duration-300"
-                                      ref={el => { imageRefs.current[product.id] = el; }}
-                                      onError={(e) => {
-                                        // Fallback to package icon if image fails to load
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
-                                        target.nextElementSibling?.classList.remove('hidden');
-                                      }}
-                                    />
-                                    {/* Subtle overlay on hover */}
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 rounded-xl"></div>
-                                  </div>
-                                </Link>
-                              ) : (
-                                <Link 
-                                  to={`/product/${product.id}`}
-                                  className="hover:bg-amber-50 rounded-xl p-1 -m-1 transition-colors block"
-                                >
-                                  <div className={`w-20 h-20 md:w-24 md:h-24 ${components.backgrounds.fallback} rounded-xl border-2 ${components.borders.secondary} flex items-center justify-center shadow-sm group-hover:${components.borders.primary} transition-colors duration-300`}>
-                                    <Package className="w-8 h-8 text-amber-400" />
-                                  </div>
-                                </Link>
-                              )}
+                                <img
+                                  src={getProductImageUrl(product, 'original')}
+                                  alt={product.nume}
+                                  className="w-full h-full object-cover"
+                                  ref={el => { imageRefs.current[product.id] = el; }}
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    target.nextElementSibling?.classList.remove('hidden');
+                                  }}
+                                />
+                              ) : null}
+                              {/* Fallback icon */}
+                              <div className={`w-full h-full ${components.backgrounds.fallback} flex items-center justify-center ${product.images && product.images.length > 0 ? 'hidden' : ''}`}>
+                                <Package className="w-12 h-12 text-amber-400" />
+                              </div>
                             </div>
-                            
-                            {/* Content Area - Redesigned */}
-                            <div className="flex-1 min-w-0 flex flex-col justify-between">
+                          </div>
+                        </Link>
+
+                        {/* Content Area */}
+                        <div className="p-6">
+                          <div className="flex-1 min-w-0 flex flex-col justify-between text-center">
                               {/* Product Info */}
                               <div className="space-y-2">
                                 {/* Product Name */}
@@ -389,14 +396,41 @@ const WelcomePage: React.FC = () => {
                                 {/* Description */}
                                 {product.description && (
                                   <div>
-                                    <Link 
-                                      to={`/product/${product.id}`}
-                                      className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
-                                    >
-                                      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                                        {product.description}
+                                    {expandedDescriptions[product.id] ? (
+                                      <div className="text-sm text-gray-600 leading-relaxed">
+                                        <span>{product.description}</span>
+                                        {product.description.length > 100 && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              toggleDescription(product.id);
+                                            }}
+                                            className="text-amber-600 hover:text-amber-700 text-xs font-medium ml-1 align-baseline"
+                                          >
+                                            Arată mai puțin
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-gray-600 leading-relaxed">
+                                        <span>
+                                          {truncateText(product.description, 120)}
+                                        </span>
+                                        {product.description.length > 100 && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              toggleDescription(product.id);
+                                            }}
+                                            className="ml-1 text-amber-600 hover:text-amber-700 text-xs font-medium align-baseline whitespace-nowrap"
+                                          >
+                                            Arată mai mult
+                                          </button>
+                                        )}
                                       </p>
-                                    </Link>
+                                    )}
                                   </div>
                                 )}
                                 
@@ -411,8 +445,8 @@ const WelcomePage: React.FC = () => {
                               </div>
                               
                               {/* Quantity Selector and Add to Cart Button */}
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-3">
-                                <div className="flex items-center justify-between gap-2 w-full sm:w-auto">
+                              <div className="flex flex-col items-center gap-2 pt-3 justify-center">
+                                <div className="flex items-center justify-between gap-2 w-full sm:w-auto justify-center">
                                   <Button
                                     variant="secondary"
                                     size="sm"
@@ -443,7 +477,7 @@ const WelcomePage: React.FC = () => {
                                     addToCart(product);
                                   }}
                                   disabled={addingToCart[product.id]}
-                                  className={components.button.primary("w-full sm:w-auto font-medium py-2 px-4 rounded-lg")}
+                                  className={components.button.primary("w-full sm:w-auto font-medium py-2 px-4 rounded-lg mt-1")}
                                 >
                                   {addingToCart[product.id] ? (
                                     <>
@@ -459,7 +493,6 @@ const WelcomePage: React.FC = () => {
                                 </Button>
                               </div>
                             </div>
-                          </div>
                         </div>
                       </div>
                     ))}
