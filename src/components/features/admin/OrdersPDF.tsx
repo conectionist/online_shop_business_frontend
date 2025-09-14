@@ -14,11 +14,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#ffffff',
     padding: 40,
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Roboto',
   },
   header: {
-    fontSize: 20,
+    fontSize: 28,
     textAlign: 'center',
     marginBottom: 30,
     fontFamily: 'Roboto',
@@ -32,6 +32,7 @@ const styles = StyleSheet.create({
   },
   orderText: {
     fontFamily: 'Roboto',
+    fontSize: 14,
     lineHeight: 1.4,
     whiteSpace: 'pre-line',
   },
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
   },
   noOrders: {
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 16,
     color: '#666666',
     fontFamily: 'Roboto',
   },
@@ -54,14 +55,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#333333',
   },
   deliveryTitle: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Roboto',
     fontWeight: 'bold',
     color: '#333333',
     marginBottom: 2,
   },
   deliveryCount: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Roboto',
     color: '#666666',
   },

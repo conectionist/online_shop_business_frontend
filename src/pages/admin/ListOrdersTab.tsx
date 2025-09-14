@@ -244,15 +244,15 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         <head>
           <title>Lista Comenzi - ${new Date().toLocaleDateString('ro-RO')}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
+            body { font-family: Arial, sans-serif; margin: 20px; font-size: 16px; }
             .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-            .header h1 { margin: 0; color: #333; }
+            .header h1 { margin: 0; color: #333; font-size: 28px; }
             .delivery-group { margin-bottom: 40px; break-inside: avoid; page-break-inside: avoid; }
             .delivery-group + .delivery-group { break-before: page; page-break-before: always; }
             .delivery-group.first-group { break-before: auto; page-break-before: auto; }
             .delivery-header { border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px; }
-            .delivery-title { font-size: 18px; font-weight: bold; color: #333; margin: 0; }
-            .delivery-count { font-size: 12px; color: #666; margin: 2px 0 0 0; }
+            .delivery-title { font-size: 22px; font-weight: bold; color: #333; margin: 0; }
+            .delivery-count { font-size: 16px; color: #666; margin: 2px 0 0 0; }
             .order { margin-bottom: 30px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; break-inside: avoid; page-break-inside: avoid; }
             .order-content { background: #f9f9f9; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-line; }
             @media print { body { margin: 15px; } }
