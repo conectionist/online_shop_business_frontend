@@ -97,24 +97,40 @@ const WelcomePage: React.FC = () => {
     const img = imageRefs.current[productId];
     const cartIcon = cartIconRef.current;
     if (!img || !cartIcon) return;
+    
+    // Get the image position relative to the viewport
     const imgRect = img.getBoundingClientRect();
     const cartRect = cartIcon.getBoundingClientRect();
+    
+    // If the image is not visible (negative top or outside viewport), use a fallback position
+    const isImageVisible = imgRect.top >= 0 && imgRect.left >= 0 && 
+                          imgRect.top < window.innerHeight && imgRect.left < window.innerWidth;
+    
+    // Use the image position if visible, otherwise use a fallback position near the center
+    const startX = isImageVisible ? imgRect.left : window.innerWidth / 2 - 50;
+    const startY = isImageVisible ? imgRect.top : window.innerHeight / 2 - 50;
+    const startWidth = isImageVisible ? imgRect.width : 100;
+    const startHeight = isImageVisible ? imgRect.height : 100;
+    
+    
     const clone = img.cloneNode(true) as HTMLImageElement;
     clone.style.position = 'fixed';
     clone.style.zIndex = '9999';
-    clone.style.left = `${imgRect.left}px`;
-    clone.style.top = `${imgRect.top}px`;
-    clone.style.width = `${imgRect.width}px`;
-    clone.style.height = `${imgRect.height}px`;
+    clone.style.left = `${startX}px`;
+    clone.style.top = `${startY}px`;
+    clone.style.width = `${startWidth}px`;
+    clone.style.height = `${startHeight}px`;
     clone.style.transition = 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
     document.body.appendChild(clone);
+    
     requestAnimationFrame(() => {
-      clone.style.left = `${cartRect.left + cartRect.width / 2 - imgRect.width / 2}px`;
-      clone.style.top = `${cartRect.top + cartRect.height / 2 - imgRect.height / 2}px`;
+      clone.style.left = `${cartRect.left + cartRect.width / 2 - 16}px`;
+      clone.style.top = `${cartRect.top + cartRect.height / 2 - 16}px`;
       clone.style.width = '32px';
       clone.style.height = '32px';
       clone.style.opacity = '0.5';
     });
+    
     clone.addEventListener('transitionend', () => {
       clone.remove();
     });
