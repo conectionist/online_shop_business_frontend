@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Mail, Phone, MapPin, Building, Shield, FileText, Cookie, RotateCcw, Info } from 'lucide-react';
+import { ExternalLink, Mail, Phone, MapPin, Building, Shield, FileText, Cookie, RotateCcw, Clock } from 'lucide-react';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import {
   getBusinessName,
@@ -11,7 +11,6 @@ import {
   getBusinessRegistrationNumber,
   getBusinessRepresentative,
   getBusinessHours,
-  getBusinessDescription,
   getANPCLink,
   getSOLLink,
   getSALLink,
@@ -31,7 +30,6 @@ const Footer: React.FC = () => {
   const businessRegistrationNumber = getBusinessRegistrationNumber(businessDetails || undefined);
   const businessRepresentative = getBusinessRepresentative(businessDetails || undefined);
   const businessHours = getBusinessHours(businessDetails || undefined);
-  const businessDescription = getBusinessDescription(businessDetails || undefined);
   const anpcLink = getANPCLink();
   const solLink = getSOLLink();
   const salLink = getSALLink();
@@ -116,9 +114,22 @@ const Footer: React.FC = () => {
                 to={legalRoutes.contact} 
                 className="flex items-center hover:text-amber-400 transition-colors"
               >
-                <Info className="h-4 w-4 mr-2" />
+                <ExternalLink className="h-4 w-4 mr-2" />
                 Contact
               </Link>
+            </div>
+          </div>
+
+          {/* Business Hours */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white flex items-center">
+              <Clock className="h-5 w-5 mr-2" />
+              Program
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="text-xs text-gray-400 p-3 bg-gray-800 rounded">
+                <p className="whitespace-pre-line">{businessHours}</p>
+              </div>
             </div>
           </div>
 
@@ -139,21 +150,6 @@ const Footer: React.FC = () => {
                 ANPC - Protecția Consumatorilor
               </a>
               <a 
-                href={solLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center hover:opacity-90 transition"
-              >
-                <img
-                  decoding="async"
-                  style={{ width: '250px', height: '50px' }}
-                  src="/anpc-sol.png"
-                  alt="Soluționarea Online a Litigiilor"
-                  title="Soluționarea Online a Litigiilor"
-                  className="rounded shadow-sm"
-                />
-              </a>
-              <a 
                 href={salLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -168,42 +164,31 @@ const Footer: React.FC = () => {
                   className="rounded shadow-sm"
                 />
               </a>
+              <a 
+                href={solLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center hover:opacity-90 transition"
+              >
+                <img
+                  decoding="async"
+                  style={{ width: '250px', height: '50px' }}
+                  src="/anpc-sol.png"
+                  alt="Soluționarea Online a Litigiilor"
+                  title="Soluționarea Online a Litigiilor"
+                  className="rounded shadow-sm"
+                />
+              </a>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center">
-              <Info className="h-5 w-5 mr-2" />
-              Link-uri Rapide
-            </h3>
-            <div className="space-y-2 text-sm">
-              <Link 
-                to="/" 
-                className="flex items-center hover:text-amber-400 transition-colors"
-              >
-                Pagina principală
-              </Link>
-              <Link 
-                to="/cart" 
-                className="flex items-center hover:text-amber-400 transition-colors"
-              >
-                Coșul de cumpărături
-              </Link>
-              <div className="text-xs text-gray-400 mt-4 p-3 bg-gray-800 rounded">
-                <p className="font-medium mb-2">Program:</p>
-                <p className="whitespace-pre-line">{businessHours}</p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 pt-8">
           <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400 text-center">
-              <p>&copy; {currentYear} {businessName}. Toate drepturile rezervate.</p>
-              <p className="mt-1">{businessDescription}</p>
+              <p>&copy; {currentYear} {businessName}</p>
             </div>
           </div>
         </div>
