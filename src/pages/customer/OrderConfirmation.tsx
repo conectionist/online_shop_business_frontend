@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/Button';
 import { usePublishedList } from '@/hooks/useLists';
 import { useCreateOrder, useOrders } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
-import { requiresAddress } from '@/utils/delivery';
 import { components } from '@/utils/theme';
+import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
 
 
 interface OrderData {
@@ -55,52 +55,7 @@ const OrderConfirmation: React.FC = () => {
 
   const formatOrderText = () => {
     if (!orderData) return '';
-
-    let orderText = `${orderData.prenume} ${orderData.nume}\n`;
-    
-    // Add phone number if provided
-    if (orderData.phone_number) {
-      orderText += `Telefon: ${orderData.phone_number}\n`;
-    }
-    
-    // Add items
-    orderData.items.forEach(item => {
-      orderText += `${item.quantity} x ${item.nume} (${item.quantity * item.pret} RON)\n`;
-    });
-    
-    // Add totals breakdown
-    const subtotal = orderData.subtotal ?? orderData.items.reduce((t, it) => t + it.quantity * it.pret, 0);
-    const deliveryTax = orderData.delivery_tax ?? 0;
-    if (deliveryTax > 0) {
-      orderText += `Subtotal: ${subtotal} RON\n`;
-      orderText += `Taxă livrare: ${deliveryTax} RON\n`;
-    }
-    orderText += `Total: ${orderData.total} RON\n`;
-    
-    // Add payment method
-    if (orderData.paymentMethod) {
-      orderText += `Plata ${orderData.paymentMethod.name.toLowerCase()}.\n`;
-    }
-    
-    // Add delivery method and address
-    if (orderData.deliveryType) {
-      if (orderData.address && requiresAddress(orderData.deliveryType)) {
-        // If address is provided, show clean delivery message
-        orderText += `Livrare la adresa: ${orderData.address}\n`;
-      } else {
-        // If no address, show the original delivery method description
-        orderText += `${orderData.deliveryType.denumire}.\n`;
-      }
-    }
-    
-
-    
-    // Add observatii if present
-    if (orderData.observatii) {
-      orderText += `Observații: ${orderData.observatii}\n`;
-    }
-
-    return orderText.trim();
+    return formatOrderTextUtil(orderData);
   };
 
   const copyToClipboard = async () => {

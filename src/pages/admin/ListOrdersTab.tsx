@@ -13,7 +13,8 @@ import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
-import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
+import { getDeliveryTax } from '@/utils/delivery';
+import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
 import OrdersPDF from '@/components/features/admin/OrdersPDF';
 import { EditOrderForm } from '@/components/features/admin/EditOrderForm';
 import { pdf } from '@react-pdf/renderer';
@@ -177,53 +178,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   };
 
   const formatOrderText = (order: OrderRead) => {
-    let orderText = `${order.nume_client}\n`;
-    
-    // Add phone number if provided
-    if (order.phone_number) {
-      orderText += `Telefon: ${order.phone_number}\n`;
-    }
-    
-    // Add items
-    const aggregated = order.items ? aggregateItemsByProduct(order.items) : [];
-    aggregated.forEach(item => {
-      const productName = getProductName(item.produse_id);
-      orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
+    return formatOrderTextUtil(order, {
+      getProductName,
+      getPaymentMethodName,
+      deliveryTypes,
+      businessDetails
     });
-    
-    // Add totals breakdown
-    const subtotal = order.items?.reduce((total, item) => total + (item.pret_produs * item.cantitate_produs), 0) || 0;
-    const orderDeliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-    const deliveryTax = getDeliveryTax(orderDeliveryType, businessDetails);
-    
-    if (deliveryTax > 0) {
-      orderText += `Subtotal: ${subtotal} RON\n`;
-      orderText += `Taxă livrare: ${deliveryTax} RON\n`;
-    }
-    orderText += `Total: ${subtotal + deliveryTax} RON\n`;
-    
-    // Add payment method
-    const paymentMethodName = getPaymentMethodName(order.payment_method_id);
-    orderText += `Plata ${paymentMethodName.toLowerCase()}.\n`;
-    
-    // Add delivery method and address
-    const deliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-    if (deliveryType) {
-      if (order.delivery_address && requiresAddress(deliveryType)) {
-        // If address is provided, show clean delivery message
-        orderText += `Livrare la adresa: ${order.delivery_address}\n`;
-      } else {
-        // If no address, show the original delivery method description
-        orderText += `${deliveryType.denumire}.\n`;
-      }
-    }
-    
-    // Add observatii if present
-    if (order.order_notes) {
-      orderText += `Observații: ${order.order_notes}\n`;
-    }
-
-    return orderText.trim();
   };
 
 
@@ -328,8 +288,6 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           deliveryTypes={deliveryTypes || []}
           getProductName={getProductName}
           getPaymentMethodName={getPaymentMethodName}
-          requiresAddress={requiresAddress}
-          getDeliveryTax={getDeliveryTax}
           businessDetails={businessDetails}
         />
       );
@@ -653,12 +611,6 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 <span className="font-medium text-gray-700">Metoda de livrare:</span>
                 <p className="text-gray-900">{getDeliveryTypeName(selectedOrder.delivery_type_id)}</p>
               </div>
-              {selectedOrder.phone_number && (
-                <div>
-                  <span className="font-medium text-gray-700">Telefon:</span>
-                  <p className="text-gray-900">{selectedOrder.phone_number}</p>
-                </div>
-              )}
             </div>
 
             {/* Order Totals Breakdown */}
@@ -696,6 +648,13 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
               <div>
                 <span className="font-medium text-gray-700">Adresa de livrare:</span>
                 <p className="text-gray-900 mt-1">{selectedOrder.delivery_address}</p>
+              </div>
+            )}
+
+            {selectedOrder.phone_number && (
+              <div>
+                <span className="font-medium text-gray-700">Telefon:</span>
+                <p className="text-gray-900 mt-1">{selectedOrder.phone_number}</p>
               </div>
             )}
 

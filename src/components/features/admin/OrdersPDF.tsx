@@ -1,6 +1,7 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { OrderRead } from '@/types/api';
+import { formatOrderText } from '@/utils/orderFormatter';
 
 // Register Roboto font for proper diacritic support
 Font.register({
@@ -76,8 +77,6 @@ interface OrdersPDFProps {
   deliveryTypes: any[];
   getProductName: (productId: number) => string;
   getPaymentMethodName: (paymentMethodId: number) => string;
-  requiresAddress: (deliveryType: any) => boolean;
-  getDeliveryTax: (deliveryType: any, businessDetails: any) => number;
   businessDetails: any;
 }
 
@@ -86,57 +85,15 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
   deliveryTypes,
   getProductName,
   getPaymentMethodName,
-  requiresAddress,
-  getDeliveryTax,
   businessDetails,
 }) => {
-  const formatOrderText = (order: OrderRead) => {
-    let orderText = `${order.nume_client}\n`;
-    
-    // Add phone number if provided
-    if (order.phone_number) {
-      orderText += `Telefon: ${order.phone_number}\n`;
-    }
-    
-    // Add items
-    order.items?.forEach(item => {
-      const productName = getProductName(item.produse_id);
-      orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
+  const formatOrderTextForPDF = (order: OrderRead) => {
+    return formatOrderText(order, {
+      getProductName,
+      getPaymentMethodName,
+      deliveryTypes,
+      businessDetails
     });
-    
-    // Add totals breakdown
-    const subtotal = order.items?.reduce((sum, item) => sum + (item.pret_produs * item.cantitate_produs), 0) || 0;
-    const pdfDeliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-    const deliveryTax = getDeliveryTax(pdfDeliveryType, businessDetails);
-    
-    if (deliveryTax > 0) {
-      orderText += `Subtotal: ${subtotal} RON\n`;
-      orderText += `Taxă livrare: ${deliveryTax} RON\n`;
-    }
-    orderText += `Total: ${subtotal + deliveryTax} RON\n`;
-    
-    // Add payment method
-    const paymentMethodName = getPaymentMethodName(order.payment_method_id);
-    orderText += `Plata ${paymentMethodName.toLowerCase()}.\n`;
-    
-    // Add delivery method and address
-    const addressDeliveryType = deliveryTypes?.find(dt => dt.id === order.delivery_type_id);
-    if (addressDeliveryType) {
-      if (order.delivery_address && requiresAddress(addressDeliveryType)) {
-        // If address is provided, show clean delivery message
-        orderText += `Livrare la adresa: ${order.delivery_address}\n`;
-      } else {
-        // If no address, show the original delivery method description
-        orderText += `${addressDeliveryType.denumire}.\n`;
-      }
-    }
-    
-    // Add observatii if present
-    if (order.order_notes) {
-      orderText += `Observații: ${order.order_notes}\n`;
-    }
-
-    return orderText.trim();
   };
 
   // Group orders by delivery type ID for stable ordering independent of names
@@ -181,7 +138,7 @@ const OrdersPDF: React.FC<OrdersPDFProps> = ({
                 <View key={order.id} wrap={false}>
                   <View style={styles.order} wrap={false}>
                     <Text style={styles.orderText} wrap>
-                      {formatOrderText(order)}
+                      {formatOrderTextForPDF(order)}
                     </Text>
                   </View>
                   {index < deliveryOrders.length - 1 && <View style={styles.separator} />}
