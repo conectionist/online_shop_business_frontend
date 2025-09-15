@@ -50,7 +50,7 @@ COPY robots.txt /usr/share/nginx/html/robots.txt
 COPY site.webmanifest /usr/share/nginx/html/site.webmanifest
 
 # Copy Google verification file for Search Console
-COPY google*.html /usr/share/nginx/html/
+#COPY google*.html /usr/share/nginx/html/
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
