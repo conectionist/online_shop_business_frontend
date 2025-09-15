@@ -162,6 +162,20 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     return paymentMethod?.name || `Metodă plată #${paymentMethodId}`;
   };
 
+  const aggregateItemsByProduct = (items: NonNullable<OrderRead['items']>) => {
+    const map = new Map<number, { produse_id: number; pret_produs: number; cantitate_produs: number; unitati_id: number }>();
+    for (const it of items) {
+      const existing = map.get(it.produse_id);
+      if (existing) {
+        existing.cantitate_produs += it.cantitate_produs;
+        // Keep the original unit price; if prices differ across lines, we keep the first
+      } else {
+        map.set(it.produse_id, { ...it });
+      }
+    }
+    return Array.from(map.values());
+  };
+
   const formatOrderText = (order: OrderRead) => {
     let orderText = `${order.nume_client}\n`;
     
@@ -171,7 +185,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     }
     
     // Add items
-    order.items?.forEach(item => {
+    const aggregated = order.items ? aggregateItemsByProduct(order.items) : [];
+    aggregated.forEach(item => {
       const productName = getProductName(item.produse_id);
       orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
     });
@@ -694,16 +709,19 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             <div>
               <h4 className="font-medium text-gray-700 mb-2">Produse comandate:</h4>
               <div className="space-y-2">
-                {selectedOrder.items?.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded">
-                    <span className="text-gray-900">
-                      {item.cantitate_produs} x {getProductName(item.produse_id)}
-                    </span>
-                    <span className="text-gray-700 font-medium">
-                      {item.pret_produs * item.cantitate_produs} RON
-                    </span>
-                  </div>
-                ))}
+                {(() => {
+                  const aggregated = selectedOrder.items ? aggregateItemsByProduct(selectedOrder.items) : [];
+                  return aggregated.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded">
+                      <span className="text-gray-900">
+                        {item.cantitate_produs} x {getProductName(item.produse_id)}
+                      </span>
+                      <span className="text-gray-700 font-medium">
+                        {item.pret_produs * item.cantitate_produs} RON
+                      </span>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           </div>
