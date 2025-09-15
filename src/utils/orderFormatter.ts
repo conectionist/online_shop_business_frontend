@@ -49,7 +49,8 @@ export function formatOrderText(
     if (config?.getProductName) {
       orderRead.items?.forEach(item => {
         const productName = config.getProductName(item.produse_id);
-        orderText += `${item.cantitate_produs} x ${productName} (${item.pret_produs} RON)\n`;
+        const lineTotal = item.cantitate_produs * item.pret_produs;
+        orderText += `${item.cantitate_produs} x ${productName} (${lineTotal} RON)\n`;
       });
     }
   } else {
