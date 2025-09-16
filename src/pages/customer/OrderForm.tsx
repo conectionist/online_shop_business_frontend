@@ -13,6 +13,8 @@ import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { components } from '@/utils/theme';
 import { PHONE_REGEX } from '@/utils/validation';
+import { useCreateOrder } from '@/hooks/useOrders';
+import { OrderCreate } from '@/types/api';
 
 interface OrderFormData {
   nume: string;
@@ -36,6 +38,9 @@ const OrderForm: React.FC = () => {
 
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
 
+  // Prepare order creation
+  const createOrderMutation = useCreateOrder();
+
   const {
     register,
     handleSubmit,
@@ -55,6 +60,7 @@ const OrderForm: React.FC = () => {
 
   const watchedPaymentMethod = watch('payment_method_id');
   const watchedDeliveryType = watch('delivery_type_id');
+  // No client-side duplicate detection; backend enforces duplicates now
 
   // Update selected delivery type when form changes
   React.useEffect(() => {
@@ -107,7 +113,102 @@ const OrderForm: React.FC = () => {
     );
   }
 
-  const onSubmit = (data: OrderFormData) => {
+  const formatOrderText = (orderData: {
+    prenume: string;
+    nume: string;
+    phone_number?: string | null;
+    items: typeof items;
+    subtotal: number;
+    delivery_tax: number;
+    total: number;
+    deliveryType: any;
+    address?: string;
+    paymentMethod?: { id: number; name: string } | undefined;
+  }) => {
+    let orderText = `${orderData.prenume} ${orderData.nume}\n`;
+
+    if (orderData.phone_number) {
+      orderText += `Telefon: ${orderData.phone_number}\n`;
+    }
+
+    orderData.items.forEach((item) => {
+      orderText += `${item.quantity} x ${item.nume} (${item.quantity * item.pret} RON)\n`;
+    });
+
+    if (orderData.delivery_tax > 0) {
+      orderText += `Subtotal: ${orderData.subtotal} RON\n`;
+      orderText += `Taxă livrare: ${orderData.delivery_tax} RON\n`;
+    }
+    orderText += `Total: ${orderData.total} RON\n`;
+
+    if (orderData.paymentMethod) {
+      orderText += `Plata ${orderData.paymentMethod.name.toLowerCase()}.\n`;
+    }
+
+    if (orderData.deliveryType) {
+      if (orderData.address && requiresAddress(orderData.deliveryType)) {
+        orderText += `Livrare la adresa: ${orderData.address}\n`;
+      } else {
+        orderText += `${orderData.deliveryType.denumire}.\n`;
+      }
+    }
+
+    return orderText.trim();
+  };
+
+  const submitOrderToServer = async (orderData: ReturnType<typeof buildOrderDataForSession>) => {
+    if (!publishedList) return;
+
+    const orderCreateData: OrderCreate = {
+      nume_client: `${orderData.prenume} ${orderData.nume}`.trim(),
+      data_plasarii: new Date().toISOString(),
+      liste_id: publishedList.id,
+      delivery_type_id: orderData.delivery_type_id!,
+      payment_method_id: orderData.payment_method_id!,
+      delivery_address: orderData.address || undefined,
+      order_notes: orderData.observatii || undefined,
+      phone_number: orderData.phone_number || undefined,
+      items: orderData.items.map((item) => ({
+        produse_id: item.id,
+        pret_produs: item.pret,
+        cantitate_produs: item.quantity,
+        unitati_id: item.unitati_id,
+      })),
+    };
+
+    try {
+      await createOrderMutation.mutateAsync(orderCreateData);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 409) {
+        // Duplicate order: handle silently (likely quick double action)
+        console.info('Duplicate order (409) handled silently.');
+      } else {
+        console.error('Failed to submit order to server:', error);
+      }
+    }
+  };
+
+  const buildOrderDataForSession = (data: OrderFormData) => {
+    const subtotal = getTotalPrice();
+    const deliveryTax = getDeliveryTax(selectedDeliveryType, businessDetails);
+    const grandTotal = subtotal + deliveryTax;
+
+    return {
+      ...data,
+      phone_number: data.phone_number?.trim() || null,
+      items,
+      subtotal,
+      delivery_tax: deliveryTax,
+      total: grandTotal,
+      deliveryType: selectedDeliveryType,
+      paymentMethod: paymentMethods?.find(pm => pm.id === data.payment_method_id) as
+        | { id: number; name: string }
+        | undefined,
+    };
+  };
+
+  const onSubmit = async (data: OrderFormData) => {
     // Validate required fields
     if (!data.payment_method_id) {
       alert('Te rugăm să selectezi o metodă de plată.');
@@ -119,27 +220,23 @@ const OrderForm: React.FC = () => {
       return;
     }
 
-    const subtotal = getTotalPrice();
-    const deliveryTax = getDeliveryTax(selectedDeliveryType, businessDetails);
-    const grandTotal = subtotal + deliveryTax;
-    
-    // For now, just navigate to confirmation page with order data
-    const orderData = {
-      ...data,
-      // Convert empty string to null for phone_number as per backend requirements
-      phone_number: data.phone_number?.trim() || null,
-      items,
-      subtotal,
-      delivery_tax: deliveryTax,
-      total: grandTotal,
-      deliveryType: selectedDeliveryType,
-      paymentMethod: paymentMethods?.find(pm => pm.id === data.payment_method_id)
-    };
-    
-    // Store order data in sessionStorage for confirmation page
+    const orderData = buildOrderDataForSession(data);
+
+    // Open WhatsApp immediately (within user gesture)
+    const whatsappText = encodeURIComponent(formatOrderText(orderData));
+    const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
+    const whatsappWindow = window.open(whatsappUrl, '_blank');
+    if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
+      window.location.href = whatsappUrl;
+    }
+
+    // Submit the order to the server (fire-and-forget, with duplicate guard)
+    await submitOrderToServer(orderData);
+
+    // Persist for confirmation page and then navigate there
     sessionStorage.setItem('orderData', JSON.stringify(orderData));
-    
-    // Clear cart and navigate to confirmation
+
+    // Clear cart and navigate to confirmation page
     clearCart();
     navigate('/order-confirmation');
   };
@@ -377,14 +474,14 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-center">
             <Button
               type="submit"
               variant="primary"
               disabled={isSubmitting}
               className={components.button.primary("px-8 py-3")}
             >
-              {isSubmitting ? 'Se procesează...' : 'Finalizează Comanda'}
+              {isSubmitting ? 'Se procesează...' : 'Trimite comanda pe Whatsapp'}
             </Button>
           </div>
         </form>

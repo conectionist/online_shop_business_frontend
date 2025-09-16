@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, ArrowLeft, Copy, Share2 } from 'lucide-react';
+import { CheckCircle, ArrowLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { usePublishedList } from '@/hooks/useLists';
-import { useCreateOrder, useOrders } from '@/hooks/useOrders';
+import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
+import { getBusinessPhone } from '@/utils/businessInfo';
+import { useCreateOrder } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
 import { components } from '@/utils/theme';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
@@ -29,18 +31,14 @@ const OrderConfirmation: React.FC = () => {
   const navigate = useNavigate();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   
   // Get the current published list for the order
   const { data: publishedList } = usePublishedList();
+  const { data: businessDetails } = useBusinessDetailsSingle();
   const createOrderMutation = useCreateOrder();
-  // Preload existing orders for the current published list and current customer
-  const normalizedClientName = orderData ? `${orderData.prenume} ${orderData.nume}`.trim() : undefined;
-  const { data: existingOrders } = useOrders(
-    publishedList && normalizedClientName
-      ? { liste_id: publishedList.id, nume_client: normalizedClientName, merge_similar: true }
-      : undefined
-  );
+  // No client-side duplicate detection anymore; backend enforces duplicates
 
   useEffect(() => {
     const storedOrderData = sessionStorage.getItem('orderData');
@@ -124,86 +122,20 @@ const OrderConfirmation: React.FC = () => {
         })),
       };
 
-      // Duplicate guard: skip if identical order exists for this list
-      const isSameString = (a?: string | null, b?: string | null) => (a || '') === (b || '');
-      const itemsSignature = (items?: { produse_id: number; pret_produs: number; cantitate_produs: number; unitati_id: number; }[]) =>
-        JSON.stringify(
-          (items || [])
-            .map(i => ({ produse_id: i.produse_id, pret_produs: i.pret_produs, cantitate_produs: i.cantitate_produs, unitati_id: i.unitati_id }))
-            .sort((a, b) => a.produse_id - b.produse_id || a.unitati_id - b.unitati_id || a.pret_produs - b.pret_produs)
-        );
-
-      const newSignature = {
-        nume_client: orderCreateData.nume_client,
-        liste_id: orderCreateData.liste_id,
-        delivery_type_id: orderCreateData.delivery_type_id,
-        payment_method_id: orderCreateData.payment_method_id,
-        delivery_address: orderCreateData.delivery_address || '',
-        order_notes: orderCreateData.order_notes || '',
-        phone_number: orderCreateData.phone_number || '',
-        items: itemsSignature(orderCreateData.items),
-      };
-
-      // Check against fetched existing orders (filtered by list and client name)
-      const duplicateExists = (existingOrders || []).some(o => {
-        const existingSig = {
-          nume_client: o.nume_client,
-          liste_id: o.liste_id,
-          delivery_type_id: o.delivery_type_id,
-          payment_method_id: o.payment_method_id,
-          delivery_address: o.delivery_address || '',
-          order_notes: o.order_notes || '',
-          phone_number: o.phone_number || '',
-          items: itemsSignature(o.items),
-        };
-        return (
-          isSameString(existingSig.nume_client, newSignature.nume_client) &&
-          existingSig.liste_id === newSignature.liste_id &&
-          existingSig.delivery_type_id === newSignature.delivery_type_id &&
-          existingSig.payment_method_id === newSignature.payment_method_id &&
-          isSameString(existingSig.delivery_address, newSignature.delivery_address) &&
-          isSameString(existingSig.order_notes, newSignature.order_notes) &&
-          isSameString(existingSig.phone_number, newSignature.phone_number) &&
-          existingSig.items === newSignature.items
-        );
-      });
-
-      if (!duplicateExists) {
-        await createOrderMutation.mutateAsync(orderCreateData);
-      }
+      await createOrderMutation.mutateAsync(orderCreateData);
       console.log('Order submitted successfully to server');
-    } catch (error) {
-      console.error('Failed to submit order to server:', error);
-      // Don't show error to user as this is a background operation
-      // The WhatsApp functionality will still work
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 409) {
+        // Duplicate order: handle silently (copy/WhatsApp double action)
+        console.info('Duplicate order (409) handled silently.');
+      } else {
+        console.error('Failed to submit order to server:', error);
+      }
     }
   };
 
-  const shareOrder = async () => {
-    // Open WhatsApp immediately while we have the user gesture
-    const orderText = formatOrderText();
-    const whatsappText = encodeURIComponent(orderText);
-    const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
-    
-    // For iOS Safari compatibility, we need to open the URL immediately
-    // within the user gesture context
-    const whatsappWindow = window.open(whatsappUrl, '_blank');
-    
-    // Check if the window was blocked (common on mobile)
-    if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
-      // Fallback: redirect in the same window
-      window.location.href = whatsappUrl;
-    }
-    
-    // Then submit the order to the server
-    try {
-      await submitOrderToServer();
-    } catch (error) {
-      // If the order submission fails, we could close the WhatsApp window
-      // or show an error message, but the user has already started the WhatsApp flow
-      console.error('Failed to submit order:', error);
-    }
-  };
+  // WhatsApp flow is now handled on the order form; no WhatsApp button here
 
   if (!orderData) {
     return (
@@ -231,6 +163,20 @@ const OrderConfirmation: React.FC = () => {
   }
 
   const orderText = formatOrderText();
+  const whatsappContact = publishedList?.numar_whatsapp || getBusinessPhone(businessDetails || undefined);
+
+  const formatRomanianDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const formatted = date.toLocaleDateString('ro-RO', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    // Capitalize month (default is lowercase in ro-RO)
+    return formatted.replace(/ (\p{L}+)/u, (m) => ` ${m.slice(1,2).toUpperCase()}${m.slice(2)}`);
+  };
 
   return (
     <div className={components.page.container}>
@@ -242,50 +188,61 @@ const OrderConfirmation: React.FC = () => {
             Comanda a fost finalizată!
           </h1>
           <p className="text-gray-600">
-            Comanda ta a fost pregătită. Copiază textul de mai jos și trimite-l prin WhatsApp.
+            Vei primi produsele comandate pe data de<br />
+            <span className="font-medium">{formatRomanianDate(publishedList?.data)}</span>
           </p>
         </div>
 
-        {/* Order Display */}
+        {/* Help / Fallback Section */}
         <div className={components.card.main + " p-6 mb-6"}>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Comanda ta:
-          </h2>
-          
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
-              {orderText}
-            </pre>
-          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Dacă, însă, nu ai reușit să plasezi comanda pe WhatsApp,
+            <button
+              className="text-blue-600 underline ml-1"
+              onClick={() => setShowHelp((s) => !s)}
+            >
+              dă click aici
+            </button>
+          </h3>
+
+          {showHelp && (
+            <div className="mt-4 space-y-4">
+              <div className="text-gray-700 text-sm">
+                <p className="mb-2 font-medium">Ce ai de făcut:</p>
+                <ol className="list-decimal ml-5 space-y-1">
+                  <li>Apasă pe butonul "Copiază comanda" de mai jos.</li>
+                  <li>
+                    Deschide WhatsApp și selectează grupul de comenzi (dacă ești membru)
+                    sau numărul {whatsappContact}.
+                  </li>
+                  <li>Lipește textul copiat în mesaj și trimite-l.</li>
+                </ol>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Textul comenzii:</h4>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
+                    {orderText}
+                  </pre>
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  variant="primary"
+                  onClick={copyToClipboard}
+                  className={components.button.primary("w-full sm:w-auto")}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  {copied ? 'Copiat!' : 'Copiază Comanda'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Action Buttons */}
-        <div className={components.card.main + " p-6 mb-6"}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Acțiuni
-          </h3>
-          
-          <div className="space-y-3">
-            <Button
-              variant="primary"
-              onClick={copyToClipboard}
-              className={components.button.primary("w-full")}
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              {copied ? 'Copiat!' : 'Copiază Comanda'}
-            </Button>
-            
-            <Button
-              variant="secondary"
-              onClick={shareOrder}
-              disabled={createOrderMutation.isPending}
-              className={components.button.secondary("w-full")}
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              {createOrderMutation.isPending ? 'Se trimite...' : 'Trimite prin WhatsApp'}
-            </Button>
-          </div>
-        </div>
+        {/* No WhatsApp button here anymore */}
 
         {/* Navigation */}
         <div className="flex justify-center">
