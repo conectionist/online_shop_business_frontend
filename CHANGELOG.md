@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.21.0 - 2025-09-16
+
+### Added
+- Pass `source` query param when creating orders:
+  - `whatsapp_button` when sending via WhatsApp from `OrderForm`
+  - `copy_button` when using copy order on `OrderConfirmation`
+
 ## 2.18.3 - 2025-09-11
 
 ### Changed

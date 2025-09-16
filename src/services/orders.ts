@@ -3,8 +3,9 @@ import { OrderCreate, OrderRead } from '@/types/api';
 
 export const orderService = {
   // Create a new order (PUBLIC - no auth required for customer orders)
-  createOrder: async (orderData: OrderCreate): Promise<OrderRead> => {
-    const response = await apiClient.post('/orders', orderData);
+  createOrder: async (orderData: OrderCreate, options?: { source?: string }): Promise<OrderRead> => {
+    const source = options?.source ? `?source=${encodeURIComponent(options.source)}` : '';
+    const response = await apiClient.post(`/orders${source}`, orderData);
     return response.data;
   },
 

@@ -156,7 +156,7 @@ const OrderForm: React.FC = () => {
     return orderText.trim();
   };
 
-  const submitOrderToServer = async (orderData: ReturnType<typeof buildOrderDataForSession>) => {
+  const submitOrderToServer = async (orderData: ReturnType<typeof buildOrderDataForSession>, source?: string) => {
     if (!publishedList) return;
 
     const orderCreateData: OrderCreate = {
@@ -177,7 +177,7 @@ const OrderForm: React.FC = () => {
     };
 
     try {
-      await createOrderMutation.mutateAsync(orderCreateData);
+      await createOrderMutation.mutateAsync({ orderData: orderCreateData, source });
     } catch (error: any) {
       const status = error?.response?.status;
       if (status === 409) {
@@ -231,7 +231,7 @@ const OrderForm: React.FC = () => {
     }
 
     // Submit the order to the server (fire-and-forget, with duplicate guard)
-    await submitOrderToServer(orderData);
+    await submitOrderToServer(orderData, 'whatsapp_button');
 
     // Persist for confirmation page and then navigate there
     sessionStorage.setItem('orderData', JSON.stringify(orderData));

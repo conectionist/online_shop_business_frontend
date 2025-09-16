@@ -8,7 +8,8 @@ export const useCreateOrder = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (orderData: OrderCreate) => orderService.createOrder(orderData),
+    mutationFn: (args: { orderData: OrderCreate; source?: string }) =>
+      orderService.createOrder(args.orderData, { source: args.source }),
     onSuccess: () => {
       // Invalidate all orders queries to refresh data, including filtered lists
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });

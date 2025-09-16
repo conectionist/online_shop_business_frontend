@@ -58,7 +58,7 @@ const OrderConfirmation: React.FC = () => {
 
   const copyToClipboard = async () => {
     // First submit the order to the server
-    await submitOrderToServer();
+    await submitOrderToServer('copy_button');
     
     // Then proceed with copying to clipboard
     const orderText = formatOrderText();
@@ -98,7 +98,7 @@ const OrderConfirmation: React.FC = () => {
     }
   };
 
-  const submitOrderToServer = async () => {
+  const submitOrderToServer = async (source?: string) => {
     if (!orderData || !publishedList) {
       console.error('Order data or published list not available');
       return;
@@ -122,7 +122,7 @@ const OrderConfirmation: React.FC = () => {
         })),
       };
 
-      await createOrderMutation.mutateAsync(orderCreateData);
+      await createOrderMutation.mutateAsync({ orderData: orderCreateData, source });
       console.log('Order submitted successfully to server');
     } catch (error: any) {
       const status = error?.response?.status;
