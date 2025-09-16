@@ -1,6 +1,6 @@
 {
   "name": "online-shop-business-frontend",
-  "version": "2.19.5",
+  "version": "2.20.0",
   "description": "Frontend for online shop business management system",
   "private": true,
   "type": "module",
