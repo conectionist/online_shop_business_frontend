@@ -39,12 +39,14 @@ import ReturnsPolicy from './pages/ReturnsPolicy'
 import ContactPage from './pages/ContactPage'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
+import OfflineBanner from './components/ui/OfflineBanner'
 import AuthInitializer from './components/AuthInitializer'
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
+      <OfflineBanner />
       <AuthInitializer>
       <Router>
         {/* Default SEO component for the entire app */}

@@ -46,8 +46,8 @@ COPY robots.txt /usr/share/nginx/html/robots.txt
 
 # sitemap.xml is generated at runtime by entrypoint
 
-# Copy web manifest for PWA support
-COPY site.webmanifest /usr/share/nginx/html/site.webmanifest
+# Copy web manifest for PWA support (from public assets)
+#COPY --from=builder /app/public/favicon/site.webmanifest /usr/share/nginx/html/site.webmanifest
 
 # Copy Google verification file for Search Console
 COPY google*.html /usr/share/nginx/html/

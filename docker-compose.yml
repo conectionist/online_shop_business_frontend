@@ -14,7 +14,14 @@ services:
     env_file:
       - .env
     volumes:
-      - ./assets/logo.jpg:/usr/share/nginx/html/assets/logo.jpg 
+      - ./assets/logo.jpg:/usr/share/nginx/html/assets/logo.jpg
+      - ./public/favicon/favicon.ico:/usr/share/nginx/html/favicon.ico
+      - ./public/favicon/favicon-96x96.png:/usr/share/nginx/html/favicon-96x96.png
+      - ./public/favicon/favicon.svg:/usr/share/nginx/html/favicon.svg
+      - ./public/favicon/apple-touch-icon.png:/usr/share/nginx/html/apple-touch-icon.png
+      - ./public/favicon/site.webmanifest:/usr/share/nginx/html/site.webmanifest
+      - ./public/favicon/web-app-manifest-192x192.png:/usr/share/nginx/html/web-app-manifest-192x192.png
+      - ./public/favicon/web-app-manifest-512x512.png:/usr/share/nginx/html/web-app-manifest-512x512.png
       - ./public/legal:/usr/share/nginx/html/legal:ro
     deploy:
       resources:
