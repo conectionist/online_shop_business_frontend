@@ -153,9 +153,6 @@ const OrderForm: React.FC = () => {
       }
     }
 
-    // Mark that this order was placed via the website (for business owners)
-    orderText += `Comandă plasată prin site.`;
-
     return orderText.trim();
   };
 
