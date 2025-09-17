@@ -15,6 +15,7 @@ import { components } from '@/utils/theme';
 import { PHONE_REGEX } from '@/utils/validation';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
+import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
 
 interface OrderFormData {
   nume: string;
@@ -113,48 +114,6 @@ const OrderForm: React.FC = () => {
     );
   }
 
-  const formatOrderText = (orderData: {
-    prenume: string;
-    nume: string;
-    phone_number?: string | null;
-    items: typeof items;
-    subtotal: number;
-    delivery_tax: number;
-    total: number;
-    deliveryType: any;
-    address?: string;
-    paymentMethod?: { id: number; name: string } | undefined;
-  }) => {
-    let orderText = `${orderData.prenume} ${orderData.nume}\n`;
-
-    if (orderData.phone_number) {
-      orderText += `Telefon: ${orderData.phone_number}\n`;
-    }
-
-    orderData.items.forEach((item) => {
-      orderText += `${item.quantity} x ${item.nume} (${item.quantity * item.pret} RON)\n`;
-    });
-
-    if (orderData.delivery_tax > 0) {
-      orderText += `Subtotal: ${orderData.subtotal} RON\n`;
-      orderText += `Taxă livrare: ${orderData.delivery_tax} RON\n`;
-    }
-    orderText += `Total: ${orderData.total} RON\n`;
-
-    if (orderData.paymentMethod) {
-      orderText += `Plata ${orderData.paymentMethod.name.toLowerCase()}.\n`;
-    }
-
-    if (orderData.deliveryType) {
-      if (orderData.address && requiresAddress(orderData.deliveryType)) {
-        orderText += `Livrare la adresa: ${orderData.address}\n`;
-      } else {
-        orderText += `${orderData.deliveryType.denumire}.\n`;
-      }
-    }
-
-    return orderText.trim();
-  };
 
   const submitOrderToServer = async (orderData: ReturnType<typeof buildOrderDataForSession>, source?: string) => {
     if (!publishedList) return;
@@ -223,7 +182,7 @@ const OrderForm: React.FC = () => {
     const orderData = buildOrderDataForSession(data);
 
     // Open WhatsApp immediately (within user gesture)
-    const whatsappText = encodeURIComponent(formatOrderText(orderData));
+    const whatsappText = encodeURIComponent(formatOrderTextUtil(orderData, { includeSeparator: true }));
     const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
     const whatsappWindow = window.open(whatsappUrl, '_blank');
     if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
