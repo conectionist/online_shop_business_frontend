@@ -2,10 +2,12 @@ import { OrderRead, DeliveryType, BusinessDetails } from '@/types/api';
 import { requiresAddress, getDeliveryTax } from './delivery';
 
 export interface OrderFormatterConfig {
-  getProductName: (productId: number) => string;
-  getPaymentMethodName: (paymentMethodId: number) => string;
+  getProductName?: (productId: number) => string;
+  getPaymentMethodName?: (paymentMethodId: number) => string;
   deliveryTypes?: DeliveryType[];
   businessDetails?: BusinessDetails | null;
+  includeSeparator?: boolean;
+  appendFooterText?: string;
 }
 
 export interface OrderConfirmationData {
@@ -46,13 +48,12 @@ export function formatOrderText(
   // Add items
   if (isOrderRead) {
     const orderRead = order as OrderRead;
-    if (config?.getProductName) {
-      orderRead.items?.forEach(item => {
-        const productName = config.getProductName(item.produse_id);
-        const lineTotal = item.cantitate_produs * item.pret_produs;
-        orderText += `${item.cantitate_produs} x ${productName} (${lineTotal} RON)\n`;
-      });
-    }
+    const getProductName = config?.getProductName;
+    orderRead.items?.forEach(item => {
+      const productName = getProductName ? getProductName(item.produse_id) : `Produs #${item.produse_id}`;
+      const lineTotal = item.cantitate_produs * item.pret_produs;
+      orderText += `${item.cantitate_produs} x ${productName} (${lineTotal} RON)\n`;
+    });
   } else {
     const orderConfirmation = order as OrderConfirmationData;
     orderConfirmation.items.forEach(item => {
@@ -82,6 +83,11 @@ export function formatOrderText(
     total = orderConfirmation.total;
   }
   
+  // Separate products from the rest of the details for admin and shared usages (configurable)
+  if (config?.includeSeparator !== false) {
+    orderText += `==============================\n`;
+  }
+
   if (deliveryTax > 0) {
     orderText += `Subtotal: ${subtotal} RON\n`;
     orderText += `Taxă livrare: ${deliveryTax} RON\n`;
@@ -91,8 +97,9 @@ export function formatOrderText(
   // Add payment method
   if (isOrderRead) {
     const orderRead = order as OrderRead;
-    if (config?.getPaymentMethodName) {
-      const paymentMethodName = config.getPaymentMethodName(orderRead.payment_method_id);
+    const getPaymentMethodName = config?.getPaymentMethodName;
+    if (getPaymentMethodName) {
+      const paymentMethodName = getPaymentMethodName(orderRead.payment_method_id);
       orderText += `Plata ${paymentMethodName.toLowerCase()}.\n`;
     }
   } else {
@@ -142,6 +149,11 @@ export function formatOrderText(
     
   if (notes) {
     orderText += `Observații: ${notes}\n`;
+  }
+
+  // Optional footer text (e.g., customer marker)
+  if (config?.appendFooterText) {
+    orderText += `${config.appendFooterText}`;
   }
 
   return orderText.trim();

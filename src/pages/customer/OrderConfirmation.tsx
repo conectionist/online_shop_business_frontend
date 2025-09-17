@@ -53,7 +53,12 @@ const OrderConfirmation: React.FC = () => {
 
   const formatOrderText = () => {
     if (!orderData) return '';
-    return formatOrderTextUtil(orderData);
+    return formatOrderTextUtil(orderData, {
+      // Disable admin-style separator for customer copy text
+      includeSeparator: false,
+      // Add website marker to match WhatsApp text
+      appendFooterText: 'Comandă plasată prin site.'
+    });
   };
 
   const copyToClipboard = async () => {
