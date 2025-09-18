@@ -35,6 +35,37 @@ const Footer: React.FC = () => {
   const salLink = getSALLink();
   const legalRoutes = getLegalPageRoutes();
 
+  const [installPrompt, setInstallPrompt] = React.useState<any>(null);
+  const [isStandalone, setIsStandalone] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    // Pick up early-captured BIP if available
+    if ((window as any).__DEFERRED_BIP__) {
+      setInstallPrompt((window as any).__DEFERRED_BIP__);
+    }
+    // Track display-mode to avoid showing link in standalone
+    const mq = window.matchMedia('(display-mode: standalone)');
+    const updateStandalone = () => setIsStandalone(mq.matches || (window.navigator as any).standalone === true);
+    updateStandalone();
+    mq.addEventListener?.('change', updateStandalone);
+    const onAvailable = () => setInstallPrompt((window as any).__DEFERRED_BIP__);
+    const onCleared = () => setInstallPrompt(null);
+    window.addEventListener('bip-available', onAvailable);
+    window.addEventListener('bip-cleared', onCleared);
+    return () => {
+      mq.removeEventListener?.('change', updateStandalone);
+      window.removeEventListener('bip-available', onAvailable);
+      window.removeEventListener('bip-cleared', onCleared);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    await installPrompt.userChoice;
+    setInstallPrompt(null);
+  };
+
   return (
     <footer className="bg-gray-900 text-gray-300 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -190,6 +221,14 @@ const Footer: React.FC = () => {
             <div className="text-sm text-gray-400 text-center">
               <p>&copy; {currentYear} {businessName}</p>
             </div>
+            {installPrompt && !isStandalone && (
+              <button
+                onClick={handleInstallClick}
+                className="mt-4 md:mt-0 md:ml-6 text-xs text-amber-300 hover:text-amber-200 underline"
+              >
+                Instalează aplicația
+              </button>
+            )}
             {('Notification' in window) && (
               <button
                 onClick={() => {
