@@ -8,7 +8,7 @@ export const emailSchema = z.string().email('Invalid email address');
 
 export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters');
 
-export const phoneSchema = z.string().regex(PHONE_REGEX, 'Numărul de telefon trebuie să conțină 7-20 cifre cu prefix opțional +');
+export const phoneSchema = z.string().trim().regex(PHONE_REGEX, 'Numărul de telefon trebuie să conțină 7-20 cifre cu prefix opțional +');
 
 export const priceSchema = z.number().positive('Price must be positive');
 
@@ -57,13 +57,13 @@ export type ListFormData = z.infer<typeof listSchema>;
 
 // Order validation schema
 export const orderSchema = z.object({
-  nume_client: z.string().min(1, 'Numele clientului este obligatoriu'),
+  nume_client: z.string().trim().min(1, 'Numele clientului este obligatoriu'),
   data_plasarii: z.string().min(1, 'Data plasării este obligatorie'),
   liste_id: z.number().min(1, 'Lista este obligatorie'),
   delivery_type_id: z.number().min(1, 'Tipul de livrare este obligatoriu'),
   payment_method_id: z.number().min(1, 'Metoda de plată este obligatorie'),
-  delivery_address: z.string().optional(),
-  order_notes: z.string().optional(),
+  delivery_address: z.string().trim().optional(),
+  order_notes: z.string().trim().optional(),
   phone_number: phoneSchema.optional().or(z.literal('')),
 });
 

@@ -155,7 +155,11 @@ const OrderForm: React.FC = () => {
 
     return {
       ...data,
+      nume: data.nume?.trim() || '',
+      prenume: data.prenume?.trim() || '',
       phone_number: data.phone_number?.trim() || null,
+      address: data.address?.trim() || undefined,
+      observatii: data.observatii?.trim() || undefined,
       items,
       subtotal,
       delivery_tax: deliveryTax,

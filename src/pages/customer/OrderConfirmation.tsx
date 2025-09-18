@@ -109,14 +109,14 @@ const OrderConfirmation: React.FC = () => {
 
     try {
       const orderCreateData: OrderCreate = {
-        nume_client: `${orderData.prenume} ${orderData.nume}`,
+        nume_client: `${orderData.prenume?.trim() || ''} ${orderData.nume?.trim() || ''}`.trim(),
         data_plasarii: new Date().toISOString(),
         liste_id: publishedList.id,
         delivery_type_id: orderData.delivery_type_id,
         payment_method_id: orderData.payment_method_id,
-        delivery_address: orderData.address || undefined,
-        order_notes: orderData.observatii || undefined,
-        phone_number: orderData.phone_number || undefined,
+        delivery_address: orderData.address?.trim() || undefined,
+        order_notes: orderData.observatii?.trim() || undefined,
+        phone_number: orderData.phone_number?.trim() || undefined,
         items: orderData.items.map(item => ({
           produse_id: item.id,
           pret_produs: item.pret,
