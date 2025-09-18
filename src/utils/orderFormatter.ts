@@ -85,7 +85,7 @@ export function formatOrderText(
   
   // Separate products from the rest of the details for admin and shared usages (configurable)
   if (config?.includeSeparator !== false) {
-    orderText += `=========================\n`;
+    orderText += `=======================\n`;
   }
 
   if (deliveryTax > 0) {
