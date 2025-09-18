@@ -13,6 +13,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
       devOptions: {
         enabled: process.env.NODE_ENV !== 'production',
       },
@@ -24,32 +30,7 @@ export default defineConfig({
         'offline.html'
       ],
       manifest: false,
-      workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        navigateFallback: '/index.html',
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            // Cache GET API requests (avoid auth endpoints)
-            urlPattern: ({ url, request }) => request.method === 'GET' && url.pathname.startsWith('/api/v1') && !url.pathname.includes('/auth/'),
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 10,
-              cacheableResponse: { statuses: [0, 200] },
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 }
-            }
-          },
-          {
-            urlPattern: ({ request }) => request.destination === 'image',
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'images-cache',
-              expiration: { maxEntries: 60, maxAgeSeconds: 7 * 24 * 60 * 60 }
-            }
-          }
-        ]
-      }
+      // runtime caching moved into custom sw via injectManifest
     })
   ],
   resolve: {

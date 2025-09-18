@@ -9,6 +9,8 @@ import ScrollToTop from './components/ScrollToTop'
 import WelcomePage from './pages/WelcomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/admin/Dashboard'
+import AdvancedOperations from './pages/admin/AdvancedOperations'
+import PushNotifications from './pages/admin/PushNotifications'
 import CategoriesList from './pages/admin/CategoriesList'
 import CategoryForm from './pages/admin/CategoryForm'
 import ProductsList from './pages/admin/ProductsList'
@@ -40,6 +42,7 @@ import ContactPage from './pages/ContactPage'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 import OfflineBanner from './components/ui/OfflineBanner'
+import PushNotificationBanner from './components/ui/PushNotificationBanner'
 import AuthInitializer from './components/AuthInitializer'
 
 function App() {
@@ -47,6 +50,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
       <OfflineBanner />
+      <PushNotificationBanner />
       <AuthInitializer>
       <Router>
         {/* Default SEO component for the entire app */}
@@ -79,6 +83,8 @@ function App() {
           }>
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="advanced" element={<AdvancedOperations />} />
+            <Route path="advanced/push" element={<PushNotifications />} />
             <Route path="categories" element={<CategoriesList />} />
             <Route path="categories/new" element={<CategoryForm />} />
             <Route path="categories/:id/edit" element={<CategoryForm />} />

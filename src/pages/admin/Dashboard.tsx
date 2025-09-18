@@ -135,18 +135,19 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </Link>
 
-          <Card className="opacity-60 cursor-not-allowed">
-            <div className="p-6">
-              <div className="flex items-center space-x-3">
-                <Wrench className="h-8 w-8 text-red-600" />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Operațiuni</h3>
-                  <p className="text-gray-600 text-sm">Operațiuni avansate ale sistemului</p>
-                  <p className="text-xs text-gray-500 mt-1">În curând</p>
+          <Link to="/admin/advanced" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <Wrench className="h-8 w-8 text-red-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Operațiuni avansate</h3>
+                    <p className="text-gray-600 text-sm">Operațiuni avansate ale sistemului</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
         </div>
       </div>
     </div>

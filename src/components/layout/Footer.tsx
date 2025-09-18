@@ -190,6 +190,17 @@ const Footer: React.FC = () => {
             <div className="text-sm text-gray-400 text-center">
               <p>&copy; {currentYear} {businessName}</p>
             </div>
+            {('Notification' in window) && (
+              <button
+                onClick={() => {
+                  const event = new CustomEvent('show-push-banner');
+                  window.dispatchEvent(event);
+                }}
+                className="mt-4 md:mt-0 md:ml-6 text-xs text-amber-300 hover:text-amber-200 underline"
+              >
+                Activează notificările
+              </button>
+            )}
           </div>
         </div>
       </div>
