@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit, Info } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { useDeleteOrder, useUpdateOrder } from '@/hooks/useOrders';
-import { useProducts } from '@/hooks/useProducts';
+import { useListProductsOrdered } from '@/hooks/useLists';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
@@ -42,7 +42,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const { data: orders, isLoading, error } = useOrders(
     mergeSimilar ? { liste_id: listId, merge_similar: true } : { liste_id: listId }
   );
-  const { data: products } = useProducts(); // For product names
+  const { data: listProductsData } = useListProductsOrdered(listId); // List-scoped products
   const { data: deliveryTypes } = useDeliveryTypes(); // For delivery method names
   const { data: paymentMethods } = usePaymentMethods(); // For payment method names
   const { data: businessDetails } = useBusinessDetailsSingle(); // For delivery tax calculation
@@ -72,15 +72,26 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     });
   }, [orders, deliveryTypes]);
 
+  // Flatten list products for easy access
+  const listProducts = React.useMemo(() => {
+    if (!listProductsData?.categories) return [] as Array<{ id: number; nume: string; pret: number; unitati_id: number; category_id?: number }>;
+    return listProductsData.categories.flatMap((category: any) =>
+      (category.products || []).map((product: { id: number; nume: string; pret: number; unitati_id: number }) => ({
+        ...product,
+        category_id: category.id,
+      }))
+    );
+  }, [listProductsData]);
+
   // Calculate total quantities for each product across all orders
   const orderTotals = React.useMemo(() => {
-    if (!orders || !products) return {};
+    if (!orders || !listProducts) return {};
     
     const totals: { [productId: number]: { name: string; quantity: number } } = {};
     
     orders.forEach(order => {
       order.items?.forEach(item => {
-        const product = products.find(p => p.id === item.produse_id);
+        const product = listProducts.find((p: { id: number; nume: string }) => p.id === item.produse_id);
         if (product) {
           if (!totals[item.produse_id]) {
             totals[item.produse_id] = {
@@ -94,7 +105,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     });
     
     return totals;
-  }, [orders, products]);
+  }, [orders, listProducts]);
 
   const handleViewOrder = (order: OrderRead) => {
     setSelectedOrder(order);
@@ -149,7 +160,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   };
 
   const getProductName = (productId: number) => {
-    const product = products?.find(p => p.id === productId);
+    const product = listProducts?.find((p: { id: number; nume: string }) => p.id === productId);
     return product?.nume || `Produs #${productId}`;
   };
 
@@ -717,7 +728,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             order={orderToEdit}
             deliveryTypes={deliveryTypes || []}
             paymentMethods={paymentMethods || []}
-            products={products || []}
+            products={listProducts || []}
             businessDetails={businessDetails}
             onSave={async (updatedData) => {
               try {
