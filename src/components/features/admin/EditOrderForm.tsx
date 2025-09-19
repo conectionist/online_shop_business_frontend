@@ -483,6 +483,19 @@ interface AddProductModalProps {
 const AddProductModal: React.FC<AddProductModalProps> = ({ products, onAdd, onCancel }) => {
   const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
+  const [query, setQuery] = useState<string>('');
+
+  const normalizeString = (value: string) =>
+    (value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  const normalizedQuery = normalizeString(query.trim());
+  const filteredProducts = (normalizedQuery
+    ? products.filter(p => normalizeString(p.nume || '').includes(normalizedQuery))
+    : products
+  ).slice().sort((a, b) => normalizeString(a.nume || '').localeCompare(normalizeString(b.nume || '')));
 
   const selectedProduct = products.find(p => p.id.toString() === selectedProductId);
 
@@ -493,36 +506,79 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ products, onAdd, onCa
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] isolation-isolate">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div className="bg-white rounded-lg p-6 w-full max-w-xs sm:max-w-sm mx-4">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Adaugă Produs</h3>
         
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Selectează Produs
-            </label>
-            <Select
-              value={selectedProductId}
-              onChange={setSelectedProductId}
-              options={products.map(product => ({
-                value: product.id.toString(),
-                label: `${product.nume} - ${product.pret} RON`
-              }))}
-              placeholder="Alege un produs..."
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cantitate
+              Caută produs
             </label>
             <Input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-              placeholder="Cantitatea"
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tastează pentru a filtra după nume"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Alege din listă
+            </label>
+            <div className="border border-gray-300 rounded-md max-h-64 overflow-auto divide-y divide-gray-100">
+              {filteredProducts.length === 0 ? (
+                <div className="p-3 text-sm text-gray-500 text-center">Niciun produs găsit</div>
+              ) : (
+                filteredProducts.map(product => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => setSelectedProductId(product.id.toString())}
+                    className={`w-full text-left p-3 hover:bg-blue-50 transition-colors ${
+                      selectedProductId === product.id.toString() ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-900">{product.nume}</span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <span className="text-sm font-medium text-gray-700 select-none">Cantitate</span>
+            <div className="flex items-center space-x-2">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="p-0 h-9 w-9"
+                onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                aria-label="Scade cantitatea"
+              >
+                <Minus className="h-5 w-5" />
+              </Button>
+              <Input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-14 text-center"
+              />
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="p-0 h-9 w-9"
+                onClick={() => setQuantity(prev => prev + 1)}
+                aria-label="Crește cantitatea"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
         
