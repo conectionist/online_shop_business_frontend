@@ -35,6 +35,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
 
   // Local UI state
   const [mergeSimilar, setMergeSimilar] = useState(false);
+  const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
   const [showMergeInfo, setShowMergeInfo] = useState(false);
   const mergeInfoRef = useRef<HTMLDivElement | null>(null);
 
@@ -197,8 +199,22 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const handlePrintList = () => {
     closeDropdown();
     
+    // Determine which orders to include based on multiselect
+    const ordersForActions = multiSelectEnabled && selectedOrderIds.size > 0
+      ? sortedOrders.filter(o => selectedOrderIds.has(o.id))
+      : sortedOrders;
+
+    if (multiSelectEnabled && selectedOrderIds.size === 0) {
+      showToast({
+        type: 'warning',
+        title: 'Selectați comenzi',
+        message: 'Nu ați selectat nicio comandă pentru tipărire.'
+      });
+      return;
+    }
+
     // Group orders by delivery type ID
-    const ordersByDeliveryTypeId = sortedOrders.reduce((groups, order) => {
+    const ordersByDeliveryTypeId = ordersForActions.reduce((groups, order) => {
       const key = order.delivery_type_id;
       if (!groups[key]) {
         groups[key] = [] as typeof sortedOrders;
@@ -236,7 +252,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             <h1>Lista Comenzi ${new Date().toLocaleDateString('ro-RO')}</h1>
           </div>
           
-          ${sortedOrders && sortedOrders.length > 0 ? 
+          ${ordersForActions && ordersForActions.length > 0 ? 
             sortedDeliveryTypes
               .filter(dt => ordersByDeliveryTypeId[dt.id] && ordersByDeliveryTypeId[dt.id].length > 0)
               .map((dt, groupIndex) => `
@@ -279,10 +295,24 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     closeDropdown();
     
     try {
+      // Determine which orders to include based on multiselect
+      const ordersForActions = multiSelectEnabled && selectedOrderIds.size > 0
+        ? sortedOrders.filter(o => selectedOrderIds.has(o.id))
+        : sortedOrders;
+
+      if (multiSelectEnabled && selectedOrderIds.size === 0) {
+        showToast({
+          type: 'warning',
+          title: 'Selectați comenzi',
+          message: 'Nu ați selectat nicio comandă pentru export PDF.'
+        });
+        return;
+      }
+
       // Create PDF document using react-pdf/renderer
       const pdfDoc = (
         <OrdersPDF
-          orders={sortedOrders || []}
+          orders={ordersForActions || []}
           deliveryTypes={deliveryTypes || []}
           getProductName={getProductName}
           getPaymentMethodName={getPaymentMethodName}
@@ -436,7 +466,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         </div>
       </div>
 
-      {/* Merge similar toggle positioned below header */}
+      {/* Toggles positioned below header */}
       <div className="flex items-center space-x-2 -mt-2 mb-2" ref={mergeInfoRef}>
         <input
           id="merge-similar-toggle"
@@ -465,6 +495,26 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             </div>
           </div>
         )}
+
+      </div>
+
+      {/* Multiselect toggle placed under the merge toggle */}
+      <div className="mb-2">
+        <div className="flex items-center justify-start space-x-2">
+          <input
+            id="multi-select-toggle"
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            checked={multiSelectEnabled}
+            onChange={(e) => {
+              setMultiSelectEnabled(e.target.checked);
+              setSelectedOrderIds(new Set());
+            }}
+          />
+          <label htmlFor="multi-select-toggle" className="text-sm text-gray-800 select-none cursor-pointer">
+            selectare multipla
+          </label>
+        </div>
       </div>
 
       {/* Orders List */}
@@ -501,6 +551,30 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 {ordersByDeliveryTypeId[dt.id].map((order) => (
                   <Card key={order.id} className="p-6">
                     <div className="space-y-4">
+                      {/* Checkbox when multiselect enabled */}
+                      {multiSelectEnabled && (
+                        <div className="-mt-2">
+                          <label className="inline-flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              checked={selectedOrderIds.has(order.id)}
+                              onChange={(e) => {
+                                setSelectedOrderIds(prev => {
+                                  const next = new Set(prev);
+                                  if (e.target.checked) {
+                                    next.add(order.id);
+                                  } else {
+                                    next.delete(order.id);
+                                  }
+                                  return next;
+                                });
+                              }}
+                            />
+                            <span className="text-sm text-gray-700">Selectează această comandă</span>
+                          </label>
+                        </div>
+                      )}
                       {/* Order Display - Similar to OrderConfirmation */}
                       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
