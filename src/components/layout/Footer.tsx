@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, Mail, Phone, MapPin, Building, Shield, FileText, Cookie, RotateCcw, Clock } from 'lucide-react';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
@@ -16,10 +16,14 @@ import {
   getSALLink,
   getLegalPageRoutes
 } from '@/utils/businessInfo';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import Modal from '@/components/ui/Modal';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { data: businessDetails } = useBusinessDetailsSingle();
+  const { isIOS, isStandalone, isInstallAvailable, promptInstall } = usePWAInstall();
+  const [iosHelpOpen, setIosHelpOpen] = useState(false);
   
   // Get business information using utility functions
   const businessName = getBusinessName(businessDetails || undefined);
@@ -34,6 +38,14 @@ const Footer: React.FC = () => {
   const solLink = getSOLLink();
   const salLink = getSALLink();
   const legalRoutes = getLegalPageRoutes();
+
+  const handleInstallClick = async () => {
+    if (isIOS) {
+      setIosHelpOpen(true);
+      return;
+    }
+    await promptInstall();
+  };
 
   return (
     <footer className="bg-gray-900 text-gray-300 mt-16">
@@ -189,10 +201,31 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400 text-center">
               <p>&copy; {currentYear} {businessName}</p>
+              {!isStandalone && isInstallAvailable && (
+                <button
+                  onClick={handleInstallClick}
+                  className="mt-2 text-xs underline text-amber-400 hover:text-amber-300"
+                >
+                  Instalează aplicația
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* iOS instructions modal */}
+      <Modal isOpen={iosHelpOpen} onClose={() => setIosHelpOpen(false)} title="Instalare pe iPhone / iPad">
+        <div className="space-y-3 text-sm text-gray-800">
+          <p>Pentru a instala această aplicație pe iOS:</p>
+          <ol className="list-decimal ml-5 space-y-2">
+            <li>Deschide în Safari (nu în alt browser).</li>
+            <li>Atinge butonul Share (pătratul cu săgeată în sus).</li>
+            <li>Selectează „Add to Home Screen” / „Adăugați pe ecranul de pornire”.</li>
+            <li>Confirmă numele aplicației și apasă „Add”.</li>
+          </ol>
+        </div>
+      </Modal>
     </footer>
   );
 };
