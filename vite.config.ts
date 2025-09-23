@@ -13,20 +13,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      filename: 'sw.js',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'favicon.svg'],
-      manifest: {
-        name: 'Paine cu Maia de la Andreea',
-        short_name: 'PCMA',
-        start_url: '/',
-        scope: '/',
-        display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#ffffff',
-        icons: [
-          { src: '/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-          { src: '/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
-        ]
-      },
+      manifest: false,
       workbox: {
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // allow up to 6MB chunks
         navigateFallback: '/index.html',
