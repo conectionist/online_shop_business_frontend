@@ -40,7 +40,6 @@ import ContactPage from './pages/ContactPage'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 import AuthInitializer from './components/AuthInitializer'
-import InstallPrompt from './components/InstallPrompt'
 
 function App() {
   return (
@@ -114,7 +113,6 @@ function App() {
         </Routes>
       </Router>
       </AuthInitializer>
-      <InstallPrompt />
       
       {/* React Query Devtools - only in development */}
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
