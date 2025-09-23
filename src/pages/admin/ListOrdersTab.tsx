@@ -551,11 +551,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 {ordersByDeliveryTypeId[dt.id].map((order) => (
                   <Card key={order.id} className="p-6">
                     <div className="space-y-4">
-                      {/* Checkbox when multiselect enabled */}
-                      {multiSelectEnabled && (
-                        <div className="-mt-2">
-                          <label className="inline-flex items-center space-x-2">
+                      {/* Order row with optional checkbox on the left */}
+                      <div className="flex items-center">
+                        {multiSelectEnabled && (
+                          <div className="mr-3 self-center">
                             <input
+                              aria-label="Selectează comanda"
                               type="checkbox"
                               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                               checked={selectedOrderIds.has(order.id)}
@@ -571,15 +572,15 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                                 });
                               }}
                             />
-                            <span className="text-sm text-gray-700">Selectează această comandă</span>
-                          </label>
+                          </div>
+                        )}
+
+                        {/* Order Display - Similar to OrderConfirmation */}
+                        <div className="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
+                            {formatOrderText(order)}
+                          </pre>
                         </div>
-                      )}
-                      {/* Order Display - Similar to OrderConfirmation */}
-                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
-                          {formatOrderText(order)}
-                        </pre>
                       </div>
                       
                       {/* Action Buttons */}
