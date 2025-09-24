@@ -23,7 +23,14 @@ export const useOrder = (id: number) => {
     queryKey: queryKeys.orders.detail(id),
     queryFn: () => orderService.getOrder(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    // Always treat as stale to ensure immediate refetch capability
+    staleTime: 0,
+    // Proactively refetch on app focus and reconnect to catch new orders
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    // Light polling to surface updates if the page stays open
+    refetchInterval: 15000, // 15s
+    refetchIntervalInBackground: true,
   });
 };
 
@@ -44,7 +51,14 @@ export const useOrders = (filters?: {
   return useQuery({
     queryKey: queryKeys.orders.list(filters),
     queryFn: () => orderService.listOrders(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    // Always treat as stale to force network where appropriate
+    staleTime: 0,
+    // Refetch aggressively to ensure the latest orders are shown
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    // Short polling for near-real-time updates while the tab is open
+    refetchInterval: 15000, // 15s
+    refetchIntervalInBackground: true,
   });
 };
 
