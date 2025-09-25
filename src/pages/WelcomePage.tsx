@@ -187,7 +187,7 @@ const WelcomePage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="text-center py-12">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto px-6 sm:px-6">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Se încarcă...</p>
         </div>
@@ -214,11 +214,10 @@ const WelcomePage: React.FC = () => {
   if (!publishedList) {
     return (
       <div className="text-center py-12">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto px-6 sm:px-6">
           <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            {businessDetails?.list_not_available_msg || 
-              'Lista de produse nu a fost publicată încă. Vă rugăm să reveniți mai târziu.'}
+          <h1 className="text-xl font-bold text-gray-900 mb-4 whitespace-pre-line">
+            {businessDetails?.list_not_available_msg || 'Lista de produse nu a fost publicată încă. Vă rugăm să reveniți mai târziu.'}
           </h1>
         </div>
       </div>

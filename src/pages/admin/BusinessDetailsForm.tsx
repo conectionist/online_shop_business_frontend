@@ -362,14 +362,17 @@ export default function BusinessDetailsForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Tooltip content="Mesaj afișat când nu există liste active">
+                  <Tooltip content="Mesaj afișat când nu există liste active. Acceptă macro-ul {urmatoarea_zi_de_livrari}">
                     Mesaj când lista nu este disponibilă
                   </Tooltip>
                 </label>
-                <Input
+                <textarea
                   value={formData.list_not_available_msg}
                   onChange={(e) => handleInputChange('list_not_available_msg', e.target.value)}
-                  placeholder="Ex: Lista va fi disponibilă mâine"
+                  placeholder="Ex: Lista va fi disponibilă din nou in curand"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  maxLength={1000}
                 />
               </div>
 
