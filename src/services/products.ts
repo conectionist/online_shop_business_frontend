@@ -7,7 +7,8 @@ export interface ProductFilters {
   search?: string;
   category_id?: number;
   limit?: number;
-  offset?: number;
+  // Backend expects 'skip' for pagination offset
+  skip?: number;
   include_deleted?: boolean;
 }
 
@@ -26,8 +27,8 @@ export const productService = {
     if (filters?.limit) {
       params.append('limit', filters.limit.toString());
     }
-    if (filters?.offset) {
-      params.append('offset', filters.offset.toString());
+    if (filters?.skip) {
+      params.append('skip', filters.skip.toString());
     }
     if (filters?.include_deleted) {
       params.append('include_deleted', 'true');

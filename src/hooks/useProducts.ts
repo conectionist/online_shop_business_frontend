@@ -5,9 +5,15 @@ import { queryKeys, invalidateQueries } from '@/lib/queryKeys';
 
 // Hook to fetch all products
 export const useProducts = (filters?: ProductFilters) => {
+  const effectiveFilters: ProductFilters = {
+    limit: 500,
+    skip: 0,
+    ...(filters || {}),
+  };
+
   return useQuery({
-    queryKey: queryKeys.products.list(filters || {}),
-    queryFn: () => productService.getProducts(filters),
+    queryKey: queryKeys.products.list(effectiveFilters),
+    queryFn: () => productService.getProducts(effectiveFilters),
   });
 };
 
