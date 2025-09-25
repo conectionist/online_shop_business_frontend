@@ -194,6 +194,8 @@ export interface BusinessDetails {
   logo_path?: string;
   motto?: string;
   list_not_available_msg?: string;
+  // Raw, unprocessed version returned by backend for admin editing
+  list_not_available_msg_raw?: string;
   alte_detalii?: string;
   delivery_tax?: number;
   business_name?: string;

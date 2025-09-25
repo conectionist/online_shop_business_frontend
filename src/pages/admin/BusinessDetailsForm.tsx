@@ -81,7 +81,7 @@ export default function BusinessDetailsForm() {
         adresa: existingDetails.adresa || '',
         telefon: existingDetails.telefon || '',
         motto: existingDetails.motto || '',
-        list_not_available_msg: existingDetails.list_not_available_msg || '',
+        list_not_available_msg: existingDetails.list_not_available_msg_raw ?? existingDetails.list_not_available_msg ?? '',
         alte_detalii: existingDetails.alte_detalii || '',
         delivery_tax: existingDetails.delivery_tax ?? undefined,
         business_name: existingDetails.business_name || '',
@@ -369,7 +369,7 @@ export default function BusinessDetailsForm() {
                 <textarea
                   value={formData.list_not_available_msg}
                   onChange={(e) => handleInputChange('list_not_available_msg', e.target.value)}
-                  placeholder="Ex: Lista va fi disponibilă din nou in curand"
+                  placeholder="Ex: Lista va fi disponibilă din nou pe {urmatoarea_zi_de_livrari}"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
                   maxLength={1000}
