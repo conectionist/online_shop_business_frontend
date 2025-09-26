@@ -89,6 +89,13 @@ export const queryKeys = {
     details: () => [...queryKeys.orders.all, 'detail'] as const,
     detail: (id: number) => [...queryKeys.orders.details(), id] as const,
   },
+
+  // System
+  system: {
+    all: ['system'] as const,
+    nextDeliveryDate: (referenceDate?: string) => 
+      [...queryKeys.system.all, 'next-delivery-date', referenceDate] as const,
+  },
 };
 
 // Helper function to invalidate related queries

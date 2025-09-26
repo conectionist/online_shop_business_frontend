@@ -370,4 +370,11 @@ export interface ApiSuccessResponse<T> {
 export interface ApiErrorResponse {
   detail: string;
   status?: number;
+}
+
+// Delivery Date Types
+export interface NextDeliveryDateResponse {
+  next_delivery_date: string;
+  formatted_date_ro: string;
+  reference_date: string;
 } 

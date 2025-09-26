@@ -8,6 +8,7 @@ import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
+import { useNextDeliveryDate } from '@/hooks/useSystem';
 import { ListCreate, ListUpdate } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -59,6 +60,9 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
 
+  // Get next delivery date for new lists
+  const { data: nextDeliveryDate } = useNextDeliveryDate();
+
   // Form mutations
   const createListMutation = useCreateList();
   const updateListMutation = useUpdateList();
@@ -86,7 +90,7 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
     setValue,
   } = useForm<ListFormData>({
     defaultValues: {
-      data: new Date().toISOString().split('T')[0], // Today's date
+      data: nextDeliveryDate?.next_delivery_date?.split('T')[0] || new Date().toISOString().split('T')[0], // Next delivery date or today's date as fallback
       is_current: false,
       is_published: false,
       mesaj_introducere: '',
@@ -110,7 +114,9 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
   // Set form data when list is loaded (for editing)
   useEffect(() => {
     if (list && isEditing) {
-      setValue('data', list.data);
+      // Use next delivery date for the date field, but keep original data for other fields
+      const dateToUse = nextDeliveryDate?.next_delivery_date?.split('T')[0] || list.data;
+      setValue('data', dateToUse);
       setValue('is_current', list.is_current);
       setValue('is_published', list.is_published);
       setValue('mesaj_introducere', list.mesaj_introducere || '');
@@ -124,7 +130,7 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
         setValue('expiration_date', null);
       }
     }
-  }, [list, isEditing, setValue]);
+  }, [list, isEditing, setValue, nextDeliveryDate]);
 
   // Set selected delivery types when list delivery types are loaded (for editing)
   useEffect(() => {
@@ -132,6 +138,13 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
       setSelectedDeliveryTypes(listDeliveryTypes.map(dt => dt.id));
     }
   }, [listDeliveryTypes, isEditing]);
+
+  // Update form with next delivery date when it becomes available (for new lists)
+  useEffect(() => {
+    if (nextDeliveryDate && !isEditing) {
+      setValue('data', nextDeliveryDate.next_delivery_date.split('T')[0]);
+    }
+  }, [nextDeliveryDate, isEditing, setValue]);
 
   const onSubmit = async (data: ListFormData) => {
     try {

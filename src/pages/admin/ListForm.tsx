@@ -7,6 +7,7 @@ import { useCreateList, useUpdateList, useListDeliveryTypes, useReplaceListDeliv
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
+import { useNextDeliveryDate } from '@/hooks/useSystem';
 import { ListCreate, ListUpdate } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -48,6 +49,9 @@ const ListForm: React.FC = () => {
   // Fetch list-specific delivery types if editing
   const { data: listDeliveryTypes } = useListDeliveryTypes(listId);
 
+  // Get next delivery date for new lists
+  const { data: nextDeliveryDate } = useNextDeliveryDate();
+
   // Form mutations
   const createListMutation = useCreateList();
   const updateListMutation = useUpdateList();
@@ -62,7 +66,7 @@ const ListForm: React.FC = () => {
     setValue,
   } = useForm<ListFormData>({
     defaultValues: {
-      data: new Date().toISOString().split('T')[0], // Today's date
+      data: nextDeliveryDate?.next_delivery_date?.split('T')[0] || new Date().toISOString().split('T')[0], // Next delivery date or today's date as fallback
       is_current: false,
       is_published: false,
       mesaj_introducere: '',
@@ -86,7 +90,9 @@ const ListForm: React.FC = () => {
   // Set form data when list is loaded (for editing)
   useEffect(() => {
     if (list && isEditing) {
-      setValue('data', list.data);
+      // Use next delivery date for the date field, but keep original data for other fields
+      const dateToUse = nextDeliveryDate?.next_delivery_date?.split('T')[0] || list.data;
+      setValue('data', dateToUse);
       setValue('is_current', list.is_current);
       setValue('is_published', list.is_published);
       setValue('mesaj_introducere', list.mesaj_introducere || '');
@@ -100,7 +106,14 @@ const ListForm: React.FC = () => {
         setValue('expiration_date', null);
       }
     }
-  }, [list, isEditing, setValue]);
+  }, [list, isEditing, setValue, nextDeliveryDate]);
+
+  // Update form with next delivery date when it becomes available (for new lists)
+  useEffect(() => {
+    if (nextDeliveryDate && !isEditing) {
+      setValue('data', nextDeliveryDate.next_delivery_date.split('T')[0]);
+    }
+  }, [nextDeliveryDate, isEditing, setValue]);
 
   // Set selected delivery types when list delivery types are loaded (for editing)
   useEffect(() => {
