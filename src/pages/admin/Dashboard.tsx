@@ -1,14 +1,17 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart } from 'lucide-react';
+import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart, Copy } from 'lucide-react';
 import Card from '@/components/ui/Card';
-import { useLists } from '@/hooks/useLists';
+import { useLists, useCloneList } from '@/hooks/useLists';
+import { useToast } from '@/components/ui/ToastContainer';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   
   // Get all lists to find the latest one
   const { data: lists } = useLists();
+  const cloneListMutation = useCloneList();
+  const { showToast } = useToast();
   
   const handleRecentOrdersClick = () => {
     if (lists && lists.length > 0) {
@@ -18,6 +21,39 @@ const AdminDashboard: React.FC = () => {
       );
       const latestList = sortedLists[0];
       navigate(`/admin/lists/${latestList.id}/manage?tab=orders`);
+    }
+  };
+
+  const handleCloneLatestList = async () => {
+    if (lists && lists.length > 0) {
+      // Sort by created_at in descending order to get the newest list
+      const sortedLists = [...lists].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      const latestList = sortedLists[0];
+      
+      try {
+        const clonedList = await cloneListMutation.mutateAsync(latestList.id);
+        
+        // Show success message
+        showToast({
+          type: 'success',
+          title: 'Listă clonată cu succes!',
+          message: `Lista "${latestList.mesaj_introducere || 'fără titlu'}" a fost clonată. Noua listă are ID-ul ${clonedList.id}.`
+        });
+        
+        // Navigate to the newly cloned list
+        navigate(`/admin/lists/${clonedList.id}/manage`);
+      } catch (error) {
+        console.error('Failed to clone list:', error);
+        
+        // Show error message
+        showToast({
+          type: 'error',
+          title: 'Eroare la clonarea listei',
+          message: 'Nu s-a putut clona lista. Vă rugăm să încercați din nou.'
+        });
+      }
     }
   };
 
@@ -45,6 +81,23 @@ const AdminDashboard: React.FC = () => {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Comenzi recente</h3>
                     <p className="text-gray-600 text-sm">Vezi comenzile recente</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handleCloneLatestList}
+          >
+            <Card>
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <Copy className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Clonează lista</h3>
+                    <p className="text-gray-600 text-sm">Clonează cea mai recentă listă</p>
                   </div>
                 </div>
               </div>
