@@ -122,12 +122,19 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
       setValue('mesaj_introducere', list.mesaj_introducere || '');
       setValue('alte_detalii', list.alte_detalii || '');
       setValue('orare_livrari_id', list.orare_livrari_id);
-      const exp = (list as any).expiration_date as string | null | undefined;
-      if (exp) {
-        const d = new Date(exp);
-        setValue('expiration_date', formatForDateTimeLocal(d));
+      
+      // Set expiration date to next delivery date at 19:00, or use original if no next delivery date
+      if (nextDeliveryDate) {
+        const expirationDateTime = `${nextDeliveryDate.next_delivery_date.split('T')[0]}T19:00`;
+        setValue('expiration_date', expirationDateTime);
       } else {
-        setValue('expiration_date', null);
+        const exp = (list as any).expiration_date as string | null | undefined;
+        if (exp) {
+          const d = new Date(exp);
+          setValue('expiration_date', formatForDateTimeLocal(d));
+        } else {
+          setValue('expiration_date', null);
+        }
       }
     }
   }, [list, isEditing, setValue, nextDeliveryDate]);
@@ -143,6 +150,9 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
   useEffect(() => {
     if (nextDeliveryDate && !isEditing) {
       setValue('data', nextDeliveryDate.next_delivery_date.split('T')[0]);
+      // Set expiration date to same date but at 19:00
+      const expirationDateTime = `${nextDeliveryDate.next_delivery_date.split('T')[0]}T19:00`;
+      setValue('expiration_date', expirationDateTime);
     }
   }, [nextDeliveryDate, isEditing, setValue]);
 
