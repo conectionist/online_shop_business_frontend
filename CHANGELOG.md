@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## 2.23.0 - 2025-09-26
+- Lists: Added optional expiration datetime support
+  - Admin can set `Data Expirării` with date+time (no timezone shift)
+  - Client-side validation ensures expiration is after list date
+  - Welcome page now hides expired published lists at the exact expiration moment
+
 ## 2.22.1 - 2025-09-19
 - Admin Orders: Add-product modal now shows only products from the current list
 

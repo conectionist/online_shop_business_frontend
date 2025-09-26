@@ -22,6 +22,7 @@ interface ListFormData {
   mesaj_introducere: string;
   alte_detalii: string;
   orare_livrari_id: number;
+  expiration_date?: string | null;
 }
 
 const ListForm: React.FC = () => {
@@ -67,8 +68,20 @@ const ListForm: React.FC = () => {
       mesaj_introducere: '',
       alte_detalii: '',
       orare_livrari_id: 0,
+      expiration_date: null,
     },
   });
+
+  // Helper to format a Date to 'YYYY-MM-DDTHH:MM' for datetime-local inputs
+  const formatForDateTimeLocal = (date: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const yyyy = date.getFullYear();
+    const mm = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const min = pad(date.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  };
 
   // Set form data when list is loaded (for editing)
   useEffect(() => {
@@ -79,6 +92,13 @@ const ListForm: React.FC = () => {
       setValue('mesaj_introducere', list.mesaj_introducere || '');
       setValue('alte_detalii', list.alte_detalii || '');
       setValue('orare_livrari_id', list.orare_livrari_id);
+      const exp = (list as any).expiration_date as string | null | undefined;
+      if (exp) {
+        const d = new Date(exp);
+        setValue('expiration_date', formatForDateTimeLocal(d));
+      } else {
+        setValue('expiration_date', null);
+      }
     }
   }, [list, isEditing, setValue]);
 
@@ -91,11 +111,15 @@ const ListForm: React.FC = () => {
 
   const onSubmit = async (data: ListFormData) => {
     try {
+      // Keep expiration as local datetime string; backend will interpret appropriately
+      const normalizedExpiration = data.expiration_date || null;
+
       if (isEditing) {
         const updateData: ListUpdate = {
           data: data.data,
           is_current: data.is_current,
           is_published: data.is_published,
+          expiration_date: normalizedExpiration,
           mesaj_introducere: data.mesaj_introducere || undefined,
           alte_detalii: data.alte_detalii || undefined,
           orare_livrari_id: data.orare_livrari_id,
@@ -115,6 +139,7 @@ const ListForm: React.FC = () => {
           data: data.data,
           is_current: data.is_current,
           is_published: data.is_published,
+          expiration_date: normalizedExpiration,
           mesaj_introducere: data.mesaj_introducere || undefined,
           alte_detalii: data.alte_detalii || undefined,
           orare_livrari_id: data.orare_livrari_id,
@@ -232,7 +257,34 @@ const ListForm: React.FC = () => {
               />
             </div>
 
-            {/* Delivery Schedule */}
+            {/* Expiration Date (optional) */}
+            <div>
+              <label htmlFor="expiration_date" className="block text-sm font-medium text-gray-700 mb-2">
+                Data Expirării (opțional)
+              </label>
+              <Input
+                id="expiration_date"
+                type="datetime-local"
+                {...register('expiration_date', {
+                  validate: (value) => {
+                    if (!value) return true;
+                    const exp = new Date(value);
+                    const listDate = new Date(watch('data'));
+                    // compare with list date at 00:00 to allow same-day times after midnight
+                    listDate.setHours(0,0,0,0);
+                    return exp.getTime() > listDate.getTime() || 'Data expirării trebuie să fie după data listei';
+                  }
+                })}
+                error={errors.expiration_date?.message as string}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                După această dată, lista este considerată expirată și nu va fi afișată clienților.
+              </p>
+            </div>
+          </div>
+
+          {/* Delivery Schedule */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="orare_livrari_id" className="block text-sm font-medium text-gray-700 mb-2">
                 Orar Livrări *

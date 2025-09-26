@@ -39,6 +39,20 @@ export const listService = {
       const response = await apiClient.get('/liste');
       const lists = response.data;
       const publishedList = lists.find((list: List) => list.is_published && !list.is_deleted);
+
+      // If there's a published list, ensure it is not expired
+      if (publishedList) {
+        const { expiration_date } = publishedList as { expiration_date?: string | null };
+        if (expiration_date) {
+          // With datetime support, treat expiration as an exact moment
+          const now = new Date();
+          const expiresAt = new Date(expiration_date);
+          if (expiresAt.getTime() <= now.getTime()) {
+            return null;
+          }
+        }
+      }
+
       return publishedList || null;
     } catch (error) {
       console.error('Error fetching published list:', error);

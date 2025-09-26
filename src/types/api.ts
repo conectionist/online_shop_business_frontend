@@ -92,6 +92,7 @@ export interface List {
   data: string;
   is_current: boolean;
   is_published: boolean;
+  expiration_date?: string | null;
   mesaj_introducere?: string;
   alte_detalii?: string;
   numar_whatsapp?: string;
@@ -106,6 +107,7 @@ export interface ListCreate {
   is_current: boolean;
   orare_livrari_id: number;
   is_published?: boolean;
+  expiration_date?: string | null;
   mesaj_introducere?: string;
   alte_detalii?: string;
   numar_whatsapp?: string;
@@ -115,6 +117,7 @@ export interface ListUpdate {
   data?: string;
   is_current?: boolean;
   is_published?: boolean;
+  expiration_date?: string | null;
   mesaj_introducere?: string;
   alte_detalii?: string;
   numar_whatsapp?: string;
