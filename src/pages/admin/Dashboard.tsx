@@ -1,9 +1,26 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart } from 'lucide-react';
 import Card from '@/components/ui/Card';
+import { useLists } from '@/hooks/useLists';
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  
+  // Get all lists to find the latest one
+  const { data: lists } = useLists();
+  
+  const handleRecentOrdersClick = () => {
+    if (lists && lists.length > 0) {
+      // Sort by created_at in descending order to get the newest list
+      const sortedLists = [...lists].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      const latestList = sortedLists[0];
+      navigate(`/admin/lists/${latestList.id}/manage?tab=orders`);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -11,6 +28,29 @@ const AdminDashboard: React.FC = () => {
         <p className="mt-1 text-sm text-gray-500">
           Gestionează-ți afacerea online de aici.
         </p>
+      </div>
+
+      {/* Shortcuts Section */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Scurtături</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handleRecentOrdersClick}
+          >
+            <Card>
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <ShoppingCart className="h-8 w-8 text-red-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Comenzi recente</h3>
+                    <p className="text-gray-600 text-sm">Vezi comenzile recente</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Catalog Section */}
