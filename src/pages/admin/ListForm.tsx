@@ -90,20 +90,18 @@ const ListForm: React.FC = () => {
   // Set form data when list is loaded (for editing)
   useEffect(() => {
     if (list && isEditing) {
-      // Use next delivery date for the date field, but keep original data for other fields
-      const dateToUse = nextDeliveryDate?.next_delivery_date?.split('T')[0] || list.data;
-      setValue('data', dateToUse);
-      setValue('is_current', list.is_current);
-      setValue('is_published', list.is_published);
-      setValue('mesaj_introducere', list.mesaj_introducere || '');
-      setValue('alte_detalii', list.alte_detalii || '');
-      setValue('orare_livrari_id', list.orare_livrari_id);
+      // Check if this is a recently cloned list (created within last 5 minutes)
+      const isRecentlyCreated = new Date().getTime() - new Date(list.created_at).getTime() < 5 * 60 * 1000;
+      const isClonedList = isRecentlyCreated && nextDeliveryDate && list.data === nextDeliveryDate.next_delivery_date.split('T')[0];
       
-      // Set expiration date to next delivery date at 19:00, or use original if no next delivery date
-      if (nextDeliveryDate) {
+      if (isClonedList) {
+        // This is a cloned list - use next delivery date presets
+        setValue('data', nextDeliveryDate.next_delivery_date.split('T')[0]);
         const expirationDateTime = `${nextDeliveryDate.next_delivery_date.split('T')[0]}T19:00`;
         setValue('expiration_date', expirationDateTime);
       } else {
+        // This is an existing list being edited - preserve original data
+        setValue('data', list.data);
         const exp = (list as any).expiration_date as string | null | undefined;
         if (exp) {
           const d = new Date(exp);
@@ -112,6 +110,12 @@ const ListForm: React.FC = () => {
           setValue('expiration_date', null);
         }
       }
+      
+      setValue('is_current', list.is_current);
+      setValue('is_published', list.is_published);
+      setValue('mesaj_introducere', list.mesaj_introducere || '');
+      setValue('alte_detalii', list.alte_detalii || '');
+      setValue('orare_livrari_id', list.orare_livrari_id);
     }
   }, [list, isEditing, setValue, nextDeliveryDate]);
 
