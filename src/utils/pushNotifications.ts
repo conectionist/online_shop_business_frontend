@@ -6,6 +6,14 @@
  * This is iOS-safe as it only does detection, no actual push operations
  */
 export function isPushSupported(): boolean {
+  // iOS Safari special case: uses Apple's push service, not standard PushManager
+  if (isSafari() && isIOS()) {
+    // On iOS Safari, we need service worker and standalone mode
+    // iOS Safari doesn't use standard PushManager API
+    return 'serviceWorker' in navigator && isStandalone();
+  }
+  
+  // For other browsers, check for standard web push API support
   return (
     'serviceWorker' in navigator &&
     'PushManager' in window &&
@@ -129,12 +137,15 @@ export function isPushFullySupported(): boolean {
  */
 export function getPushSupportMessage(): string {
   if (!isPushSupported()) {
+    if (isIOS() && !isSafari()) {
+      return 'Push notifications are not supported in Chrome/Firefox on iOS. Use Safari for push notifications on iOS.';
+    }
     return 'Push notifications are not supported in this browser.';
   }
 
   if (isSafari() && isIOS()) {
     if (!isStandalone()) {
-      return 'Push notifications on iOS require adding this app to your home screen.';
+      return 'Push notifications on iOS Safari require adding this app to your home screen.';
     }
     return 'Push notifications are supported on this device.';
   }
