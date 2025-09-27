@@ -10,9 +10,9 @@ const PushNotificationBanner: React.FC = () => {
     const handler = () => {
       if (isSupported && permission === 'default') {
         setVisible(true);
-      } else if (permission === 'granted') {
-        // Already granted, attempt subscribe directly for convenience
-        subscribe();
+      } else {
+        // Do not auto-subscribe on load; avoid iOS/Safari issues and require explicit user action
+        setVisible(false);
       }
     };
     window.addEventListener('show-push-banner', handler as EventListener);
@@ -22,6 +22,7 @@ const PushNotificationBanner: React.FC = () => {
   if (!visible) return null;
 
   const onEnable = async () => {
+    if (!isSupported) return;
     const ok = await subscribe();
     if (ok) setVisible(false);
   };

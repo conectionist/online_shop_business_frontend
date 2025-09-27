@@ -13,9 +13,17 @@ export const usePushNotifications = () => {
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (permission === 'granted') return true;
     if (permission === 'denied') return false;
-    const newPermission = await Notification.requestPermission();
-    setPermission(newPermission);
-    return newPermission === 'granted';
+    try {
+      if (!('Notification' in window) || typeof Notification.requestPermission !== 'function') {
+        return false;
+      }
+      const newPermission = await Notification.requestPermission();
+      setPermission(newPermission);
+      return newPermission === 'granted';
+    } catch (err) {
+      console.error('Notification permission request failed:', err);
+      return false;
+    }
   }, [permission]);
 
   const subscribe = useCallback(async (): Promise<boolean> => {
@@ -25,8 +33,11 @@ export const usePushNotifications = () => {
       if (!hasPermission) throw new Error('Permission denied');
 
       const registration = await navigator.serviceWorker.ready;
+      if (!registration.pushManager || typeof registration.pushManager.subscribe !== 'function') {
+        throw new Error('PushManager not available in this browser');
+      }
       // If already subscribed, reuse existing subscription and (re)send to backend
-      const existing = await registration.pushManager.getSubscription();
+      const existing = await registration.pushManager.getSubscription?.();
       if (existing) {
         const existingData = {
           endpoint: existing.endpoint,
@@ -72,6 +83,9 @@ export const usePushNotifications = () => {
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     try {
       const registration = await navigator.serviceWorker.ready;
+      if (!registration.pushManager) {
+        return false;
+      }
       const subscription = await registration.pushManager.getSubscription();
       if (subscription) {
         await subscription.unsubscribe();
@@ -89,6 +103,10 @@ export const usePushNotifications = () => {
   const checkSubscriptionStatus = useCallback(async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
+      if (!registration.pushManager) {
+        setIsSubscribed(false);
+        return;
+      }
       const subscription = await registration.pushManager.getSubscription();
       setIsSubscribed(!!subscription);
     } catch (error) {
@@ -100,7 +118,11 @@ export const usePushNotifications = () => {
   useEffect(() => {
     const supported = checkSupport();
     setIsSupported(supported);
-    setPermission(Notification.permission);
+    const currentPermission: NotificationPermission =
+      ('Notification' in window && typeof Notification.permission !== 'undefined')
+        ? Notification.permission
+        : 'denied';
+    setPermission(currentPermission);
     if (supported) {
       checkSubscriptionStatus();
     }
