@@ -27,6 +27,8 @@ import ListsList from './pages/admin/ListsList'
 import ListForm from './pages/admin/ListForm'
 import ListProducts from './pages/admin/ListProducts'
 import ListManagement from './pages/admin/ListManagement'
+import Operatiuni from './pages/admin/Operatiuni'
+import Notificari from './pages/admin/Notificari'
 import CartPage from './pages/customer/CartPage'
 import OrderForm from './pages/customer/OrderForm'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
@@ -104,6 +106,10 @@ function App() {
             <Route path="lists/:id/edit" element={<ListForm />} />
             <Route path="lists/:id/products" element={<ListProducts />} />
             <Route path="lists/:id/manage" element={<ListManagement />} />
+            <Route path="operatiuni" element={<Operatiuni />}>
+              <Route index element={<Navigate to="/admin/operatiuni/notificari" replace />} />
+              <Route path="notificari" element={<Notificari />} />
+            </Route>
             {/* Future admin routes will go here */}
           </Route>
 
