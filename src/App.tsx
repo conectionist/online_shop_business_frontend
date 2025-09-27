@@ -118,8 +118,8 @@ function App() {
       {/* React Query Devtools - only in development */}
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
       
-      {/* Push Notification Debug - show in production for testing */}
-      <PushNotificationDebug show={true} />
+      {/* Push Notification Debug - only in development */}
+      {process.env.NODE_ENV === 'development' && <PushNotificationDebug show={true} />}
       </ToastProvider>
     </QueryClientProvider>
   )

@@ -54,10 +54,11 @@ export async function subscribeToCustomerPush(): Promise<{
     // Subscribe to push service
     const registration = await navigator.serviceWorker.ready;
 
-    // Debug: Log the registration object to see what's available
-    console.log('Service Worker Registration:', registration);
-    console.log('PushManager available:', !!registration.pushManager);
-    console.log('Registration keys:', Object.keys(registration));
+    // Debug logging in development only
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Service Worker Registration keys:', Object.keys(registration));
+      console.log('PushManager available:', !!registration.pushManager);
+    }
 
     // Check if pushManager is available (iOS Safari doesn't expose it)
     if (!registration.pushManager) {
@@ -107,10 +108,11 @@ export async function subscribeToAdminPush(adminToken: string): Promise<{
     // Subscribe to push service
     const registration = await navigator.serviceWorker.ready;
 
-    // Debug: Log the registration object to see what's available
-    console.log('Service Worker Registration:', registration);
-    console.log('PushManager available:', !!registration.pushManager);
-    console.log('Registration keys:', Object.keys(registration));
+    // Debug logging in development only
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Service Worker Registration keys:', Object.keys(registration));
+      console.log('PushManager available:', !!registration.pushManager);
+    }
 
     // Check if pushManager is available (iOS Safari doesn't expose it)
     if (!registration.pushManager) {
