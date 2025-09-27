@@ -4,6 +4,7 @@
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PushNotificationPermission } from './PushNotificationPermission';
 import { useVapidKey } from '@/hooks/useVapidKey';
+import { useCustomerPushSubscription } from '@/hooks/usePushSubscription';
 
 interface PushNotificationDebugProps {
   show?: boolean;
@@ -16,6 +17,7 @@ interface PushNotificationDebugProps {
 export function PushNotificationDebug({ show = false }: PushNotificationDebugProps) {
   const pushStatus = usePushNotifications();
   const { data: vapidKey, isLoading: vapidLoading, error: vapidError } = useVapidKey();
+  const subscription = useCustomerPushSubscription();
 
   // Show when explicitly requested or in development
   if (!show && process.env.NODE_ENV !== 'development') {
@@ -84,6 +86,19 @@ export function PushNotificationDebug({ show = false }: PushNotificationDebugPro
              vapidKey ? 'Available' : 'Not loaded'}
           </span>
         </div>
+        
+        <div className="flex justify-between">
+          <span>Subscribed:</span>
+          <span className={
+            subscription.isSubscribing ? 'text-yellow-400' :
+            subscription.isSubscribed ? 'text-green-400' :
+            subscription.error ? 'text-red-400' : 'text-gray-400'
+          }>
+            {subscription.isSubscribing ? 'Subscribing...' :
+             subscription.isSubscribed ? 'Yes' :
+             subscription.error ? 'Error' : 'No'}
+          </span>
+        </div>
       </div>
       
       <div className="mt-2 pt-2 border-t border-gray-600">
@@ -107,6 +122,44 @@ export function PushNotificationDebug({ show = false }: PushNotificationDebugPro
           onPermissionDenied={() => console.log('Permission denied!')}
           className="text-xs"
         />
+      </div>
+      
+      {/* Subscription Test - THE MOMENT OF TRUTH! */}
+      <div className="mt-4 pt-2 border-t border-gray-600">
+        <h4 className="text-xs font-bold mb-2">Subscription Test:</h4>
+        <div className="space-y-2">
+          <button
+            onClick={subscription.subscribe}
+            disabled={!subscription.canSubscribe}
+            className={`
+              w-full px-2 py-1 text-xs rounded
+              ${subscription.canSubscribe 
+                ? 'bg-green-600 text-white hover:bg-green-700' 
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+              }
+            `}
+          >
+            {subscription.isSubscribing ? 'Subscribing...' : 'Subscribe to Push'}
+          </button>
+          
+          <button
+            onClick={subscription.unsubscribe}
+            disabled={!subscription.canUnsubscribe}
+            className={`
+              w-full px-2 py-1 text-xs rounded
+              ${subscription.canUnsubscribe 
+                ? 'bg-red-600 text-white hover:bg-red-700' 
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+              }
+            `}
+          >
+            {subscription.isUnsubscribing ? 'Unsubscribing...' : 'Unsubscribe'}
+          </button>
+          
+          {subscription.error && (
+            <p className="text-xs text-red-400">{subscription.error}</p>
+          )}
+        </div>
       </div>
     </div>
   );

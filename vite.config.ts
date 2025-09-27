@@ -35,6 +35,13 @@ export default defineConfig({
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'image-cache' }
           }
+        ],
+        // THE MOMENT OF TRUTH - Push notification support!
+        additionalManifestEntries: [
+          {
+            url: '/sw-push.js',
+            revision: null
+          }
         ]
       },
       devOptions: { enabled: true }
