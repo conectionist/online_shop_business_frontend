@@ -40,6 +40,7 @@ import ContactPage from './pages/ContactPage'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 import AuthInitializer from './components/AuthInitializer'
+import { PushNotificationDebug } from './components/PushNotificationDebug'
 
 function App() {
   return (
@@ -116,6 +117,9 @@ function App() {
       
       {/* React Query Devtools - only in development */}
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
+      
+      {/* Push Notification Debug - only in development */}
+      <PushNotificationDebug show={process.env.NODE_ENV === 'development'} />
       </ToastProvider>
     </QueryClientProvider>
   )
