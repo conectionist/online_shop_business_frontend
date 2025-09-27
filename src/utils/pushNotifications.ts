@@ -66,6 +66,45 @@ export function getNotificationPermission(): NotificationPermission {
 }
 
 /**
+ * Request notification permission from the user
+ * This is iOS-safe as it only requests permission, no subscription yet
+ */
+export async function requestNotificationPermission(): Promise<boolean> {
+  if (!('Notification' in window)) {
+    return false;
+  }
+
+  // If already granted, return true
+  if (Notification.permission === 'granted') {
+    return true;
+  }
+
+  // If already denied, return false
+  if (Notification.permission === 'denied') {
+    return false;
+  }
+
+  try {
+    // Request permission (this is the safe part - no subscription yet)
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  } catch (error) {
+    console.error('Failed to request notification permission:', error);
+    return false;
+  }
+}
+
+/**
+ * Check if we can request permission (not already denied)
+ */
+export function canRequestPermission(): boolean {
+  if (!('Notification' in window)) {
+    return false;
+  }
+  return Notification.permission === 'default';
+}
+
+/**
  * Check if push notifications are supported and properly configured
  * This combines all the checks needed for a working push notification setup
  */

@@ -2,6 +2,7 @@
 // Step 2: Display detection results - NO actual push implementation yet
 
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { PushNotificationPermission } from './PushNotificationPermission';
 
 interface PushNotificationDebugProps {
   show?: boolean;
@@ -81,6 +82,18 @@ export function PushNotificationDebug({ show = false }: PushNotificationDebugPro
             {JSON.stringify(pushStatus.debugInfo, null, 2)}
           </pre>
         </details>
+      )}
+      
+      {/* Permission Request Component - only in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-4 pt-2 border-t border-gray-600">
+          <h4 className="text-xs font-bold mb-2">Permission Test:</h4>
+          <PushNotificationPermission 
+            onPermissionGranted={() => console.log('Permission granted!')}
+            onPermissionDenied={() => console.log('Permission denied!')}
+            className="text-xs"
+          />
+        </div>
       )}
     </div>
   );

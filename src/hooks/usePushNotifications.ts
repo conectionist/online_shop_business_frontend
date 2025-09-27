@@ -10,7 +10,9 @@ import {
   getPushDebugInfo,
   isSafari,
   isIOS,
-  isStandalone
+  isStandalone,
+  requestNotificationPermission,
+  canRequestPermission
 } from '@/utils/pushNotifications';
 
 export interface PushNotificationStatus {
@@ -22,6 +24,8 @@ export interface PushNotificationStatus {
   isIOS: boolean;
   isStandalone: boolean;
   debugInfo: ReturnType<typeof getPushDebugInfo>;
+  canRequestPermission: boolean;
+  requestPermission: () => Promise<boolean>;
 }
 
 /**
@@ -37,7 +41,9 @@ export function usePushNotifications(): PushNotificationStatus {
     isSafari: false,
     isIOS: false,
     isStandalone: false,
-    debugInfo: getPushDebugInfo()
+    debugInfo: getPushDebugInfo(),
+    canRequestPermission: false,
+    requestPermission: async () => false
   }));
 
   useEffect(() => {
@@ -53,7 +59,14 @@ export function usePushNotifications(): PushNotificationStatus {
         isSafari: isSafari(),
         isIOS: isIOS(),
         isStandalone: isStandalone(),
-        debugInfo
+        debugInfo,
+        canRequestPermission: canRequestPermission(),
+        requestPermission: async () => {
+          const granted = await requestNotificationPermission();
+          // Update status after permission request
+          updateStatus();
+          return granted;
+        }
       });
     };
 
