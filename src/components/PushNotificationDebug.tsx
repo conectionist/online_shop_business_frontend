@@ -3,6 +3,7 @@
 
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PushNotificationPermission } from './PushNotificationPermission';
+import { useVapidKey } from '@/hooks/useVapidKey';
 
 interface PushNotificationDebugProps {
   show?: boolean;
@@ -14,6 +15,7 @@ interface PushNotificationDebugProps {
  */
 export function PushNotificationDebug({ show = false }: PushNotificationDebugProps) {
   const pushStatus = usePushNotifications();
+  const { data: vapidKey, isLoading: vapidLoading, error: vapidError } = useVapidKey();
 
   // Show when explicitly requested or in development
   if (!show && process.env.NODE_ENV !== 'development') {
@@ -67,6 +69,19 @@ export function PushNotificationDebug({ show = false }: PushNotificationDebugPro
           <span>Standalone:</span>
           <span className={pushStatus.isStandalone ? 'text-green-400' : 'text-red-400'}>
             {pushStatus.isStandalone ? 'Yes' : 'No'}
+          </span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span>VAPID Key:</span>
+          <span className={
+            vapidLoading ? 'text-yellow-400' :
+            vapidError ? 'text-red-400' :
+            vapidKey ? 'text-green-400' : 'text-gray-400'
+          }>
+            {vapidLoading ? 'Loading...' :
+             vapidError ? 'Error' :
+             vapidKey ? 'Available' : 'Not loaded'}
           </span>
         </div>
       </div>

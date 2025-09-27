@@ -96,6 +96,12 @@ export const queryKeys = {
     nextDeliveryDate: (referenceDate?: string) => 
       [...queryKeys.system.all, 'next-delivery-date', referenceDate] as const,
   },
+
+  // Push Notifications
+  push: {
+    all: ['push'] as const,
+    vapidKey: () => [...queryKeys.push.all, 'vapid-key'] as const,
+  },
 };
 
 // Helper function to invalidate related queries
