@@ -53,6 +53,17 @@ export async function subscribeToCustomerPush(): Promise<{
     
     // Subscribe to push service
     const registration = await navigator.serviceWorker.ready;
+
+    // Debug: Log the registration object to see what's available
+    console.log('Service Worker Registration:', registration);
+    console.log('PushManager available:', !!registration.pushManager);
+    console.log('Registration keys:', Object.keys(registration));
+
+    // Check if pushManager is available (iOS Safari doesn't expose it)
+    if (!registration.pushManager) {
+      throw new Error('PushManager not available in this browser');
+    }
+
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: applicationServerKey as unknown as ArrayBuffer
@@ -95,6 +106,17 @@ export async function subscribeToAdminPush(adminToken: string): Promise<{
     
     // Subscribe to push service
     const registration = await navigator.serviceWorker.ready;
+
+    // Debug: Log the registration object to see what's available
+    console.log('Service Worker Registration:', registration);
+    console.log('PushManager available:', !!registration.pushManager);
+    console.log('Registration keys:', Object.keys(registration));
+
+    // Check if pushManager is available (iOS Safari doesn't expose it)
+    if (!registration.pushManager) {
+      throw new Error('PushManager not available in this browser');
+    }
+
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: applicationServerKey as unknown as ArrayBuffer
