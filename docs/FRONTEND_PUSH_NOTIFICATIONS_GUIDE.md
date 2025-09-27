@@ -47,7 +47,9 @@ GET /api/v1/push/public-key
 }
 ```
 
-### 2. Subscribe to Push Notifications
+### 2. Customer Push Notifications
+
+#### Subscribe to Customer Notifications
 ```http
 POST /api/v1/push/subscribe
 Content-Type: application/json
@@ -74,7 +76,97 @@ Content-Type: application/json
 }
 ```
 
-### 3. Unsubscribe from Push Notifications
+**Note:** No authentication required for customer subscriptions.
+
+### 3. Admin Push Notifications
+
+#### Subscribe to Admin Notifications
+```http
+POST /api/v1/push/admin/subscribe
+Content-Type: application/json
+Authorization: Bearer <admin_token>
+```
+
+**Request Body:**
+```json
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/...",
+  "keys": {
+    "p256dh": "BEl62iUYgUivxIkv69yViEuiBIa40HI...",
+    "auth": "tBHItJI5svbpez7KI4CCXg=="
+  },
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+}
+```
+
+**Response:**
+```json
+{
+  "id": 124,
+  "endpoint": "https://fcm.googleapis.com/fcm/send/...",
+  "is_active": true
+}
+```
+
+**Note:** Admin authentication required. Subscription will be associated with the authenticated admin user.
+
+#### Send Notifications to All Admins
+```http
+POST /api/v1/push/admin/notify
+Content-Type: application/json
+Authorization: Bearer <admin_token>
+```
+
+**Request Body:**
+```json
+{
+  "title": "System Alert",
+  "body": "Database maintenance scheduled for tonight",
+  "data": {
+    "type": "system_alert",
+    "priority": "high"
+  },
+  "icon": "/icons/alert.png",
+  "tag": "system_maintenance"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "queued"
+}
+```
+
+#### Send Notifications to Specific Admin
+```http
+POST /api/v1/push/admin/notify/{admin_id}
+Content-Type: application/json
+Authorization: Bearer <admin_token>
+```
+
+**Request Body:**
+```json
+{
+  "title": "Order Alert",
+  "body": "New order #12345 received",
+  "data": {
+    "type": "order_alert",
+    "order_id": "12345"
+  },
+  "icon": "/icons/order.png",
+  "tag": "order_12345"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "queued"
+}
+```
+
+### 4. Unsubscribe from Push Notifications
 ```http
 DELETE /api/v1/push/subscribe?endpoint=https://fcm.googleapis.com/fcm/send/...
 ```
@@ -85,6 +177,8 @@ DELETE /api/v1/push/subscribe?endpoint=https://fcm.googleapis.com/fcm/send/...
   "status": "deactivated"
 }
 ```
+
+**Note:** Works for both customer and admin subscriptions.
 
 ## Frontend Implementation
 
@@ -136,10 +230,10 @@ async function getVapidPublicKey() {
 }
 ```
 
-### 4. Subscribe to Push Notifications
+### 4. Subscribe to Customer Push Notifications
 
 ```javascript
-async function subscribeToPush() {
+async function subscribeToCustomerPush() {
   try {
     // Get VAPID public key
     const vapidPublicKey = await getVapidPublicKey();
@@ -154,7 +248,7 @@ async function subscribeToPush() {
       applicationServerKey: applicationServerKey
     });
     
-    // Send subscription to backend
+    // Send subscription to backend (customer endpoint)
     const response = await fetch('/api/v1/push/subscribe', {
       method: 'POST',
       headers: {
@@ -172,13 +266,62 @@ async function subscribeToPush() {
     
     if (response.ok) {
       const result = await response.json();
-      console.log('Successfully subscribed:', result);
+      console.log('Successfully subscribed to customer notifications:', result);
       return result;
     } else {
-      throw new Error(`Subscription failed: ${response.status}`);
+      throw new Error(`Customer subscription failed: ${response.status}`);
     }
   } catch (error) {
-    console.error('Push subscription failed:', error);
+    console.error('Customer push subscription failed:', error);
+    throw error;
+  }
+}
+```
+
+### 5. Subscribe to Admin Push Notifications
+
+```javascript
+async function subscribeToAdminPush(adminToken) {
+  try {
+    // Get VAPID public key
+    const vapidPublicKey = await getVapidPublicKey();
+    
+    // Convert VAPID key to Uint8Array
+    const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+    
+    // Subscribe to push service
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: applicationServerKey
+    });
+    
+    // Send subscription to backend (admin endpoint)
+    const response = await fetch('/api/v1/push/admin/subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({
+        endpoint: subscription.endpoint,
+        keys: {
+          p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
+          auth: arrayBufferToBase64(subscription.getKey('auth'))
+        },
+        user_agent: navigator.userAgent
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('Successfully subscribed to admin notifications:', result);
+      return result;
+    } else {
+      throw new Error(`Admin subscription failed: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Admin push subscription failed:', error);
     throw error;
   }
 }
@@ -526,10 +669,87 @@ Add to your `manifest.json`:
 - **Error Recovery**: Handle subscription failures gracefully
 - **Cleanup**: Unsubscribe when user logs out
 
-## Example Integration
+## Admin Notification Management
+
+### Send Notifications from Frontend (Admin Panel)
 
 ```javascript
-class PushNotificationManager {
+// Send notification to all admins
+async function notifyAllAdmins(adminToken, notification) {
+  try {
+    const response = await fetch('/api/v1/push/admin/notify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify(notification)
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('Admin notification queued:', result);
+      return result;
+    } else {
+      throw new Error(`Admin notification failed: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Failed to send admin notification:', error);
+    throw error;
+  }
+}
+
+// Send notification to specific admin
+async function notifySpecificAdmin(adminToken, adminId, notification) {
+  try {
+    const response = await fetch(`/api/v1/push/admin/notify/${adminId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify(notification)
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('Admin notification queued:', result);
+      return result;
+    } else {
+      throw new Error(`Admin notification failed: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Failed to send admin notification:', error);
+    throw error;
+  }
+}
+
+// Example usage
+const orderAlert = {
+  title: "New Order Received",
+  body: "Order #12345 has been placed",
+  data: {
+    type: "order_alert",
+    order_id: "12345",
+    customer: "John Doe"
+  },
+  icon: "/icons/order.png",
+  tag: "order_12345"
+};
+
+// Notify all admins
+await notifyAllAdmins(adminToken, orderAlert);
+
+// Notify specific admin
+await notifySpecificAdmin(adminToken, 1, orderAlert);
+```
+
+## Example Integration
+
+### Customer Push Notification Manager
+
+```javascript
+class CustomerPushNotificationManager {
   constructor() {
     this.isSupported = isPushSupported();
     this.isSubscribed = false;
@@ -548,7 +768,7 @@ class PushNotificationManager {
   async subscribe() {
     if (!this.isSupported) throw new Error('Not supported');
     
-    const result = await subscribeToPush();
+    const result = await subscribeToCustomerPush();
     this.isSubscribed = true;
     return result;
   }
@@ -569,21 +789,211 @@ class PushNotificationManager {
     };
   }
 }
+```
 
-// Usage
-const pushManager = new PushNotificationManager();
-await pushManager.init();
+### Admin Push Notification Manager
 
-// Subscribe button
-document.getElementById('subscribe-btn').addEventListener('click', async () => {
+```javascript
+class AdminPushNotificationManager {
+  constructor(adminToken) {
+    this.isSupported = isPushSupported();
+    this.isSubscribed = false;
+    this.adminToken = adminToken;
+  }
+  
+  async init() {
+    if (!this.isSupported) return false;
+    
+    const hasPermission = await requestNotificationPermission();
+    if (!hasPermission) return false;
+    
+    this.isSubscribed = await getSubscriptionStatus();
+    return true;
+  }
+  
+  async subscribe() {
+    if (!this.isSupported) throw new Error('Not supported');
+    if (!this.adminToken) throw new Error('Admin token required');
+    
+    const result = await subscribeToAdminPush(this.adminToken);
+    this.isSubscribed = true;
+    return result;
+  }
+  
+  async unsubscribe() {
+    if (!this.isSupported) return false;
+    
+    const success = await unsubscribeFromPush();
+    this.isSubscribed = false;
+    return success;
+  }
+  
+  async notifyAllAdmins(notification) {
+    if (!this.adminToken) throw new Error('Admin token required');
+    return await notifyAllAdmins(this.adminToken, notification);
+  }
+  
+  async notifySpecificAdmin(adminId, notification) {
+    if (!this.adminToken) throw new Error('Admin token required');
+    return await notifySpecificAdmin(this.adminToken, adminId, notification);
+  }
+  
+  getStatus() {
+    return {
+      supported: this.isSupported,
+      subscribed: this.isSubscribed,
+      permission: Notification.permission,
+      hasAdminToken: !!this.adminToken
+    };
+  }
+}
+```
+
+### Usage Examples
+
+```javascript
+// Customer usage
+const customerPushManager = new CustomerPushNotificationManager();
+await customerPushManager.init();
+
+document.getElementById('subscribe-customer-btn').addEventListener('click', async () => {
   try {
-    await pushManager.subscribe();
-    console.log('Subscribed successfully');
+    await customerPushManager.subscribe();
+    console.log('Subscribed to customer notifications');
   } catch (error) {
-    console.error('Subscription failed:', error);
+    console.error('Customer subscription failed:', error);
+  }
+});
+
+// Admin usage
+const adminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+const adminPushManager = new AdminPushNotificationManager(adminToken);
+await adminPushManager.init();
+
+document.getElementById('subscribe-admin-btn').addEventListener('click', async () => {
+  try {
+    await adminPushManager.subscribe();
+    console.log('Subscribed to admin notifications');
+  } catch (error) {
+    console.error('Admin subscription failed:', error);
+  }
+});
+
+// Send admin notification
+document.getElementById('send-alert-btn').addEventListener('click', async () => {
+  try {
+    await adminPushManager.notifyAllAdmins({
+      title: "System Alert",
+      body: "Database maintenance scheduled",
+      data: { type: "system_alert" }
+    });
+    console.log('Admin notification sent');
+  } catch (error) {
+    console.error('Failed to send admin notification:', error);
   }
 });
 ```
+
+## Dual Subscription Scenarios
+
+### Admin Who Also Wants Customer Notifications
+
+In some cases, an admin might want to receive both admin notifications (order alerts, system alerts) and customer notifications (promotions, general updates). Here's how to handle this:
+
+```javascript
+class DualPushNotificationManager {
+  constructor(adminToken) {
+    this.isSupported = isPushSupported();
+    this.customerSubscribed = false;
+    this.adminSubscribed = false;
+    this.adminToken = adminToken;
+  }
+  
+  async init() {
+    if (!this.isSupported) return false;
+    
+    const hasPermission = await requestNotificationPermission();
+    if (!hasPermission) return false;
+    
+    // Check both subscription types
+    this.customerSubscribed = await this.getCustomerSubscriptionStatus();
+    this.adminSubscribed = await this.getAdminSubscriptionStatus();
+    return true;
+  }
+  
+  async subscribeToCustomer() {
+    if (!this.isSupported) throw new Error('Not supported');
+    
+    const result = await subscribeToCustomerPush();
+    this.customerSubscribed = true;
+    return result;
+  }
+  
+  async subscribeToAdmin() {
+    if (!this.isSupported) throw new Error('Not supported');
+    if (!this.adminToken) throw new Error('Admin token required');
+    
+    const result = await subscribeToAdminPush(this.adminToken);
+    this.adminSubscribed = true;
+    return result;
+  }
+  
+  async subscribeToBoth() {
+    const results = [];
+    
+    // Subscribe to customer notifications
+    try {
+      const customerResult = await this.subscribeToCustomer();
+      results.push({ type: 'customer', result: customerResult });
+    } catch (error) {
+      console.error('Customer subscription failed:', error);
+    }
+    
+    // Subscribe to admin notifications
+    try {
+      const adminResult = await this.subscribeToAdmin();
+      results.push({ type: 'admin', result: adminResult });
+    } catch (error) {
+      console.error('Admin subscription failed:', error);
+    }
+    
+    return results;
+  }
+  
+  getStatus() {
+    return {
+      supported: this.isSupported,
+      customerSubscribed: this.customerSubscribed,
+      adminSubscribed: this.adminSubscribed,
+      permission: Notification.permission,
+      hasAdminToken: !!this.adminToken
+    };
+  }
+}
+
+// Usage for admin who wants both types
+const dualManager = new DualPushNotificationManager(adminToken);
+await dualManager.init();
+
+// Subscribe to both types
+document.getElementById('subscribe-both-btn').addEventListener('click', async () => {
+  try {
+    const results = await dualManager.subscribeToBoth();
+    console.log('Subscription results:', results);
+  } catch (error) {
+    console.error('Dual subscription failed:', error);
+  }
+});
+```
+
+### Important Notes for Dual Subscriptions
+
+1. **Same Browser Permission**: Both subscriptions use the same browser notification permission
+2. **Different Database Records**: Creates separate subscription records (one with `user_id=NULL`, one with `user_id=admin_id`)
+3. **Targeted Notifications**: 
+   - Customer notifications go to `user_id=NULL` subscriptions
+   - Admin notifications go to `user_id=admin_id` subscriptions
+4. **Same Device**: Both notifications appear on the same device, but are targeted differently
 
 ## Troubleshooting
 
