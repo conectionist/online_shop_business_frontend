@@ -35,6 +35,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
 
   // Local UI state
   const [showExtraOptions, setShowExtraOptions] = useState(false);
+  const [groupByDelivery, setGroupByDelivery] = useState(true);
   const [mergeSimilar, setMergeSimilar] = useState(false);
   const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
@@ -214,21 +215,24 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       return;
     }
 
-    // Group orders by delivery type ID
-    const ordersByDeliveryTypeId = ordersForActions.reduce((groups, order) => {
-      const key = order.delivery_type_id;
-      if (!groups[key]) {
-        groups[key] = [] as typeof sortedOrders;
-      }
-      (groups[key] as typeof sortedOrders).push(order);
-      return groups;
-    }, {} as Record<number, typeof sortedOrders>);
+    let printContent = '';
+    
+    if (groupByDelivery) {
+      // Group orders by delivery type ID
+      const ordersByDeliveryTypeId = ordersForActions.reduce((groups, order) => {
+        const key = order.delivery_type_id;
+        if (!groups[key]) {
+          groups[key] = [] as typeof sortedOrders;
+        }
+        (groups[key] as typeof sortedOrders).push(order);
+        return groups;
+      }, {} as Record<number, typeof sortedOrders>);
 
-    // Sort delivery types by order_index
-    const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a, b) => a.order_index - b.order_index);
+      // Sort delivery types by order_index
+      const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a, b) => a.order_index - b.order_index);
 
-    // Create a formatted print view
-    const printContent = `
+      // Create a formatted print view with grouping
+      printContent = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -273,6 +277,38 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         </body>
       </html>
     `;
+    } else {
+      // Create a formatted print view without grouping
+      printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Lista Comenzi - ${new Date().toLocaleDateString('ro-RO')}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; font-size: 16px; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+            .header h1 { margin: 0; color: #333; font-size: 28px; }
+            .order { margin-bottom: 30px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; break-inside: avoid; page-break-inside: avoid; }
+            .order-content { background: #f9f9f9; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-line; }
+            @media print { body { margin: 15px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Lista Comenzi ${new Date().toLocaleDateString('ro-RO')}</h1>
+          </div>
+          
+          ${ordersForActions && ordersForActions.length > 0 ? 
+            ordersForActions.map((order) => `
+              <div class="order">
+                <div class="order-content">${formatOrderText(order)}</div>
+              </div>
+            `).join('') : 
+            '<p>Nu există comenzi pentru această listă.</p>'}
+        </body>
+      </html>
+    `;
+    }
 
     // Create a new window for printing
     const printWindow = window.open('', '_blank');
@@ -426,7 +462,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 Opțiuni avansate
               </span>
               <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                2 opțiuni
+                3 opțiuni
               </span>
             </div>
           </div>
@@ -450,6 +486,20 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         {showExtraOptions && (
           <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="space-y-3">
+              {/* Group by Delivery Toggle */}
+              <div className="flex items-center space-x-2">
+                <input
+                  id="group-by-delivery-toggle"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={groupByDelivery}
+                  onChange={(e) => setGroupByDelivery(e.target.checked)}
+                />
+                <label htmlFor="group-by-delivery-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
+                  Grupează după metoda de livrare
+                </label>
+              </div>
+
               {/* Merge Similar Orders */}
               <div className="flex items-center space-x-2" ref={mergeInfoRef}>
                 <input
@@ -556,35 +606,36 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       {/* Orders List */}
       <div className="space-y-6">
         {(() => {
-          // Group orders by delivery type ID and iterate delivery types in backend order
-          const ordersByDeliveryTypeId = sortedOrders.reduce((groups, order) => {
-            const key = order.delivery_type_id;
-            if (!groups[key]) {
-              groups[key] = [] as typeof sortedOrders;
-            }
-            (groups[key] as typeof sortedOrders).push(order);
-            return groups;
-          }, {} as Record<number, typeof sortedOrders>);
+          if (groupByDelivery) {
+            // Group orders by delivery type ID and iterate delivery types in backend order
+            const ordersByDeliveryTypeId = sortedOrders.reduce((groups, order) => {
+              const key = order.delivery_type_id;
+              if (!groups[key]) {
+                groups[key] = [] as typeof sortedOrders;
+              }
+              (groups[key] as typeof sortedOrders).push(order);
+              return groups;
+            }, {} as Record<number, typeof sortedOrders>);
 
-          const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a, b) => a.order_index - b.order_index);
+            const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a, b) => a.order_index - b.order_index);
 
-          return sortedDeliveryTypes
-            .filter(dt => ordersByDeliveryTypeId[dt.id] && ordersByDeliveryTypeId[dt.id].length > 0)
-            .map(dt => (
-            <div key={dt.id} className="space-y-4">
-              {/* Delivery Type Header */}
-              <div className="border-b border-gray-200 pb-2">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {dt.denumire}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {ordersByDeliveryTypeId[dt.id].length} {ordersByDeliveryTypeId[dt.id].length === 1 ? 'comandă' : 'comenzi'}
-                </p>
-              </div>
-              
-              {/* Orders for this delivery type */}
-              <div className="space-y-4">
-                {ordersByDeliveryTypeId[dt.id].map((order) => (
+            return sortedDeliveryTypes
+              .filter(dt => ordersByDeliveryTypeId[dt.id] && ordersByDeliveryTypeId[dt.id].length > 0)
+              .map(dt => (
+              <div key={dt.id} className="space-y-4">
+                {/* Delivery Type Header */}
+                <div className="border-b border-gray-200 pb-2">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {dt.denumire}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {ordersByDeliveryTypeId[dt.id].length} {ordersByDeliveryTypeId[dt.id].length === 1 ? 'comandă' : 'comenzi'}
+                  </p>
+                </div>
+                
+                {/* Orders for this delivery type */}
+                <div className="space-y-4">
+                  {ordersByDeliveryTypeId[dt.id].map((order) => (
                   <Card key={order.id} className="p-6">
                     <div className="space-y-4">
                       {/* Order row with optional checkbox on the left */}
@@ -654,6 +705,78 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
               </div>
             </div>
           ));
+          } else {
+            // Show orders without grouping - use the same detailed format as grouped
+            return (
+              <div className="space-y-4">
+                {sortedOrders.map((order) => (
+                  <Card key={order.id} className="p-6">
+                    <div className="space-y-4">
+                      {/* Order row with optional checkbox on the left */}
+                      <div className="flex items-center">
+                        {multiSelectEnabled && (
+                          <div className="mr-3 self-center">
+                            <input
+                              aria-label="Selectează comanda"
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              checked={selectedOrderIds.has(order.id)}
+                              onChange={(e) => {
+                                const newSelectedIds = new Set(selectedOrderIds);
+                                if (e.target.checked) {
+                                  newSelectedIds.add(order.id);
+                                } else {
+                                  newSelectedIds.delete(order.id);
+                                }
+                                setSelectedOrderIds(newSelectedIds);
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Order Display - Same detailed format as grouped */}
+                        <div className="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
+                            {formatOrderText(order)}
+                          </pre>
+                        </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-start space-x-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleViewOrder(order)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Vezi
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleEditOrder(order)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editează
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleDeleteOrder(order)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Șterge
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            );
+          }
         })()}
       </div>
 
