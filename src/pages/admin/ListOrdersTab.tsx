@@ -36,6 +36,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   // Local UI state
   const [showExtraOptions, setShowExtraOptions] = useState(false);
   const [groupByDelivery, setGroupByDelivery] = useState(true);
+  const [sortBy, setSortBy] = useState<'chronological' | 'alphabetical'>('chronological');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [mergeSimilar, setMergeSimilar] = useState(false);
   const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
@@ -54,27 +56,37 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const updateOrderMutation = useUpdateOrder();
   const { showToast } = useToast();
 
-  // Group orders by delivery type, then sort by customer name within each group
+  // Sort orders based on user preferences
   const sortedOrders = React.useMemo(() => {
     if (!orders || !deliveryTypes) return [];
     
-    return [...orders].sort((a, b) => {
-      // First, group by delivery type
-      const deliveryTypeA = deliveryTypes.find(dt => dt.id === a.delivery_type_id);
-      const deliveryTypeB = deliveryTypes.find(dt => dt.id === b.delivery_type_id);
-      
-      const deliveryNameA = deliveryTypeA?.denumire || '';
-      const deliveryNameB = deliveryTypeB?.denumire || '';
-      
-      // If delivery types are different, sort by delivery type name
-      if (deliveryNameA !== deliveryNameB) {
-        return deliveryNameA.localeCompare(deliveryNameB, 'ro-RO');
-      }
-      
-      // If delivery types are the same, sort by customer name
-      return a.nume_client.localeCompare(b.nume_client, 'ro-RO');
-    });
-  }, [orders, deliveryTypes]);
+    // If grouping is disabled, sort all orders globally
+    if (!groupByDelivery) {
+      return [...orders].sort((a, b) => {
+        let comparison = 0;
+        
+        if (sortBy === 'chronological') {
+          // Sort by date (data_plasarii)
+          const dateA = new Date(a.data_plasarii).getTime();
+          const dateB = new Date(b.data_plasarii).getTime();
+          comparison = dateA - dateB;
+        } else if (sortBy === 'alphabetical') {
+          // Sort by customer name
+          comparison = a.nume_client.localeCompare(b.nume_client, 'ro-RO');
+        }
+        
+        // Apply sort order (asc/desc)
+        if (sortOrder === 'desc') {
+          comparison = -comparison;
+        }
+        
+        return comparison;
+      });
+    }
+    
+    // If grouping is enabled, don't sort globally - sorting will be done within groups
+    return [...orders];
+  }, [orders, deliveryTypes, sortBy, sortOrder, groupByDelivery]);
 
   // Flatten list products for easy access
   const listProducts = React.useMemo(() => {
@@ -228,7 +240,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         return groups;
       }, {} as Record<number, typeof sortedOrders>);
 
-      // Sort delivery types by order_index
+      // Sort delivery types by order_index (same as display)
       const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a, b) => a.order_index - b.order_index);
 
       // Create a formatted print view with grouping
@@ -266,7 +278,28 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                   <h2 class="delivery-title">${dt.denumire}</h2>
                   <p class="delivery-count">${ordersByDeliveryTypeId[dt.id].length} ${ordersByDeliveryTypeId[dt.id].length === 1 ? 'comandă' : 'comenzi'}</p>
                 </div>
-                ${ordersByDeliveryTypeId[dt.id].map((order) => `
+                ${ordersByDeliveryTypeId[dt.id]
+                  .sort((a, b) => {
+                    let comparison = 0;
+                    
+                    if (sortBy === 'chronological') {
+                      // Sort by date (data_plasarii)
+                      const dateA = new Date(a.data_plasarii).getTime();
+                      const dateB = new Date(b.data_plasarii).getTime();
+                      comparison = dateA - dateB;
+                    } else if (sortBy === 'alphabetical') {
+                      // Sort by customer name
+                      comparison = a.nume_client.localeCompare(b.nume_client, 'ro-RO');
+                    }
+                    
+                    // Apply sort order (asc/desc)
+                    if (sortOrder === 'desc') {
+                      comparison = -comparison;
+                    }
+                    
+                    return comparison;
+                  })
+                  .map((order) => `
                   <div class="order">
                     <div class="order-content">${formatOrderText(order)}</div>
                   </div>
@@ -299,7 +332,28 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           </div>
           
           ${ordersForActions && ordersForActions.length > 0 ? 
-            ordersForActions.map((order) => `
+            ordersForActions
+              .sort((a, b) => {
+                let comparison = 0;
+                
+                if (sortBy === 'chronological') {
+                  // Sort by date (data_plasarii)
+                  const dateA = new Date(a.data_plasarii).getTime();
+                  const dateB = new Date(b.data_plasarii).getTime();
+                  comparison = dateA - dateB;
+                } else if (sortBy === 'alphabetical') {
+                  // Sort by customer name
+                  comparison = a.nume_client.localeCompare(b.nume_client, 'ro-RO');
+                }
+                
+                // Apply sort order (asc/desc)
+                if (sortOrder === 'desc') {
+                  comparison = -comparison;
+                }
+                
+                return comparison;
+              })
+              .map((order) => `
               <div class="order">
                 <div class="order-content">${formatOrderText(order)}</div>
               </div>
@@ -354,6 +408,9 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           getProductName={getProductName}
           getPaymentMethodName={getPaymentMethodName}
           businessDetails={businessDetails}
+          groupByDelivery={groupByDelivery}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
         />
       );
       
@@ -462,7 +519,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 Opțiuni avansate
               </span>
               <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                3 opțiuni
+                4 opțiuni
               </span>
             </div>
           </div>
@@ -498,6 +555,73 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 <label htmlFor="group-by-delivery-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
                   Grupează după metoda de livrare
                 </label>
+              </div>
+
+              {/* Sorting Options */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Sortează comenzi
+                </label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="sort-chronological"
+                      type="radio"
+                      name="sortBy"
+                      value="chronological"
+                      checked={sortBy === 'chronological'}
+                      onChange={(e) => setSortBy(e.target.value as 'chronological' | 'alphabetical')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor="sort-chronological" className="text-sm text-gray-700 select-none cursor-pointer">
+                      Cronologic
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="sort-alphabetical"
+                      type="radio"
+                      name="sortBy"
+                      value="alphabetical"
+                      checked={sortBy === 'alphabetical'}
+                      onChange={(e) => setSortBy(e.target.value as 'chronological' | 'alphabetical')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor="sort-alphabetical" className="text-sm text-gray-700 select-none cursor-pointer">
+                      Alfabetic
+                    </label>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="sort-asc"
+                      type="radio"
+                      name="sortOrder"
+                      value="asc"
+                      checked={sortOrder === 'asc'}
+                      onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor="sort-asc" className="text-sm text-gray-700 select-none cursor-pointer">
+                      Crescător
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="sort-desc"
+                      type="radio"
+                      name="sortOrder"
+                      value="desc"
+                      checked={sortOrder === 'desc'}
+                      onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor="sort-desc" className="text-sm text-gray-700 select-none cursor-pointer">
+                      Descrescător
+                    </label>
+                  </div>
+                </div>
               </div>
 
               {/* Merge Similar Orders */}
@@ -617,6 +741,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
               return groups;
             }, {} as Record<number, typeof sortedOrders>);
 
+            // Sort delivery types by their order_index (always maintain delivery method order)
             const sortedDeliveryTypes = (deliveryTypes || []).slice().sort((a, b) => a.order_index - b.order_index);
 
             return sortedDeliveryTypes
@@ -633,9 +758,30 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                   </p>
                 </div>
                 
-                {/* Orders for this delivery type */}
+                {/* Orders for this delivery type - sorted within group */}
                 <div className="space-y-4">
-                  {ordersByDeliveryTypeId[dt.id].map((order) => (
+                  {ordersByDeliveryTypeId[dt.id]
+                    .sort((a, b) => {
+                      let comparison = 0;
+                      
+                      if (sortBy === 'chronological') {
+                        // Sort by date (data_plasarii)
+                        const dateA = new Date(a.data_plasarii).getTime();
+                        const dateB = new Date(b.data_plasarii).getTime();
+                        comparison = dateA - dateB;
+                      } else if (sortBy === 'alphabetical') {
+                        // Sort by customer name
+                        comparison = a.nume_client.localeCompare(b.nume_client, 'ro-RO');
+                      }
+                      
+                      // Apply sort order (asc/desc)
+                      if (sortOrder === 'desc') {
+                        comparison = -comparison;
+                      }
+                      
+                      return comparison;
+                    })
+                    .map((order) => (
                   <Card key={order.id} className="p-6">
                     <div className="space-y-4">
                       {/* Order row with optional checkbox on the left */}
