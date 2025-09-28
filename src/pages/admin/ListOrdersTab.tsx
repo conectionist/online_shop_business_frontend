@@ -34,6 +34,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [orderToEdit, setOrderToEdit] = useState<OrderRead | null>(null);
 
   // Local UI state
+  const [showExtraOptions, setShowExtraOptions] = useState(false);
   const [mergeSimilar, setMergeSimilar] = useState(false);
   const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
@@ -416,6 +417,91 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
 
   return (
     <div className="space-y-6">
+      {/* Extra Options Toggle */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-blue-800">
+                Opțiuni avansate
+              </span>
+              <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                2 opțiuni
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowExtraOptions(!showExtraOptions)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              showExtraOptions ? 'bg-blue-600' : 'bg-gray-200'
+            }`}
+            aria-label="Toggle opțiuni avansate"
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                showExtraOptions ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+        
+        {/* Extra Options Group - only shown when toggle is on */}
+        {showExtraOptions && (
+          <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="space-y-3">
+              {/* Merge Similar Orders */}
+              <div className="flex items-center space-x-2" ref={mergeInfoRef}>
+                <input
+                  id="merge-similar-toggle"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={mergeSimilar}
+                  onChange={(e) => setMergeSimilar(e.target.checked)}
+                />
+                <label htmlFor="merge-similar-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
+                  Unește comenzile acelorași clienți
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowMergeInfo((v) => !v)}
+                  className="inline-flex items-center justify-center p-0.5 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Deschide explicația pentru unirea comenzilor"
+                >
+                  <Info className="w-4 h-4 text-gray-400" />
+                </button>
+                {showMergeInfo && (
+                  <div className="relative">
+                    <div className="absolute z-50 mt-2 w-96 max-w-[28rem] rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-700 shadow-lg">
+                      Dacă un client dă o comandă și apoi își amintește că mai vrea un produs sau mai multe și mai plasează o comandă, vor apărea două comenzi listate aici.
+                      <br />
+                      Bifând această căsuță, comenzile care aparțin aceluiași client pot fi unite într-una singură.
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Multi-select Toggle */}
+              <div className="flex items-center space-x-2">
+                <input
+                  id="multi-select-toggle"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={multiSelectEnabled}
+                  onChange={(e) => {
+                    setMultiSelectEnabled(e.target.checked);
+                    setSelectedOrderIds(new Set());
+                  }}
+                />
+                <label htmlFor="multi-select-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
+                  Selectare multiplă
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -466,56 +552,6 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         </div>
       </div>
 
-      {/* Toggles positioned below header */}
-      <div className="flex items-center space-x-2 -mt-2 mb-2" ref={mergeInfoRef}>
-        <input
-          id="merge-similar-toggle"
-          type="checkbox"
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          checked={mergeSimilar}
-          onChange={(e) => setMergeSimilar(e.target.checked)}
-        />
-        <label htmlFor="merge-similar-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
-          unește comenzile acelorași clienți
-        </label>
-        <button
-          type="button"
-          onClick={() => setShowMergeInfo((v) => !v)}
-          className="inline-flex items-center justify-center p-0.5 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="Deschide explicația pentru unirea comenzilor"
-        >
-          <Info className="w-4 h-4 text-gray-400" />
-        </button>
-        {showMergeInfo && (
-          <div className="relative">
-            <div className="absolute z-50 mt-2 w-96 max-w-[28rem] rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-700 shadow-lg">
-              Dacă un client dă o comandă și apoi își amintește că mai vrea un produs sau mai multe și mai plasează o comandă, vor apărea două comenzi listate aici.
-              <br />
-              Bifând această căsuță, comenzile care aparțin aceluiași client pot fi unite într-una singură.
-            </div>
-          </div>
-        )}
-
-      </div>
-
-      {/* Multiselect toggle placed under the merge toggle */}
-      <div className="mb-2">
-        <div className="flex items-center justify-start space-x-2">
-          <input
-            id="multi-select-toggle"
-            type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            checked={multiSelectEnabled}
-            onChange={(e) => {
-              setMultiSelectEnabled(e.target.checked);
-              setSelectedOrderIds(new Set());
-            }}
-          />
-          <label htmlFor="multi-select-toggle" className="text-sm text-gray-800 select-none cursor-pointer">
-            selectare multipla
-          </label>
-        </div>
-      </div>
 
       {/* Orders List */}
       <div className="space-y-6">
