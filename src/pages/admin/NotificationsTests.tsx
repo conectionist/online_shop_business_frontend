@@ -4,11 +4,142 @@ import { Link } from 'react-router-dom';
 import Card from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useNotifySpecificAdmin, useNotifyAllCustomers } from '@/hooks/useNotifications';
+import { useToast } from '@/components/ui/ToastContainer';
 
 const NotificationsTests: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'admins' | 'clients'>('admins');
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationMessage, setNotificationMessage] = useState('');
+  const [selectedAdmins, setSelectedAdmins] = useState<number[]>([]);
+  const [selectAllAdmins, setSelectAllAdmins] = useState(false);
+
+  // Hardcoded admin list (until backend implements /admins API)
+  // TODO: Replace with useAdmins() hook when backend API is ready
+  const admins = [
+    { id: 1, username: 'admin', email: 'admin@example.com', is_active: true }
+  ];
+  
+  // Notification mutations
+  const notifySpecificAdminMutation = useNotifySpecificAdmin();
+  const notifyAllCustomersMutation = useNotifyAllCustomers();
+  
+  // Toast for feedback
+  const { showToast } = useToast();
+
+  // Handle admin selection
+  const handleAdminToggle = (adminId: number) => {
+    setSelectedAdmins(prev => 
+      prev.includes(adminId) 
+        ? prev.filter(id => id !== adminId)
+        : [...prev, adminId]
+    );
+  };
+
+  const handleSelectAllAdmins = () => {
+    if (selectAllAdmins) {
+      setSelectedAdmins([]);
+      setSelectAllAdmins(false);
+    } else {
+      const allAdminIds = admins?.map(admin => admin.id) || [];
+      setSelectedAdmins(allAdminIds);
+      setSelectAllAdmins(true);
+    }
+  };
+
+  // Handle notification sending
+  const handleSendToAdmins = async () => {
+    if (!notificationTitle.trim() || !notificationMessage.trim()) {
+      showToast({
+        type: 'error',
+        title: 'Câmpuri obligatorii',
+        message: 'Vă rugăm să completați titlul și mesajul notificării.',
+      });
+      return;
+    }
+
+    if (selectedAdmins.length === 0) {
+      showToast({
+        type: 'error',
+        title: 'Selecție necesară',
+        message: 'Vă rugăm să selectați cel puțin un admin.',
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        title: notificationTitle,
+        body: notificationMessage,
+        data: {
+          type: 'test_notification',
+          timestamp: new Date().toISOString(),
+        },
+        tag: `test_${Date.now()}`,
+      };
+
+      // Send to selected admins
+      for (const adminId of selectedAdmins) {
+        await notifySpecificAdminMutation.mutateAsync({ adminId, payload });
+      }
+
+      showToast({
+        type: 'success',
+        title: 'Notificare trimisă',
+        message: `Notificare trimisă cu succes către ${selectedAdmins.length} admin(i)!`,
+      });
+      setNotificationTitle('');
+      setNotificationMessage('');
+      setSelectedAdmins([]);
+      setSelectAllAdmins(false);
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      showToast({
+        type: 'error',
+        title: 'Eroare la trimitere',
+        message: 'Eroare la trimiterea notificării. Vă rugăm să încercați din nou.',
+      });
+    }
+  };
+
+  const handleSendToAllCustomers = async () => {
+    if (!notificationTitle.trim() || !notificationMessage.trim()) {
+      showToast({
+        type: 'error',
+        title: 'Câmpuri obligatorii',
+        message: 'Vă rugăm să completați titlul și mesajul notificării.',
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        title: notificationTitle,
+        body: notificationMessage,
+        data: {
+          type: 'test_notification',
+          timestamp: new Date().toISOString(),
+        },
+        tag: `test_${Date.now()}`,
+      };
+
+      await notifyAllCustomersMutation.mutateAsync(payload);
+      showToast({
+        type: 'success',
+        title: 'Notificare trimisă',
+        message: 'Notificare trimisă cu succes către toți clienții!',
+      });
+      setNotificationTitle('');
+      setNotificationMessage('');
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      showToast({
+        type: 'error',
+        title: 'Eroare la trimitere',
+        message: 'Eroare la trimiterea notificării. Vă rugăm să încercați din nou.',
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -128,6 +259,8 @@ const NotificationsTests: React.FC = () => {
                     <input
                       type="checkbox"
                       id="select-all-admins"
+                      checked={selectAllAdmins}
+                      onChange={handleSelectAllAdmins}
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="select-all-admins" className="text-sm text-gray-700">
@@ -135,38 +268,44 @@ const NotificationsTests: React.FC = () => {
                     </label>
                   </div>
                   
-                  {/* Admin List - Placeholder for now */}
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
-                      <input
-                        type="checkbox"
-                        id="admin-1"
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <label htmlFor="admin-1" className="text-sm text-gray-700">
-                        Admin 1 (admin@example.com)
-                      </label>
+                  {/* Admin List */}
+                  {admins && admins.length > 0 ? (
+                    <div className="space-y-2">
+                      {admins.map((admin) => (
+                        <div key={admin.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
+                          <input
+                            type="checkbox"
+                            id={`admin-${admin.id}`}
+                            checked={selectedAdmins.includes(admin.id)}
+                            onChange={() => handleAdminToggle(admin.id)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <label htmlFor={`admin-${admin.id}`} className="text-sm text-gray-700">
+                            {admin.username} {admin.email && `(${admin.email})`}
+                          </label>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
-                      <input
-                        type="checkbox"
-                        id="admin-2"
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <label htmlFor="admin-2" className="text-sm text-gray-700">
-                        Admin 2 (admin2@example.com)
-                      </label>
+                  ) : (
+                    <div className="text-gray-500 text-sm">
+                      Nu au fost găsiți admini în sistem.
                     </div>
-                  </div>
+                  )}
                 </div>
                 
                 <div className="mt-4">
                   <Button
                     variant="primary"
                     size="sm"
-                    disabled
+                    onClick={handleSendToAdmins}
+                    disabled={
+                      !notificationTitle.trim() || 
+                      !notificationMessage.trim() || 
+                      selectedAdmins.length === 0 ||
+                      notifySpecificAdminMutation.isPending
+                    }
                   >
-                    Trimite notificare de test
+                    {notifySpecificAdminMutation.isPending ? 'Se trimite...' : 'Trimite notificare de test'}
                   </Button>
                 </div>
               </div>
@@ -188,10 +327,15 @@ const NotificationsTests: React.FC = () => {
                   <Button
                     variant="primary"
                     size="sm"
-                    disabled
+                    onClick={handleSendToAllCustomers}
+                    disabled={
+                      !notificationTitle.trim() || 
+                      !notificationMessage.trim() ||
+                      notifyAllCustomersMutation.isPending
+                    }
                     className="bg-red-600 hover:bg-red-700"
                   >
-                    Trimite către toți clienții
+                    {notifyAllCustomersMutation.isPending ? 'Se trimite...' : 'Trimite către toți clienții'}
                   </Button>
                 </div>
               </div>

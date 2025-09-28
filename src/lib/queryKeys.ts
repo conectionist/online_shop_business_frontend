@@ -96,6 +96,20 @@ export const queryKeys = {
     nextDeliveryDate: (referenceDate?: string) => 
       [...queryKeys.system.all, 'next-delivery-date', referenceDate] as const,
   },
+
+  // Admins
+  admins: {
+    all: ['admins'] as const,
+    lists: () => [...queryKeys.admins.all, 'list'] as const,
+    list: (filters?: Record<string, any>) => 
+      [...queryKeys.admins.lists(), filters] as const,
+  },
+
+  // Notifications
+  notifications: {
+    all: ['notifications'] as const,
+    lists: () => [...queryKeys.notifications.all, 'list'] as const,
+  },
 };
 
 // Helper function to invalidate related queries
