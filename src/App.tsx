@@ -27,6 +27,10 @@ import ListsList from './pages/admin/ListsList'
 import ListForm from './pages/admin/ListForm'
 import ListProducts from './pages/admin/ListProducts'
 import ListManagement from './pages/admin/ListManagement'
+import NotificationsPage from './pages/admin/NotificationsPage'
+import NotificationsSubscriptions from './pages/admin/NotificationsSubscriptions'
+import NotificationsClientNotifications from './pages/admin/NotificationsClientNotifications'
+import NotificationsTests from './pages/admin/NotificationsTests'
 import CartPage from './pages/customer/CartPage'
 import OrderForm from './pages/customer/OrderForm'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
@@ -103,6 +107,10 @@ function App() {
             <Route path="lists/:id/edit" element={<ListForm />} />
             <Route path="lists/:id/products" element={<ListProducts />} />
             <Route path="lists/:id/manage" element={<ListManagement />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="notifications/subscriptions" element={<NotificationsSubscriptions />} />
+            <Route path="notifications/client-notifications" element={<NotificationsClientNotifications />} />
+            <Route path="notifications/tests" element={<NotificationsTests />} />
             {/* Future admin routes will go here */}
           </Route>
 
