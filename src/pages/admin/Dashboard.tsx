@@ -96,7 +96,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <Copy className="h-8 w-8 text-blue-600" />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Clonează lista</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Clonează ultima lista</h3>
                     <p className="text-gray-600 text-sm">Clonează cea mai recentă listă</p>
                   </div>
                 </div>
