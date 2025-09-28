@@ -109,8 +109,8 @@ const ListManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="space-y-4">
+        <div className="flex items-center">
           <Button
             variant="secondary"
             size="sm"
@@ -119,14 +119,14 @@ const ListManagement: React.FC = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Înapoi la Liste
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {list.data ? `Lista ${list.data}` : 'Lista'}
-            </h1>
-            <p className="text-gray-600">
-              {getTabDescription()}
-            </p>
-          </div>
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {list.data ? `Lista ${list.data}` : 'Lista'}
+          </h1>
+          <p className="text-gray-600">
+            {getTabDescription()}
+          </p>
         </div>
       </div>
 
