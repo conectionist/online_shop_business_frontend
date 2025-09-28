@@ -542,134 +542,162 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         {/* Extra Options Group - only shown when toggle is on */}
         {showExtraOptions && (
           <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="space-y-3">
-              {/* Group by Delivery Toggle */}
-              <div className="flex items-center space-x-2">
-                <input
-                  id="group-by-delivery-toggle"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  checked={groupByDelivery}
-                  onChange={(e) => setGroupByDelivery(e.target.checked)}
-                />
-                <label htmlFor="group-by-delivery-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
-                  Grupează după metoda de livrare
-                </label>
+            <div className="space-y-4">
+              {/* Display Options Section */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-300 pb-1">
+                  Opțiuni de afișare
+                </h4>
+                
+                {/* Group by Delivery Toggle */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="group-by-delivery-toggle"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    checked={groupByDelivery}
+                    onChange={(e) => setGroupByDelivery(e.target.checked)}
+                  />
+                  <label htmlFor="group-by-delivery-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
+                    Grupează după metoda de livrare
+                  </label>
+                </div>
               </div>
 
-              {/* Sorting Options */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
+              {/* Sorting Options Section */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-300 pb-1">
                   Sortează comenzi
-                </label>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="sort-chronological"
-                      type="radio"
-                      name="sortBy"
-                      value="chronological"
-                      checked={sortBy === 'chronological'}
-                      onChange={(e) => setSortBy(e.target.value as 'chronological' | 'alphabetical')}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label htmlFor="sort-chronological" className="text-sm text-gray-700 select-none cursor-pointer">
-                      Cronologic
+                </h4>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sortează după
                     </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="sort-alphabetical"
-                      type="radio"
-                      name="sortBy"
-                      value="alphabetical"
-                      checked={sortBy === 'alphabetical'}
-                      onChange={(e) => setSortBy(e.target.value as 'chronological' | 'alphabetical')}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label htmlFor="sort-alphabetical" className="text-sm text-gray-700 select-none cursor-pointer">
-                      Alfabetic
-                    </label>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="sort-asc"
-                      type="radio"
-                      name="sortOrder"
-                      value="asc"
-                      checked={sortOrder === 'asc'}
-                      onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label htmlFor="sort-asc" className="text-sm text-gray-700 select-none cursor-pointer">
-                      Crescător
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="sort-desc"
-                      type="radio"
-                      name="sortOrder"
-                      value="desc"
-                      checked={sortOrder === 'desc'}
-                      onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label htmlFor="sort-desc" className="text-sm text-gray-700 select-none cursor-pointer">
-                      Descrescător
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Merge Similar Orders */}
-              <div className="flex items-center space-x-2" ref={mergeInfoRef}>
-                <input
-                  id="merge-similar-toggle"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  checked={mergeSimilar}
-                  onChange={(e) => setMergeSimilar(e.target.checked)}
-                />
-                <label htmlFor="merge-similar-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
-                  Unește comenzile acelorași clienți
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowMergeInfo((v) => !v)}
-                  className="inline-flex items-center justify-center p-0.5 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Deschide explicația pentru unirea comenzilor"
-                >
-                  <Info className="w-4 h-4 text-gray-400" />
-                </button>
-                {showMergeInfo && (
-                  <div className="relative">
-                    <div className="absolute z-50 mt-2 w-96 max-w-[28rem] rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-700 shadow-lg">
-                      Dacă un client dă o comandă și apoi își amintește că mai vrea un produs sau mai multe și mai plasează o comandă, vor apărea două comenzi listate aici.
-                      <br />
-                      Bifând această căsuță, comenzile care aparțin aceluiași client pot fi unite într-una singură.
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          id="sort-chronological"
+                          type="radio"
+                          name="sortBy"
+                          value="chronological"
+                          checked={sortBy === 'chronological'}
+                          onChange={(e) => setSortBy(e.target.value as 'chronological' | 'alphabetical')}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor="sort-chronological" className="text-sm text-gray-700 select-none cursor-pointer">
+                          Cronologic
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          id="sort-alphabetical"
+                          type="radio"
+                          name="sortBy"
+                          value="alphabetical"
+                          checked={sortBy === 'alphabetical'}
+                          onChange={(e) => setSortBy(e.target.value as 'chronological' | 'alphabetical')}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor="sort-alphabetical" className="text-sm text-gray-700 select-none cursor-pointer">
+                          Alfabetic
+                        </label>
+                      </div>
                     </div>
                   </div>
-                )}
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ordinea
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          id="sort-asc"
+                          type="radio"
+                          name="sortOrder"
+                          value="asc"
+                          checked={sortOrder === 'asc'}
+                          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor="sort-asc" className="text-sm text-gray-700 select-none cursor-pointer">
+                          Crescător
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          id="sort-desc"
+                          type="radio"
+                          name="sortOrder"
+                          value="desc"
+                          checked={sortOrder === 'desc'}
+                          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor="sort-desc" className="text-sm text-gray-700 select-none cursor-pointer">
+                          Descrescător
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Multi-select Toggle */}
-              <div className="flex items-center space-x-2">
-                <input
-                  id="multi-select-toggle"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  checked={multiSelectEnabled}
-                  onChange={(e) => {
-                    setMultiSelectEnabled(e.target.checked);
-                    setSelectedOrderIds(new Set());
-                  }}
-                />
-                <label htmlFor="multi-select-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
-                  Selectare multiplă
-                </label>
+              {/* Action Options Section */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-300 pb-1">
+                  Opțiuni de acțiune
+                </h4>
+                
+                {/* Merge Similar Orders */}
+                <div className="flex items-center space-x-2" ref={mergeInfoRef}>
+                  <input
+                    id="merge-similar-toggle"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    checked={mergeSimilar}
+                    onChange={(e) => setMergeSimilar(e.target.checked)}
+                  />
+                  <label htmlFor="merge-similar-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
+                    Unește comenzile acelorași clienți
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowMergeInfo((v) => !v)}
+                    className="inline-flex items-center justify-center p-0.5 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Deschide explicația pentru unirea comenzilor"
+                  >
+                    <Info className="w-4 h-4 text-gray-400" />
+                  </button>
+                  {showMergeInfo && (
+                    <div className="relative">
+                      <div className="absolute z-50 mt-2 w-96 max-w-[28rem] rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-700 shadow-lg">
+                        Dacă un client dă o comandă și apoi își amintește că mai vrea un produs sau mai multe și mai plasează o comandă, vor apărea două comenzi listate aici.
+                        <br />
+                        Bifând această căsuță, comenzile care aparțin aceluiași client pot fi unite într-una singură.
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Multi-select Toggle */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="multi-select-toggle"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    checked={multiSelectEnabled}
+                    onChange={(e) => {
+                      setMultiSelectEnabled(e.target.checked);
+                      setSelectedOrderIds(new Set());
+                    }}
+                  />
+                  <label htmlFor="multi-select-toggle" className="text-sm text-gray-700 select-none cursor-pointer">
+                    Selectare multiplă
+                  </label>
+                </div>
               </div>
             </div>
           </div>
