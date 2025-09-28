@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart, Copy } from 'lucide-react';
+import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart, Copy, Bell } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { useLists, useCloneList } from '@/hooks/useLists';
 import { useToast } from '@/components/ui/ToastContainer';
@@ -156,7 +156,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Settings Section */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Setări</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Setări Afacere</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link to="/admin/business-details" className="block">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -164,7 +164,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <Building2 className="h-8 w-8 text-indigo-600" />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Detalii Afacere</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Informațiile Firmei</h3>
                     <p className="text-gray-600 text-sm">Gestionează informațiile companiei</p>
                   </div>
                 </div>
@@ -227,6 +227,26 @@ const AdminDashboard: React.FC = () => {
               </div>
             </Card>
           </Link>
+
+        </div>
+      </div>
+
+      {/* System Section */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Sistem</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="opacity-60 cursor-not-allowed">
+            <div className="p-6">
+              <div className="flex items-center space-x-3">
+                <Bell className="h-8 w-8 text-blue-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Notificări</h3>
+                  <p className="text-gray-600 text-sm">Configurează notificările sistemului</p>
+                  <p className="text-xs text-gray-500 mt-1">În curând</p>
+                </div>
+              </div>
+            </div>
+          </Card>
 
           <Card className="opacity-60 cursor-not-allowed">
             <div className="p-6">
