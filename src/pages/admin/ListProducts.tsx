@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Package, Trash2 } from 'lucide-react';
 import { useList } from '@/hooks/useLists';
-import { useListProducts, useAddProductsToList, useRemoveProductFromList } from '@/hooks/useLists';
+import { useListProducts, useAddProductsToList, useRemoveProductFromList, useUpdateListProductStock } from '@/hooks/useLists';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -37,6 +37,7 @@ const ListProducts: React.FC = () => {
   // Mutations
   const addProductsMutation = useAddProductsToList();
   const removeProductMutation = useRemoveProductFromList();
+  const updateStockMutation = useUpdateListProductStock();
 
   // Filter available products (products not already in the list)
   const availableProducts = useMemo(() => {
@@ -242,14 +243,50 @@ const ListProducts: React.FC = () => {
                         </p> */}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setProductToRemove(product)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setProductToRemove(product)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  {/* Availability row */}
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                      <span className={`text-sm font-medium ${product.stoc_produs === 0 ? 'text-red-700' : 'text-green-700'}`}>
+                        {product.stoc_produs === 0 ? 'Indisponibil' : 'Disponibil'}
+                      </span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={product.stoc_produs !== 0}
+                        onClick={async () => {
+                          const makeUnavailable = !(product.stoc_produs === 0);
+                          try {
+                            await updateStockMutation.mutateAsync({
+                              listId,
+                              productId: product.id,
+                              stock: makeUnavailable ? 0 : null,
+                            });
+                          } catch (err) {
+                            console.error('Failed to toggle availability:', err);
+                          }
+                        }}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                          product.stoc_produs === 0 ? 'bg-red-600' : 'bg-green-600'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            product.stoc_produs !== 0 ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

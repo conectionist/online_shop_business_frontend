@@ -15,7 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 2.28.1 - 2025-09-29
 - Security: Enforced strong password requirements with live checklist (min length, upper/lower, digit, special, not same as current)
 
-## 2.28.2 - 2025-09-29
+## 2.29.0 - 2025-09-29
+- Admin: Added availability toggle for list products (flat and grouped tabs)
+  - Toggle sets `stoc_produs` to 0 (Indisponibil) or null (Disponibil)
+  - Clear pill switch UI with color and label states
+- Customer: Disabled Add to Cart for unavailable products, centered bold badge “Nu mai avem momentan”
+- Services/Hooks: Added PATCH support for updating `stoc_produs` on list-product link
 - Security: Update policy to min 10 chars and ASCII-only (no diacritics, no spaces)
 
 ## 2.23.0 - 2025-09-26

@@ -341,3 +341,21 @@ export const useBulkUpdatePositions = () => {
     },
   });
 }; 
+
+// Hook to update stock (availability) for a product in a list
+export const useUpdateListProductStock = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ listId, productId, stock }: { listId: number; productId: number; stock: number | null }) =>
+      listService.updateListProductStock(listId, productId, stock),
+    onSuccess: (_, { listId }) => {
+      // Invalidate products (both ordered and flat) for this list
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.lists.detail(listId), 'products'] });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.lists.detail(listId), 'products', 'ordered'] });
+    },
+    onError: (error) => {
+      console.error('Failed to update list product stock:', error);
+    },
+  });
+};

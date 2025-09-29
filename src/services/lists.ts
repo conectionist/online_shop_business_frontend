@@ -126,6 +126,18 @@ export const listService = {
     });
   },
 
+  // Update stock (availability) for a product already in a list (PROTECTED)
+  updateListProductStock: async (
+    listId: number,
+    productId: number,
+    stock: number | null
+  ): Promise<{ list_id: number; product_id: number; stoc_produs: number | null }> => {
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.patch(`/liste/${listId}/products/${productId}`, { stoc_produs: stock });
+      return response.data;
+    });
+  },
+
   // Add multiple products to a list in batch (PROTECTED - requires auth)
   addProductsToList: async (listId: number, productIds: number[]): Promise<any[]> => {
     return authService.makeAuthenticatedRequest(async () => {

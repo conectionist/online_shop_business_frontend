@@ -278,7 +278,7 @@ export interface ListProduct {
   description?: string;
   category_id: number;
   unitati_id: number;
-  stoc_produs: number; // Stock for this product in this list
+  stoc_produs: number | null; // Stock for this product in this list (null means ignored)
   created_at: string;
   updated_at: string;
   is_deleted: boolean;

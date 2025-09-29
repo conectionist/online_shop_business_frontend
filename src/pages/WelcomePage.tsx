@@ -491,7 +491,7 @@ const WelcomePage: React.FC = () => {
                                     e.stopPropagation();
                                     addToCart(product);
                                   }}
-                                  disabled={addingToCart[product.id]}
+                                  disabled={addingToCart[product.id] || product.stoc_produs === 0}
                                   className={components.button.primary("w-full sm:w-auto font-medium py-2 px-4 rounded-lg mt-1")}
                                 >
                                   {addingToCart[product.id] ? (
@@ -502,13 +502,20 @@ const WelcomePage: React.FC = () => {
                                   ) : (
                                     <>
                                       <Plus className="w-4 h-4 mr-2" />
-                                      Adaugă în coș
+                                      {product.stoc_produs === 0 ? 'Indisponibil' : 'Adaugă în coș'}
                                     </>
                                   )}
                                 </Button>
                               </div>
                             </div>
                         </div>
+                        {product.stoc_produs === 0 && (
+                          <div className="px-6 pb-4 -mt-2 flex justify-center">
+                            <div className="text-sm font-bold inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700">
+                              Nu mai avem momentan
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
