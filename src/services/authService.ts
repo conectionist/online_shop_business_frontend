@@ -80,6 +80,18 @@ class AuthService {
     }
   }
 
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    return this.makeAuthenticatedRequest(async () => {
+      // Use absolute URL to avoid any baseURL confusion like in login
+      const baseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || getApiBaseUrl();
+      const fullUrl = `${baseUrl}/api/v1/auth/change-password`;
+      await apiClient.post(fullUrl, {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+    });
+  }
+
   logout(): void {
     // Clear tokens from localStorage
     localStorage.removeItem('access_token');

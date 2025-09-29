@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.28.0 - 2025-09-29
+- Admin: Added `Securitate` page under Setări with Change Password form
+- Auth: Implemented `POST /api/v1/auth/change-password` integration in frontend
+
 ## 2.23.0 - 2025-09-26
 - Lists: Added optional expiration datetime support
   - Admin can set `Data Expirării` with date+time (no timezone shift)

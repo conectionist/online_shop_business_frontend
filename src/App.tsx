@@ -22,6 +22,7 @@ import DeliveryTypeForm from './pages/admin/DeliveryTypeForm'
 import PaymentMethodsList from './pages/admin/PaymentMethodsList'
 import PaymentMethodForm from './pages/admin/PaymentMethodForm'
 import BusinessDetailsList from './pages/admin/BusinessDetailsList'
+import SecurityPage from './pages/admin/SecurityPage'
 import BusinessDetailsForm from './pages/admin/BusinessDetailsForm'
 import ListsList from './pages/admin/ListsList'
 import ListForm from './pages/admin/ListForm'
@@ -98,6 +99,7 @@ function App() {
             <Route path="business-details" element={<BusinessDetailsList />} />
             <Route path="business-details/new" element={<BusinessDetailsForm />} />
             <Route path="business-details/:id/edit" element={<BusinessDetailsForm />} />
+            <Route path="security" element={<SecurityPage />} />
             <Route path="lists" element={<ListsList />} />
             <Route path="lists/new" element={<ListForm />} />
             <Route path="lists/:id/edit" element={<ListForm />} />

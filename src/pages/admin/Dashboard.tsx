@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart, Copy } from 'lucide-react';
+import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart, Copy, Shield } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { useLists, useCloneList } from '@/hooks/useLists';
 import { useToast } from '@/components/ui/ToastContainer';
@@ -222,6 +222,20 @@ const AdminDashboard: React.FC = () => {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Unități</h3>
                     <p className="text-gray-600 text-sm">Gestionează unitățile de măsură</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </Link>
+
+          <Link to="/admin/security" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <Shield className="h-8 w-8 text-red-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Securitate</h3>
+                    <p className="text-gray-600 text-sm">Setări de securitate</p>
                   </div>
                 </div>
               </div>
