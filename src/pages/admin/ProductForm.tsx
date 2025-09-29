@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
-import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, useDeleteProductImage } from '@/hooks/useProducts';
+import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, useDeleteProductImage, useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { ProductCreate, ProductUpdate } from '@/types/api';
@@ -38,9 +38,8 @@ interface ValidationRule {
 const VALIDATION_RULES: Record<string, ValidationRule> = {
   nume: {
     required: true,
-    minLength: 2,
+    minLength: 1,
     maxLength: VALIDATION.PRODUCT_NAME_MAX_LENGTH,
-    pattern: /^[a-zA-ZăâîșțĂÂÎȘȚ0-9\s\-_.,()%]+$/
   },
   pret: {
     required: true,
@@ -79,9 +78,8 @@ interface ValidationMessages {
 const VALIDATION_MESSAGES: Record<string, ValidationMessages> = {
   nume: {
     required: 'Numele produsului este obligatoriu',
-    minLength: 'Numele produsului trebuie să aibă cel puțin 2 caractere',
-    maxLength: 'Numele produsului nu poate depăși 100 de caractere',
-    pattern: 'Numele produsului conține caractere invalide'
+    minLength: 'Numele produsului trebuie să aibă cel puțin 1 caracter',
+    maxLength: 'Numele produsului nu poate depăși 100 de caractere'
   },
   pret: {
     required: 'Prețul este obligatoriu',
@@ -129,6 +127,7 @@ const ProductForm: React.FC = () => {
 
   // Fetch product data if editing
   const { data: product, isLoading: isLoadingProduct } = useProduct(Number(id));
+  const { data: allProducts } = useProducts();
 
   // Mutations and queries
   const createProductMutation = useCreateProduct();
@@ -190,14 +189,12 @@ const ProductForm: React.FC = () => {
 
     // String validations
     if (typeof value === 'string') {
-      if (rules.minLength && value.length < rules.minLength) {
+      const trimmed = value.trim();
+      if (rules.minLength && trimmed.length < rules.minLength) {
         return messages.minLength || '';
       }
-      if (rules.maxLength && value.length > rules.maxLength) {
+      if (rules.maxLength && trimmed.length > rules.maxLength) {
         return messages.maxLength || '';
-      }
-      if (rules.pattern && !rules.pattern.test(value)) {
-        return messages.pattern || '';
       }
     }
 
@@ -212,6 +209,23 @@ const ProductForm: React.FC = () => {
     }
 
     return '';
+  };
+
+  const normalizeForUniqueness = (text: string): string =>
+    (text || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  const isDuplicateName = (name: string): boolean => {
+    if (!allProducts || !Array.isArray(allProducts)) return false;
+    const currentId = isEditing ? Number(id) : null;
+    const target = normalizeForUniqueness(name);
+    return allProducts.some((p: any) => {
+      if (currentId && p.id === currentId) return false;
+      return normalizeForUniqueness(p.nume || '') === target;
+    });
   };
 
   // Validate entire form
@@ -427,6 +441,12 @@ const ProductForm: React.FC = () => {
               required
               maxLength={VALIDATION_RULES.nume.maxLength}
             />
+            {touched.nume && !errors.nume && isDuplicateName(formData.nume) && (
+              <p className="text-sm text-red-600 mt-1 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                Acest nume pare deja folosit (verificare rapidă). Vă rugăm să verificați.
+              </p>
+            )}
             {touched.nume && !errors.nume && (
               <p className="text-sm text-green-600 mt-1">
                 ✓ Numele produsului este valid
