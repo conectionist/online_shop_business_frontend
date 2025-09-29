@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Create public directory if it doesn't exist and create a placeholder config.js (will be replaced at runtime)
-RUN mkdir -p public && echo 'window.__RUNTIME_CONFIG__ = { VITE_API_BASE_URL: "PLACEHOLDER", VITE_APP_NAME: "PLACEHOLDER", VITE_LOGO_PATH: "PLACEHOLDER" };' > public/config.js
+RUN mkdir -p public && echo 'window.__RUNTIME_CONFIG__ = { VITE_API_BASE_URL: "PLACEHOLDER", VITE_APP_NAME: "PLACEHOLDER", VITE_LOGO_PATH: "PLACEHOLDER", VITE_SITE_URL: "PLACEHOLDER" };' > public/config.js
 
 # Build arguments for environment variables
 ARG VITE_API_BASE_URL

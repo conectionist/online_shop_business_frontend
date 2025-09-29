@@ -36,8 +36,28 @@
         }
       });
     </script>
-    <!-- Plausible Analytics -->
-    <script defer data-domain="pcma.ro" src="https://analytics.akdscloud.eu/js/script.js"></script>
+    <!-- Plausible Analytics injected via runtime config -->
+    <script>
+      (function() {
+        function getSiteHostname() {
+          try {
+            var configured = (window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VITE_SITE_URL) || (typeof importMeta !== 'undefined' && importMeta.env && importMeta.env.VITE_SITE_URL) || null;
+            if (configured) {
+              var url = new URL(configured);
+              return url.hostname;
+            }
+          } catch (e) {}
+          return window.location.hostname || 'localhost';
+        }
+
+        var domain = getSiteHostname();
+        var s = document.createElement('script');
+        s.setAttribute('defer', '');
+        s.setAttribute('data-domain', domain);
+        s.src = 'https://analytics.akdscloud.eu/js/script.js';
+        document.head.appendChild(s);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
