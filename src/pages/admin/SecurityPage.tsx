@@ -3,6 +3,7 @@ import AdminPageHeader from '@/components/layout/AdminPageHeader';
 import { useToast } from '@/components/ui/ToastContainer';
 import { authService } from '@/services/authService';
 import { useFormWithAuth } from '@/hooks/useFormWithAuth';
+import { Check, X } from 'lucide-react';
 
 const SecurityPage: React.FC = () => {
   return (
@@ -33,13 +34,25 @@ const ChangePasswordForm: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const hasMinLength = newPassword.length >= 10;
+  const hasUppercase = /[A-Z]/.test(newPassword);
+  const hasLowercase = /[a-z]/.test(newPassword);
+  const hasDigit = /\d/.test(newPassword);
+  const hasSpecial = /[^A-Za-z0-9]/.test(newPassword);
+  const isAsciiOnly = /^[\x20-\x7E]*$/.test(newPassword);
+  const notSameAsCurrent = Boolean(newPassword) && Boolean(currentPassword) && newPassword !== currentPassword;
+
   const validate = (): string | null => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       return 'Vă rugăm să completați toate câmpurile.';
     }
-    if (newPassword.length < 8) {
-      return 'Parola nouă trebuie să aibă cel puțin 8 caractere.';
-    }
+    if (!hasMinLength) return 'Parola nouă trebuie să aibă cel puțin 10 caractere.';
+    if (!hasUppercase) return 'Parola nouă trebuie să conțină cel puțin o literă mare.';
+    if (!hasLowercase) return 'Parola nouă trebuie să conțină cel puțin o literă mică.';
+    if (!hasDigit) return 'Parola nouă trebuie să conțină cel puțin o cifră.';
+    if (!hasSpecial) return 'Parola nouă trebuie să conțină cel puțin un simbol.';
+    if (!isAsciiOnly) return 'Parola poate conține doar litere din alfabetul latin (fără diacritice).';
+    if (!notSameAsCurrent) return 'Parola nouă trebuie să fie diferită de parola curentă.';
     if (newPassword !== confirmPassword) {
       return 'Parola nouă și confirmarea nu coincid.';
     }
@@ -91,8 +104,21 @@ const ChangePasswordForm: React.FC = () => {
           onChange={(e) => setNewPassword(e.target.value)}
           autoComplete="new-password"
           required
-          minLength={8}
+          minLength={10}
         />
+
+        {/* Live password requirements checklist */}
+        <div className="mt-3 space-y-1 text-sm">
+          <PasswordRule ok={hasMinLength} label="Cel puțin 10 caractere" />
+          <PasswordRule ok={hasUppercase} label="Cel puțin o literă mare (A-Z)" />
+          <PasswordRule ok={hasLowercase} label="Cel puțin o literă mică (a-z)" />
+          <PasswordRule ok={hasDigit} label="Cel puțin o cifră (0-9)" />
+          <PasswordRule ok={hasSpecial} label="Cel puțin un simbol (!@#$% etc.)" />
+          <PasswordRule ok={isAsciiOnly} label="Doar litere din alfabetul latin (fără diacritice sau spații)" />
+          {currentPassword && (
+            <PasswordRule ok={notSameAsCurrent} label="Diferită de parola curentă" />
+          )}
+        </div>
       </div>
 
       <div>
@@ -104,7 +130,7 @@ const ChangePasswordForm: React.FC = () => {
           onChange={(e) => setConfirmPassword(e.target.value)}
           autoComplete="new-password"
           required
-          minLength={8}
+          minLength={10}
         />
       </div>
 
@@ -118,6 +144,15 @@ const ChangePasswordForm: React.FC = () => {
         </button>
       </div>
     </form>
+  );
+};
+
+const PasswordRule: React.FC<{ ok: boolean; label: string }> = ({ ok, label }) => {
+  return (
+    <div className={`flex items-center ${ok ? 'text-green-600' : 'text-gray-500'}`}>
+      {ok ? <Check className="w-4 h-4 mr-2" /> : <X className="w-4 h-4 mr-2" />}
+      <span>{label}</span>
+    </div>
   );
 };
 
