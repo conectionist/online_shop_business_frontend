@@ -16,6 +16,7 @@ import { useToast } from '@/components/ui/ToastContainer';
 import { getDeliveryTax } from '@/utils/delivery';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
 import OrdersPDF from '@/components/features/admin/OrdersPDF';
+import ProductsTotalsPDF from '@/components/features/admin/ProductsTotalsPDF';
 import { EditOrderForm } from '@/components/features/admin/EditOrderForm';
 import { pdf } from '@react-pdf/renderer';
 
@@ -32,6 +33,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [openDropdown, setOpenDropdown] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState<OrderRead | null>(null);
+  const [totalsMenuOpen, setTotalsMenuOpen] = useState(false);
 
   // Local UI state
   const [showExtraOptions, setShowExtraOptions] = useState(false);
@@ -433,6 +435,92 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       
     } catch (error) {
       console.error('Error generating PDF:', error);
+      showToast({
+        type: 'error',
+        title: 'Eroare la generarea PDF-ului',
+        message: 'Vă rugăm să încercați din nou.'
+      });
+    }
+  };
+
+  const handleTotalsPrint = () => {
+    setTotalsMenuOpen(false);
+    // Build items in the same order as the Produse tab (flattened list order)
+    const orderedProductIds: number[] = (listProductsData?.categories || [])
+      .flatMap((cat: any) => (cat.products || []).map((p: any) => p.id));
+    const items = Object.entries(orderTotals)
+      .map(([id, v]: any) => ({ id: parseInt(id, 10), name: v.name, quantity: v.quantity }))
+      .sort((a, b) => {
+        const ia = orderedProductIds.indexOf(a.id);
+        const ib = orderedProductIds.indexOf(b.id);
+        if (ia === -1 && ib === -1) return a.name.localeCompare(b.name, 'ro-RO');
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+
+    // Open a lightweight print window with just the totals content
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    const dateStr = new Date().toLocaleDateString('ro-RO');
+    printWindow.document.write(`<!doctype html>
+      <html lang="ro">
+        <head>
+          <meta charset="utf-8" />
+          <title>Total Comenzi per Produs</title>
+          <style>
+            body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif; padding: 24px; }
+            h1 { font-size: 20px; margin: 0 0 4px 0; }
+            .subtitle { color: #666; margin-bottom: 16px; font-size: 12px; }
+            .row { display: flex; justify-content: space-between; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 8px; }
+            .name { color: #111827; }
+            .qty { color: #1f2937; font-weight: 700; }
+            @media print { @page { margin: 10mm; } }
+          </style>
+        </head>
+        <body>
+          <h1>Total Comenzi per Produs</h1>
+          <div class="subtitle">${dateStr}</div>
+          ${items.map(item => `<div class="row"><div class="name">${item.name}</div><div class="qty">${item.quantity}</div></div>`).join('')}
+        </body>
+      </html>`);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow!.print();
+      printWindow!.onafterprint = () => printWindow!.close();
+    };
+  };
+
+  const handleTotalsSaveAsPDF = async () => {
+    setTotalsMenuOpen(false);
+    try {
+      // Build items in the same order as the Produse tab (flattened list order)
+      const orderedProductIds: number[] = (listProductsData?.categories || [])
+        .flatMap((cat: any) => (cat.products || []).map((p: any) => p.id));
+      const items = Object.entries(orderTotals)
+        .map(([id, v]: any) => ({ id: parseInt(id, 10), name: v.name, quantity: v.quantity }))
+        .sort((a, b) => {
+          const ia = orderedProductIds.indexOf(a.id);
+          const ib = orderedProductIds.indexOf(b.id);
+          if (ia === -1 && ib === -1) return a.name.localeCompare(b.name, 'ro-RO');
+          if (ia === -1) return 1;
+          if (ib === -1) return -1;
+          return ia - ib;
+        })
+        .map(({ name, quantity }) => ({ name, quantity }));
+
+      const doc = <ProductsTotalsPDF items={items} />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `total-comenzi-per-produs-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating totals PDF:', error);
       showToast({
         type: 'error',
         title: 'Eroare la generarea PDF-ului',
@@ -958,9 +1046,37 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       {Object.keys(orderTotals).length > 0 && (
         <Card>
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Total Comenzi per Produs
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Total Comenzi per Produs
+              </h3>
+              <div className="relative">
+                <button
+                  onClick={() => setTotalsMenuOpen(v => !v)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+                {totalsMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                    <button
+                      onClick={handleTotalsPrint}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <Printer className="w-4 h-4 mr-3 text-gray-400" />
+                      Tipărește
+                    </button>
+                    <button
+                      onClick={handleTotalsSaveAsPDF}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                      Salvează PDF
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
             <p className="text-sm text-gray-600">
               Suma totală comandată pentru fiecare produs din această listă
             </p>
