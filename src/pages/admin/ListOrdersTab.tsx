@@ -17,6 +17,7 @@ import { getDeliveryTax } from '@/utils/delivery';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
 import OrdersPDF from '@/components/features/admin/OrdersPDF';
 import ProductsTotalsPDF from '@/components/features/admin/ProductsTotalsPDF';
+import * as XLSX from 'xlsx-js-style';
 import { EditOrderForm } from '@/components/features/admin/EditOrderForm';
 import { pdf } from '@react-pdf/renderer';
 
@@ -527,6 +528,59 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         message: 'Vă rugăm să încercați din nou.'
       });
     }
+  };
+
+  const handleTotalsSaveAsXLS = () => {
+    setTotalsMenuOpen(false);
+    // Build items in the same order as the Produse tab (flattened list order)
+    const orderedProductIds: number[] = (listProductsData?.categories || [])
+      .flatMap((cat: any) => (cat.products || []).map((p: any) => p.id));
+    const items = Object.entries(orderTotals)
+      .map(([id, v]: any) => ({ id: parseInt(id, 10), Nume: v.name, Cantitate: v.quantity }))
+      .sort((a, b) => {
+        const ia = orderedProductIds.indexOf(a.id);
+        const ib = orderedProductIds.indexOf(b.id);
+        if (ia === -1 && ib === -1) return a.Nume.localeCompare(b.Nume, 'ro-RO');
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      })
+      .map(({ id, ...rest }) => rest);
+
+    // Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(items, { header: ['Nume', 'Cantitate'] });
+
+    // Header styling: uppercase, bold
+    const headerCells = ['A1', 'B1'];
+    headerCells.forEach((cell) => {
+      const c = worksheet[cell];
+      if (c && c.v) {
+        c.v = String(c.v).toUpperCase();
+        c.s = { font: { bold: true } } as any;
+      }
+    });
+
+    // Column widths: widen name column, narrower quantity
+    (worksheet as any)['!cols'] = [
+      { wch: 40 }, // Nume column width
+      { wch: 12 }, // Cantitate column width
+    ];
+
+    // Center align the quantity column values
+    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      const addr = XLSX.utils.encode_cell({ r, c: 1 }); // column B (Cantitate)
+      const cell = worksheet[addr];
+      if (cell) {
+        cell.s = { alignment: { horizontal: 'center' } } as any;
+      }
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Totaluri');
+
+    // Generate and trigger download as .xlsx
+    XLSX.writeFile(workbook, `total-comenzi-per-produs-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   // Close dropdown when clicking outside
@@ -1072,6 +1126,13 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                     >
                       <FileText className="w-4 h-4 mr-3 text-gray-400" />
                       Salvează PDF
+                    </button>
+                    <button
+                      onClick={handleTotalsSaveAsXLS}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                      Salvează XLS
                     </button>
                   </div>
                 )}
