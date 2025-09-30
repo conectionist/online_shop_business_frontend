@@ -102,6 +102,7 @@ const ProductPage: React.FC = () => {
 
   const productImages = product.images || [];
   const hasMultipleImages = productImages.length > 1;
+  const isUnavailable = product.stoc_produs === 0;
 
   // Generate product-specific SEO data
   const productTitle = product.nume;
@@ -112,6 +113,9 @@ const ProductPage: React.FC = () => {
   const productCanonical = `${window.location.origin}/product/${product.id}`;
 
   const addToCart = () => {
+    if (isUnavailable) {
+      return;
+    }
     // Get current cart state to check if item exists
     const currentItems = useCartStore.getState().items;
     const existingItem = currentItems.find(item => item.id === product.id);
@@ -274,6 +278,13 @@ const ProductPage: React.FC = () => {
 
                 {/* Add to Cart Section */}
                 <div className="space-y-6 pt-6 border-t border-amber-100">
+                  {isUnavailable && (
+                    <div className="flex justify-center">
+                      <div className="text-sm font-bold inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700">
+                        Nu mai avem momentan
+                      </div>
+                    </div>
+                  )}
                   {/* Quantity Selector */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -311,11 +322,10 @@ const ProductPage: React.FC = () => {
                     variant="primary"
                     onClick={addToCart}
                     className={components.button.primary("w-full h-14 text-lg font-semibold")}
-                    // disabled={product.stoc_produs === 0}
+                    disabled={isUnavailable}
                   >
                     <Plus className="w-5 h-5 mr-3" />
-                    {/* {product.stoc_produs === 0 ? 'Stoc epuizat' : 'Adaugă în coș'} */}
-                    Adaugă în coș
+                    {isUnavailable ? 'Indisponibil' : 'Adaugă în coș'}
                   </Button>
                 </div>
               </div>
