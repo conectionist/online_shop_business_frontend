@@ -9,6 +9,7 @@ export interface CartItem {
   unitate_denumire: string;
   quantity: number;
   images?: any[];
+  listId: number;
 }
 
 interface CartStore {
@@ -16,6 +17,7 @@ interface CartStore {
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (itemId: number) => void;
   updateQuantity: (itemId: number, quantity: number) => void;
+  purgeItemsNotInList: (listId: number) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
@@ -61,6 +63,12 @@ export const useCartStore = create<CartStore>()(
               ? { ...item, quantity: Math.max(0, quantity) }
               : item
           ).filter(item => item.quantity > 0) // Remove items with 0 quantity
+        }));
+      },
+      
+      purgeItemsNotInList: (listId) => {
+        set((state) => ({
+          items: state.items.filter(item => item.listId === listId)
         }));
       },
       
