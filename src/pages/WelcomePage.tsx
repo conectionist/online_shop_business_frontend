@@ -137,6 +137,7 @@ const WelcomePage: React.FC = () => {
   };
 
   const addToCart = async (product: any) => {
+    if (!publishedList?.id) return;
     const productId = product.id;
     const quantity = quantities[productId] || 1;
     animateImageToCart(productId);
@@ -154,7 +155,8 @@ const WelcomePage: React.FC = () => {
         pret: product.pret,
         unitati_id: product.unitati_id,
         unitate_denumire: getUnitName(product.unitati_id),
-        images: product.images
+        images: product.images,
+        listId: publishedList.id
       });
       setTimeout(() => {
         useCartStore.getState().updateQuantity(productId, quantity);

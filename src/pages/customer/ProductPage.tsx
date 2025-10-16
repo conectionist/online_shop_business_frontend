@@ -113,6 +113,9 @@ const ProductPage: React.FC = () => {
   const productCanonical = `${window.location.origin}/product/${product.id}`;
 
   const addToCart = () => {
+    if (!publishedList?.id) 
+      return;
+    
     if (isUnavailable) {
       return;
     }
@@ -132,7 +135,8 @@ const ProductPage: React.FC = () => {
         pret: product.pret,
         unitati_id: product.unitati_id,
         unitate_denumire: getUnitName(product.unitati_id),
-        images: product.images
+        images: product.images,
+        listId: publishedList.id
       });
       
       // Update the quantity to the selected amount since addItem always adds with quantity 1

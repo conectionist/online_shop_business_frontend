@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -41,10 +42,24 @@ import ContactPage from './pages/ContactPage'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 import AuthInitializer from './components/AuthInitializer'
+import { usePublishedList } from './hooks/useLists'
+import { useCartStore } from './stores/cartStore'
+
+function CartListSync() {
+  const { data: publishedList } = usePublishedList()
+  const purgeItemsNotInList = useCartStore((s) => s.purgeItemsNotInList)
+  useEffect(() => {
+    if (publishedList?.id) {
+      purgeItemsNotInList(publishedList.id)
+    }
+  }, [publishedList?.id, purgeItemsNotInList])
+  return null
+}
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <CartListSync />
       <ToastProvider>
       <AuthInitializer>
       <Router>
