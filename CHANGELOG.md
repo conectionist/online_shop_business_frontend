@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.31.0 - 2025-10-16
+- PWA: Faster cold-starts and instant open via StaleWhileRevalidate for app shell
+- PWA: Add short-lived runtime caching for public API responses
+- Performance: Persist React Query cache to storage for instant data display on open
+- DX: Auto-update SW preserved; app reloads automatically when a new version is available
+
 ## 2.30.0 - 2025-09-30
 - Customer: Block add-to-cart on product page when produs indisponibil; show “Nu mai avem momentan” badge
 - Admin Orders: Added print and PDF export for “Total Comenzi per Produs”, matching Produse tab order
