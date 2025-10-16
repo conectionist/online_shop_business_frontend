@@ -1,6 +1,6 @@
 {
   "name": "online-shop-business-frontend",
-  "version": "2.30.1",
+  "version": "2.31.0",
   "description": "Frontend for online shop business management system",
   "private": true,
   "type": "module",
@@ -13,6 +13,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@tanstack/react-query-persist-client": "^5.90.5",
+    "@tanstack/query-sync-storage-persister": "^5.90.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.1",

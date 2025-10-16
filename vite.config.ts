@@ -22,7 +22,8 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === 'document',
-            handler: 'NetworkFirst',
+            // Serve cached app shell instantly, revalidate in background
+            handler: 'StaleWhileRevalidate',
             options: { cacheName: 'html-cache' }
           },
           {
@@ -34,6 +35,16 @@ export default defineConfig({
             urlPattern: ({ request }) => request.destination === 'image',
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'image-cache' }
+          },
+          {
+            // Public API JSON responses (unauthenticated). Adjust path to your API base if needed
+            urlPattern: ({ url, request }) => request.destination === '' && url.pathname.startsWith('/api/'),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'api-cache',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxAgeSeconds: 60 * 60 } // 1 hour
+            }
           }
         ]
       },
