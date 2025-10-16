@@ -1,4 +1,4 @@
-name: Docker Image (manual)
+name: Create Experimental Docker Image (manual)
 
 on:
   workflow_dispatch: {}

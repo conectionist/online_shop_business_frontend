@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Create Production Docker Image
 
 on:
   push:
