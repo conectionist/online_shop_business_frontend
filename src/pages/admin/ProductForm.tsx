@@ -16,6 +16,7 @@ import Image from '@/components/ui/Image';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getProductImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
+import ProductImagesManager from '@/pages/admin/ProductImagesManager';
 
 // Helper function to check if product has a real image (not placeholder)
 const hasRealImage = (product: any): boolean => {
@@ -642,6 +643,13 @@ const ProductForm: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Images Manager (only when editing existing product) */}
+          {isEditing && product && (
+            <div className="pt-6 border-t border-gray-200">
+              <ProductImagesManager productId={product.id} images={product.images || []} />
+            </div>
+          )}
 
           {/* Error Display */}
           {(createProductMutation.error || updateProductMutation.error || errors.submit) && (

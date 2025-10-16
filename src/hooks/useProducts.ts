@@ -159,3 +159,63 @@ export const useDeleteProductImage = () => {
     },
   });
 }; 
+
+// Hook to set primary image
+export const useSetPrimaryImage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, imageId }: { productId: number; imageId: number }) =>
+      productService.setPrimaryImage(productId, imageId),
+    onSuccess: (_, { productId, imageId }) => {
+      // Optimistically move imageId to position 0 and set is_primary
+      queryClient.setQueryData(
+        queryKeys.products.detail(productId),
+        (oldProduct: any) => {
+          if (!oldProduct?.images) return oldProduct;
+          const images = oldProduct.images
+            .map((img: any) => ({ ...img, is_primary: img.id === imageId }))
+            .sort((a: any, b: any) => (a.id === imageId ? -1 : b.id === imageId ? 1 : a.position - b.position))
+            .map((img: any, idx: number) => ({ ...img, position: idx }));
+          return { ...oldProduct, images };
+        }
+      );
+      queryClient.invalidateQueries({ queryKey: invalidateQueries.products() });
+    },
+  });
+};
+
+// Hook to update single image position
+export const useUpdateImagePosition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, imageId, position }: { productId: number; imageId: number; position: number }) =>
+      productService.updateImagePosition(productId, imageId, position),
+    onSuccess: (_, { productId, imageId, position }) => {
+      queryClient.setQueryData(
+        queryKeys.products.detail(productId),
+        (oldProduct: any) => {
+          if (!oldProduct?.images) return oldProduct;
+          const moved = oldProduct.images.map((img: any) => (img.id === imageId ? { ...img, position } : img));
+          const reordered = moved.sort((a: any, b: any) => a.position - b.position).map((img: any, idx: number) => ({ ...img, position: idx }));
+          return { ...oldProduct, images: reordered };
+        }
+      );
+    },
+  });
+};
+
+// Hook to bulk reorder images
+export const useReorderProductImages = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, mappings }: { productId: number; mappings: Array<{ id: number; position: number }> }) =>
+      productService.reorderProductImages(productId, mappings),
+    onSuccess: (newImages, { productId }) => {
+      queryClient.setQueryData(queryKeys.products.detail(productId), (oldProduct: any) => {
+        if (!oldProduct) return oldProduct;
+        return { ...oldProduct, images: newImages };
+      });
+      queryClient.invalidateQueries({ queryKey: invalidateQueries.products() });
+    },
+  });
+};

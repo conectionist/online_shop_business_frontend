@@ -6,7 +6,8 @@ import { useCartStore } from '@/stores/cartStore';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
-import { getProductImageUrl } from '@/services/api';
+import { getProductImageUrl, getProductImageUrlFromImage } from '@/services/api';
+import AppLightbox from '@/components/ui/Lightbox';
 import SEO from '@/components/SEO';
 import { generateProductSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
@@ -16,6 +17,7 @@ const ProductPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   
   const { addItem, getTotalItems } = useCartStore();
   const { data: publishedList } = usePublishedList();
@@ -203,9 +205,10 @@ const ProductPage: React.FC = () => {
                 <div className={components.interactive.imageContainer}>
                   {productImages.length > 0 ? (
                     <img
-                      src={getProductImageUrl(product, 'original')}
+                      src={getProductImageUrlFromImage(productImages[selectedImageIndex], 'original')}
                       alt={product.nume}
                       className="w-full h-full object-cover"
+                      onClick={() => setIsLightboxOpen(true)}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
@@ -233,7 +236,7 @@ const ProductPage: React.FC = () => {
                         }`}
                       >
                         <img
-                          src={getProductImageUrl(product, 'thumbnail')}
+                          src={getProductImageUrlFromImage(image, 'thumbnail')}
                           alt={`${product.nume} - imagine ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -241,6 +244,15 @@ const ProductPage: React.FC = () => {
                     ))}
                   </div>
                 )}
+                <AppLightbox
+                  open={isLightboxOpen}
+                  index={selectedImageIndex}
+                  images={productImages.map((img: any, idx: number) => ({
+                    src: getProductImageUrlFromImage(img, 'original'),
+                    alt: `${product.nume} - imagine ${idx + 1}`,
+                  }))}
+                  onClose={() => setIsLightboxOpen(false)}
+                />
               </div>
 
               {/* Product Details */}
