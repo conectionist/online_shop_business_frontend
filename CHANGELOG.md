@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.32.0 - 2025-10-17
+
+### Changed
+- Admin Product Edit: Switched image tiles to 'medium' size and increased thumbnail size for better clarity.
+- Product Images Manager: Added mobile-friendly reorder modal; desktop drag-and-drop retained.
+- Product Images Manager: Tightened spacing and improved layout for image tiles.
+- Product Images Manager: Multi-upload now uses a staging flow with previews and a commit button.
+- Product Images Manager: Added file validation (size/type) with Romanian messages.
+- Product Create: Added multi-upload with previews and validation; uploads occur after product creation.
+- Removed legacy single-image uploader (preview-before-save) to unify experience while keeping all capabilities via multi-upload.
+
+### UX Polish
+- Primary badge in reorder modal follows first image dynamically and avoids incorrect display on staged items when existing images are present.
+- Multi-upload UI restyled to match single uploader (dotted box, helper text, formats, clear button).
+
 ## 2.31.0 - 2025-10-16
 
 ### Added
