@@ -215,19 +215,38 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
         </SortableContext>
       </DndContext>
 
-      {/* Upload below images */}
+      {/* Upload below images (styled like single uploader) */}
       <div>
-        <label className="inline-flex items-center px-3 py-1.5 border rounded-md shadow-sm text-sm bg-white cursor-pointer">
-          <Upload className="w-4 h-4 mr-2" /> Adaugă imagini
-          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
-        </label>
-        {uploadErrors.length > 0 && (
-          <div className="mt-2 space-y-1">
-            {uploadErrors.map((msg, idx) => (
-              <p key={idx} className="text-sm text-red-600">{msg}</p>
-            ))}
-          </div>
-        )}
+        <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          uploadErrors.length > 0 ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+        }`}>
+          <Upload className={`w-8 h-8 mx-auto mb-2 ${uploadErrors.length > 0 ? 'text-red-400' : 'text-gray-400'}`} />
+          <p className="text-sm text-gray-600 mb-2">Adăugați imagini pentru produs (opțional)</p>
+          <p className="text-xs text-gray-500 mb-3">
+            {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
+          </p>
+          <input
+            id="product-images-upload"
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => handleFiles(e.target.files)}
+          />
+          <label
+            htmlFor="product-images-upload"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+          >
+            Alege Imagini
+          </label>
+          {uploadErrors.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {uploadErrors.map((msg, idx) => (
+                <p key={idx} className="text-sm text-red-600">{msg}</p>
+              ))}
+            </div>
+          )}
+        </div>
         {/* Staged previews */}
         {stagedFiles.length > 0 && (
           <div className="mt-3 space-y-2">

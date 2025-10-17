@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
 import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, useDeleteProductImage, useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -12,18 +12,13 @@ import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
-import Image from '@/components/ui/Image';
+// import Image from '@/components/ui/Image';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { getProductImageUrl } from '@/services/api';
+// import { getProductImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
 import ProductImagesManager from '@/pages/admin/ProductImagesManager';
 
-// Helper function to check if product has a real image (not placeholder)
-const hasRealImage = (product: any): boolean => {
-  return !!(product.image_versions && 
-    product.image_versions.thumbnail && 
-    !product.image_versions.thumbnail.includes('placeholder'));
-};
+// Single uploader preview helpers removed
 
 // Validation rule types
 interface ValidationRule {
@@ -120,9 +115,7 @@ const ProductForm: React.FC = () => {
     unitati_id: 1, // Default to first unit
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [shouldClearImage, setShouldClearImage] = useState(false);
+  // Single uploader removed
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   // Multi-upload state for product creation
@@ -158,10 +151,7 @@ const ProductForm: React.FC = () => {
         category_id: product.category_id,
         unitati_id: product.unitati_id,
       });
-      // Only show image preview if product has a real image (not placeholder)
-      if (hasRealImage(product) && product.image_versions?.thumbnail) {
-        setImagePreview(getProductImageUrl(product, 'thumbnail'));
-      }
+      // Single uploader preview removed
     }
   }, [product, isEditing]);
 
@@ -268,40 +258,7 @@ const ProductForm: React.FC = () => {
     }
   };
 
-  // Handle file selection
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file size (max 25MB)
-      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
-        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB) }));
-        return;
-      }
-
-      // Validate file type
-      if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
-        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS) }));
-        return;
-      }
-
-      setImageFile(file);
-      setErrors(prev => ({ ...prev, image: '' }));
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Remove image
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setShouldClearImage(true);
-    setErrors(prev => ({ ...prev, image: '' }));
-  };
+  // Single uploader removed — keep state for backwards compatibility (no UI)
 
   // Handle multi-file selection for product creation
   const handleCreateImagesChange = (files: FileList | null) => {
@@ -378,45 +335,12 @@ const ProductForm: React.FC = () => {
           data: updateData,
         });
 
-        // Handle image replacement
-        if (shouldClearImage && !imageFile) {
-          // User wants to remove the image - delete existing images
-          if (product?.images && product.images.length > 0) {
-            for (const image of product.images) {
-              await deleteProductImageMutation.mutateAsync({
-                productId: Number(id),
-                imageId: image.id,
-              });
-            }
-          }
-        } else if (imageFile) {
-          // User wants to upload a new image - delete old ones first if they exist
-          if (product?.images && product.images.length > 0) {
-            for (const image of product.images) {
-              await deleteProductImageMutation.mutateAsync({
-                productId: Number(id),
-                imageId: image.id,
-              });
-            }
-          }
-          
-          // Upload the new image
-          await uploadProductImageMutation.mutateAsync({
-            productId: Number(id),
-            image: imageFile,
-          });
-        }
+        // Single uploader behavior removed in edit mode
       } else {
         // For creation, send all required fields
         const createdProduct = await createProductMutation.mutateAsync(formData);
 
-        // Upload single image if selected (legacy single uploader)
-        if (imageFile) {
-          await uploadProductImageMutation.mutateAsync({
-            productId: createdProduct.id,
-            image: imageFile,
-          });
-        }
+        // Single uploader removed in create mode (use multi-upload previews instead)
         // Upload multiple images selected via multi-upload (creation)
         if (createImages.length > 0) {
           for (const file of createImages) {
@@ -636,84 +560,35 @@ const ProductForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Image Upload (hide single uploader on edit) */}
-          {!isEditing && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Imaginea Produsului <span className="text-gray-500">(opțional)</span>
-            </label>
-            
-            {imagePreview ? (
-              <div className="space-y-3">
-                <div className="relative inline-block">
-                  <Image
-                    src={imagePreview}
-                    alt="Previzualizare produs"
-                    className="w-32 h-32 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500">
-                  Click the X to remove the image
-                </p>
-              </div>
-            ) : (
-              <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                errors.image ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-              }`}>
-                <Upload className={`w-8 h-8 mx-auto mb-2 ${
-                  errors.image ? 'text-red-400' : 'text-gray-400'
-                }`} />
-                <p className="text-sm text-gray-600 mb-2">
-                  {IMAGE_UPLOAD.UI_TEXT.UPLOAD_IMAGE}
-                </p>
-                <p className="text-xs text-gray-500 mb-3">
-                  {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
-                </p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  {IMAGE_UPLOAD.UI_TEXT.CHOOSE_IMAGE}
-                </label>
-                {errors.image && (
-                  <p className="text-sm text-red-600 mt-2 flex items-center justify-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.image}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-          )}
+          {/* Single uploader removed — use multi-upload below */}
 
           {/* Multi-upload on creation */}
           {!isEditing && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Imagini produs (opțional)</label>
-              <label className="inline-flex items-center px-3 py-1.5 border rounded-md shadow-sm text-sm bg-white cursor-pointer">
-                <Upload className="w-4 h-4 mr-2" /> Adaugă imagini
+              <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                createImagesErrors.length > 0 ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+              }`}>
+                <Upload className={`w-8 h-8 mx-auto mb-2 ${createImagesErrors.length > 0 ? 'text-red-400' : 'text-gray-400'}`} />
+                <p className="text-sm text-gray-600 mb-2">Adăugați imagini pentru produs (opțional)</p>
+                <p className="text-xs text-gray-500 mb-3">
+                  {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
+                </p>
                 <input
+                  id="create-product-images-upload"
                   type="file"
                   accept="image/*"
                   multiple
                   className="hidden"
                   onChange={(e) => handleCreateImagesChange(e.target.files)}
                 />
-              </label>
+                <label
+                  htmlFor="create-product-images-upload"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  Alege Imagini
+                </label>
+              </div>
               {createStagedFiles.length > 0 && (
                 <div className="mt-3 space-y-2">
                   <div className="flex flex-wrap gap-2">
