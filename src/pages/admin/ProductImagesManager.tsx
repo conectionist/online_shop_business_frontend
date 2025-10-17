@@ -25,8 +25,8 @@ const SortableImageItem: React.FC<{
   } as React.CSSProperties;
 
   return (
-    <div ref={setNodeRef} style={style} className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-amber-200 shadow-sm">
-      <img src={getProductImageUrlFromImage(image, 'thumbnail')} alt="img" className="w-full h-full object-cover" {...attributes} {...listeners} />
+    <div ref={setNodeRef} style={style} className="relative w-56 h-56 sm:w-60 sm:h-60 rounded-lg overflow-hidden border border-amber-200 shadow-sm">
+      <img src={getProductImageUrlFromImage(image, 'medium')} alt="img" className="w-full h-full object-cover" {...attributes} {...listeners} />
       <div className="absolute top-1 right-1 flex gap-1">
         <button
           type="button"
@@ -202,7 +202,7 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
                 <div className="flex items-center gap-3">
                   <div className="text-sm text-gray-500 w-6 text-center">{index + 1}</div>
                   <img
-                    src={getProductImageUrlFromImage(image, 'thumbnail')}
+                    src={getProductImageUrlFromImage(image, 'medium')}
                     alt="img"
                     className="w-12 h-12 object-cover rounded"
                   />
