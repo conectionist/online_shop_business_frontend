@@ -28,17 +28,20 @@ const ProductCard = React.memo<{
   <Card className="overflow-hidden">
     {/* Product Image */}
     <div className="aspect-square bg-gray-100 relative">
-      {product.image_versions?.medium ? (
-        <Image
-          src={getProductImageUrl(product, 'medium')}
-          alt={product.nume}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-gray-400">
-          <Eye className="w-8 h-8" />
-        </div>
-      )}
+      <button type="button" className="absolute inset-0 group" onClick={() => onEdit(product)}>
+        {product.image_versions?.medium ? (
+          <Image
+            src={getProductImageUrl(product, 'medium')}
+            alt={product.nume}
+            className="w-full h-full object-cover transition-transform group-hover:scale-[1.02]"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <Eye className="w-8 h-8" />
+          </div>
+        )}
+        <span className="sr-only">Deschide editarea produsului</span>
+      </button>
     </div>
 
     {/* Product Info */}
