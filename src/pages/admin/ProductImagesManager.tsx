@@ -155,10 +155,6 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">Imagini produs</h3>
         <div className="flex items-center gap-2">
-          <label className="inline-flex items-center px-3 py-1.5 border rounded-md shadow-sm text-sm bg-white cursor-pointer">
-            <Upload className="w-4 h-4 mr-2" /> Încarcă imagini
-            <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
-          </label>
           <Button type="button" className="sm:hidden" variant="outline" size="sm" onClick={openReorderModal}>
             Reordonează
           </Button>
@@ -173,6 +169,14 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
           </div>
         </SortableContext>
       </DndContext>
+
+      {/* Upload below images */}
+      <div>
+        <label className="inline-flex items-center px-3 py-1.5 border rounded-md shadow-sm text-sm bg-white cursor-pointer">
+          <Upload className="w-4 h-4 mr-2" /> Adaugă imagini
+          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+        </label>
+      </div>
 
       {/* Mobile reorder modal */}
       <Modal
