@@ -2,6 +2,8 @@ import React from 'react';
 import { useUploadProductImage, useDeleteProductImage, useReorderProductImages, useSetPrimaryImage } from '@/hooks/useProducts';
 import { getProductImageUrlFromImage } from '@/services/api';
 import { Trash2, Star, Upload } from 'lucide-react';
+import Modal from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -88,14 +90,79 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
     setPrimaryMutation.mutate({ productId, imageId });
   };
 
+  // Mobile reordering (modal + native drag like ListProductsTab2)
+  const [showReorderModal, setShowReorderModal] = React.useState(false);
+  const [draggedImageId, setDraggedImageId] = React.useState<number | null>(null);
+  const [mobileOrder, setMobileOrder] = React.useState<number[]>([]);
+
+  React.useEffect(() => {
+    setMobileOrder(localImages.map((i: any) => i.id));
+  }, [localImages]);
+
+  const openReorderModal = () => {
+    setMobileOrder(localImages.map((i: any) => i.id));
+    setShowReorderModal(true);
+  };
+
+  const handleDragStartMobile = (e: React.DragEvent, id: number) => {
+    setDraggedImageId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOverMobile = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDropMobile = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (!draggedImageId || draggedImageId === targetId) return;
+
+    const current = [...mobileOrder];
+    const draggedIndex = current.indexOf(draggedImageId);
+    const targetIndex = current.indexOf(targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    current.splice(draggedIndex, 1);
+    current.splice(targetIndex, 0, draggedImageId);
+    setMobileOrder(current);
+    setDraggedImageId(null);
+  };
+
+  const moveItem = (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= mobileOrder.length) return;
+    const updated = [...mobileOrder];
+    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+    setMobileOrder(updated);
+  };
+
+  const saveMobileOrder = () => {
+    const newImages = mobileOrder.map((id: number, idx: number) => {
+      const img = localImages.find((i: any) => i.id === id);
+      return { ...(img as any), position: idx };
+    });
+    setLocalImages(newImages);
+    reorderMutation.mutate({
+      productId,
+      mappings: mobileOrder.map((id: number, idx: number) => ({ id, position: idx })),
+    });
+    setShowReorderModal(false);
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">Imagini produs</h3>
-        <label className="inline-flex items-center px-3 py-1.5 border rounded-md shadow-sm text-sm bg-white cursor-pointer">
-          <Upload className="w-4 h-4 mr-2" /> Încarcă imagini
-          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="inline-flex items-center px-3 py-1.5 border rounded-md shadow-sm text-sm bg-white cursor-pointer">
+            <Upload className="w-4 h-4 mr-2" /> Încarcă imagini
+            <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+          </label>
+          <Button type="button" className="sm:hidden" variant="outline" size="sm" onClick={openReorderModal}>
+            Reordonează
+          </Button>
+        </div>
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDrop}>
         <SortableContext items={localImages.map((i: any) => i.id)} strategy={rectSortingStrategy}>
@@ -106,6 +173,56 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
           </div>
         </SortableContext>
       </DndContext>
+
+      {/* Mobile reorder modal */}
+      <Modal
+        isOpen={showReorderModal}
+        onClose={() => setShowReorderModal(false)}
+        title="Schimbă Ordinea Imaginilor"
+      >
+        <div className="space-y-2">
+          {mobileOrder.map((id: number, index: number) => {
+            const image = localImages.find((i: any) => i.id === id);
+            if (!image) return null;
+            return (
+              <div
+                key={id}
+                draggable
+                onDragStart={(e) => handleDragStartMobile(e, id)}
+                onDragOver={handleDragOverMobile}
+                onDrop={(e) => handleDropMobile(e, id)}
+                className={`flex items-center justify-between p-3 border border-gray-200 rounded-lg cursor-move transition-colors ${
+                  draggedImageId === id ? 'bg-blue-100 border-blue-300' : 'bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-sm text-gray-500 w-6 text-center">{index + 1}</div>
+                  <img
+                    src={getProductImageUrlFromImage(image, 'thumbnail')}
+                    alt="img"
+                    className="w-12 h-12 object-cover rounded"
+                  />
+                  {index === 0 && (
+                    <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Principală</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {index > 0 && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => moveItem(index, -1)}>↑</Button>
+                  )}
+                  {index < mobileOrder.length - 1 && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => moveItem(index, 1)}>↓</Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <Button type="button" variant="outline" onClick={() => setShowReorderModal(false)}>Anulează</Button>
+          <Button type="button" onClick={saveMobileOrder}>Salvează Ordinea</Button>
+        </div>
+      </Modal>
     </div>
   );
 };
