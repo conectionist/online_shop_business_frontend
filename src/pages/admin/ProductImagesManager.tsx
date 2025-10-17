@@ -23,24 +23,24 @@ const SortableImageItem: React.FC<{
   } as React.CSSProperties;
 
   return (
-    <div ref={setNodeRef} style={style} className="relative w-24 h-24 rounded-lg overflow-hidden border border-amber-200 shadow-sm">
+    <div ref={setNodeRef} style={style} className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-amber-200 shadow-sm">
       <img src={getProductImageUrlFromImage(image, 'thumbnail')} alt="img" className="w-full h-full object-cover" {...attributes} {...listeners} />
       <div className="absolute top-1 right-1 flex gap-1">
         <button
           type="button"
-          className={`p-1 rounded ${image.is_primary ? 'bg-amber-500 text-white' : 'bg-white/90 text-gray-700 border'}`}
+          className={`p-0.5 sm:p-1 rounded ${image.is_primary ? 'bg-amber-500 text-white' : 'bg-white/90 text-gray-700 border'}`}
           onClick={() => onPrimary(image.id)}
           title="Setează principal"
         >
-          <Star className="w-3 h-3" />
+          <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
         </button>
         <button
           type="button"
-          className="p-1 rounded bg-white/90 text-red-600 border"
+          className="p-0.5 sm:p-1 rounded bg-white/90 text-red-600 border"
           onClick={() => onDelete(image.id)}
           title="Șterge"
         >
-          <Trash2 className="w-3 h-3" />
+          <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
         </button>
       </div>
     </div>
@@ -99,7 +99,7 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDrop}>
         <SortableContext items={localImages.map((i: any) => i.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {localImages.map((img: any) => (
               <SortableImageItem key={img.id} image={img} onDelete={handleDelete} onPrimary={handlePrimary} />)
             )}
