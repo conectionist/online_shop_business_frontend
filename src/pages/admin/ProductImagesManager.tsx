@@ -99,7 +99,7 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDrop}>
         <SortableContext items={localImages.map((i: any) => i.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             {localImages.map((img: any) => (
               <SortableImageItem key={img.id} image={img} onDelete={handleDelete} onPrimary={handlePrimary} />)
             )}
