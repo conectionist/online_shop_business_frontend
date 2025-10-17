@@ -125,6 +125,10 @@ const ProductForm: React.FC = () => {
   const [shouldClearImage, setShouldClearImage] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  // Multi-upload state for product creation
+  const [createImages, setCreateImages] = useState<File[]>([]);
+  const [createImagesErrors, setCreateImagesErrors] = useState<string[]>([]);
+  const [createStagedFiles, setCreateStagedFiles] = useState<Array<{ file: File; previewUrl: string }>>([]);
 
   // Fetch product data if editing
   const { data: product, isLoading: isLoadingProduct } = useProduct(Number(id));
@@ -299,6 +303,47 @@ const ProductForm: React.FC = () => {
     setErrors(prev => ({ ...prev, image: '' }));
   };
 
+  // Handle multi-file selection for product creation
+  const handleCreateImagesChange = (files: FileList | null) => {
+    if (!files) return;
+    const errs: string[] = [];
+    const nextStaged: Array<{ file: File; previewUrl: string }>= [];
+    Array.from(files).forEach((file) => {
+      if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
+        errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS));
+        return;
+      }
+      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+        errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB));
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      nextStaged.push({ file, previewUrl });
+    });
+    setCreateStagedFiles(prev => [...prev, ...nextStaged]);
+    setCreateImages(prev => [...prev, ...nextStaged.map(s => s.file)]);
+    setCreateImagesErrors(errs);
+  };
+
+  const removeCreateStagedAt = (index: number) => {
+    setCreateStagedFiles(prev => {
+      const copy = [...prev];
+      const removed = copy.splice(index, 1)[0];
+      if (removed) {
+        URL.revokeObjectURL(removed.previewUrl);
+        setCreateImages(files => files.filter(f => f !== removed.file));
+      }
+      return copy;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      createStagedFiles.forEach(it => URL.revokeObjectURL(it.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -365,12 +410,21 @@ const ProductForm: React.FC = () => {
         // For creation, send all required fields
         const createdProduct = await createProductMutation.mutateAsync(formData);
 
-        // Upload image if selected
+        // Upload single image if selected (legacy single uploader)
         if (imageFile) {
           await uploadProductImageMutation.mutateAsync({
             productId: createdProduct.id,
             image: imageFile,
           });
+        }
+        // Upload multiple images selected via multi-upload (creation)
+        if (createImages.length > 0) {
+          for (const file of createImages) {
+            await uploadProductImageMutation.mutateAsync({
+              productId: createdProduct.id,
+              image: file,
+            });
+          }
         }
       }
 
@@ -582,7 +636,8 @@ const ProductForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Image Upload */}
+          {/* Image Upload (hide single uploader on edit) */}
+          {!isEditing && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
                               Imaginea Produsului <span className="text-gray-500">(opțional)</span>
@@ -643,6 +698,54 @@ const ProductForm: React.FC = () => {
               </div>
             )}
           </div>
+          )}
+
+          {/* Multi-upload on creation */}
+          {!isEditing && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Imagini produs (opțional)</label>
+              <label className="inline-flex items-center px-3 py-1.5 border rounded-md shadow-sm text-sm bg-white cursor-pointer">
+                <Upload className="w-4 h-4 mr-2" /> Adaugă imagini
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleCreateImagesChange(e.target.files)}
+                />
+              </label>
+              {createStagedFiles.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                  {createStagedFiles.map((item, idx) => (
+                    <div key={idx} className="relative w-24 h-24 rounded overflow-hidden border bg-gray-50">
+                      <img src={item.previewUrl} alt="preview" className="w-full h-full object-cover" />
+                      {/* primary badge on first staged */}
+                      {idx === 0 && (
+                        <span className="absolute top-1 left-1 text-[10px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Principală</span>
+                      )}
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 leading-none flex items-center justify-center"
+                        onClick={() => removeCreateStagedAt(idx)}
+                        aria-label="Elimină"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  </div>
+                </div>
+              )}
+              {createImagesErrors.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {createImagesErrors.map((e, i) => (
+                    <p key={i} className="text-sm text-red-600">{e}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Images Manager (only when editing existing product) */}
           {isEditing && product && (

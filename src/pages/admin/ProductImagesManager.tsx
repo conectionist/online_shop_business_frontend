@@ -4,6 +4,7 @@ import { getProductImageUrlFromImage } from '@/services/api';
 import { Trash2, Star, Upload } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { IMAGE_UPLOAD } from '@/utils/constants';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -74,13 +75,57 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
     reorderMutation.mutate({ productId, mappings: newOrder.map((img: any, idx: number) => ({ id: img.id, position: idx })) });
   };
 
-  const handleFiles = async (files: FileList | null) => {
+  const [uploadErrors, setUploadErrors] = React.useState<string[]>([]);
+  const [stagedFiles, setStagedFiles] = React.useState<Array<{ file: File; previewUrl: string }>>([]);
+
+  // Stage files with preview (no immediate upload)
+  const handleFiles = (files: FileList | null) => {
     if (!files) return;
-    const arr = Array.from(files);
-    for (const file of arr) {
-      await uploadMutation.mutateAsync({ productId, image: file });
-    }
+    const nextErrors: string[] = [];
+    const nextStaged: Array<{ file: File; previewUrl: string }> = [];
+    Array.from(files).forEach((file) => {
+      if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
+        nextErrors.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS));
+        return;
+      }
+      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+        nextErrors.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB));
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      nextStaged.push({ file, previewUrl });
+    });
+    // Append to existing staged files
+    setStagedFiles((prev) => [...prev, ...nextStaged]);
+    setUploadErrors(nextErrors);
   };
+
+  // Remove one staged file
+  const removeStagedAt = (index: number) => {
+    setStagedFiles((prev) => {
+      const copy = [...prev];
+      const removed = copy.splice(index, 1)[0];
+      if (removed) URL.revokeObjectURL(removed.previewUrl);
+      return copy;
+    });
+  };
+
+  // Commit upload of all staged files
+  const commitStagedUpload = async () => {
+    for (const item of stagedFiles) {
+      await uploadMutation.mutateAsync({ productId, image: item.file });
+      URL.revokeObjectURL(item.previewUrl);
+    }
+    setStagedFiles([]);
+  };
+
+  // Cleanup object URLs on unmount
+  React.useEffect(() => {
+    return () => {
+      stagedFiles.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDelete = (imageId: number) => {
     deleteMutation.mutate({ productId, imageId });
@@ -176,6 +221,44 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
           <Upload className="w-4 h-4 mr-2" /> Adaugă imagini
           <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
         </label>
+        {uploadErrors.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {uploadErrors.map((msg, idx) => (
+              <p key={idx} className="text-sm text-red-600">{msg}</p>
+            ))}
+          </div>
+        )}
+        {/* Staged previews */}
+        {stagedFiles.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {stagedFiles.map((item, idx) => (
+                <div key={idx} className="relative w-24 h-24 rounded overflow-hidden border bg-gray-50">
+                  <img src={item.previewUrl} alt="preview" className="w-full h-full object-cover" />
+                  {/* primary badge on first staged */}
+                  {localImages.length === 0 && idx === 0 && (
+                    <span className="absolute top-1 left-1 text-[10px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Principală</span>
+                  )}
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 leading-none flex items-center justify-center"
+                    onClick={() => removeStagedAt(idx)}
+                    aria-label="Elimină"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => {
+                stagedFiles.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+                setStagedFiles([]);
+              }}>Renunță</Button>
+              <Button type="button" onClick={commitStagedUpload} loading={uploadMutation.isPending}>Încarcă imaginile</Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Mobile reorder modal */}
