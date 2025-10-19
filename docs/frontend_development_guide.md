@@ -860,6 +860,17 @@ curl -X PUT "http://localhost:8001/api/v1/products/8/images/reorder" \
 
 **Request Body**: Array of objects with `id` and `position` fields
 
+### Admin UI: Managing Product Images
+
+In the admin product form (when editing), a dedicated images manager allows:
+
+- Încărcare multiplă de imagini (input multiple) cu validări de tip/dimensiune.
+- Reordonare prin drag-and-drop; modificările sunt trimise către API (bulk reorder).
+- Setarea unei imagini ca principală.
+- Ștergerea imaginilor cu actualizare optimistă în UI.
+
+The component is available under `ProductImagesManager` and is mounted inside `src/pages/admin/ProductForm.tsx` for existing products.
+
 #### Error Handling Examples
 
 **404 Not Found**:

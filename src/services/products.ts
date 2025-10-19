@@ -128,6 +128,12 @@ export const productService = {
     });
   },
 
+  // Get product images (PUBLIC)
+  getProductImages: async (productId: number): Promise<ProductImage[]> => {
+    const response = await apiClient.get(`/products/${productId}/images`);
+    return response.data;
+  },
+
   // Delete product image (PROTECTED - requires auth)
   deleteProductImage: async (productId: number, imageId: number): Promise<void> => {
     return authService.makeAuthenticatedRequest(async () => {
@@ -142,12 +148,25 @@ export const productService = {
     });
   },
 
-  // Reorder product images (PROTECTED - requires auth)
-  reorderProductImages: async (productId: number, imageIds: number[]): Promise<void> => {
+  // Update single image position (PROTECTED - requires auth)
+  updateImagePosition: async (productId: number, imageId: number, position: number): Promise<ProductImage> => {
     return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.put(`/products/${productId}/images/reorder`, {
-        image_ids: imageIds,
+      const formData = new FormData();
+      formData.append('position', position.toString());
+      const response = await apiClient.put(`/products/${productId}/images/${imageId}/position`, formData, {
+        headers: { 'Content-Type': undefined },
       });
+      return response.data;
+    });
+  },
+
+  // Reorder product images in bulk (PROTECTED - requires auth)
+  reorderProductImages: async (productId: number, mappings: Array<{ id: number; position: number }>): Promise<ProductImage[]> => {
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.put(`/products/${productId}/images/reorder`, mappings, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return response.data;
     });
   },
 }; 

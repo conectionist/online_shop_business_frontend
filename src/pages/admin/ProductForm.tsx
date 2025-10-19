@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
 import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, useDeleteProductImage, useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
@@ -12,17 +12,13 @@ import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 import Loading from '@/components/ui/Loading';
 import Alert from '@/components/ui/Alert';
-import Image from '@/components/ui/Image';
+// import Image from '@/components/ui/Image';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { getProductImageUrl } from '@/services/api';
+// import { getProductImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
+import ProductImagesManager from '@/pages/admin/ProductImagesManager';
 
-// Helper function to check if product has a real image (not placeholder)
-const hasRealImage = (product: any): boolean => {
-  return !!(product.image_versions && 
-    product.image_versions.thumbnail && 
-    !product.image_versions.thumbnail.includes('placeholder'));
-};
+// Single uploader preview helpers removed
 
 // Validation rule types
 interface ValidationRule {
@@ -119,11 +115,13 @@ const ProductForm: React.FC = () => {
     unitati_id: 1, // Default to first unit
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [shouldClearImage, setShouldClearImage] = useState(false);
+  // Single uploader removed
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  // Multi-upload state for product creation
+  const [createImages, setCreateImages] = useState<File[]>([]);
+  const [createImagesErrors, setCreateImagesErrors] = useState<string[]>([]);
+  const [createStagedFiles, setCreateStagedFiles] = useState<Array<{ file: File; previewUrl: string }>>([]);
 
   // Fetch product data if editing
   const { data: product, isLoading: isLoadingProduct } = useProduct(Number(id));
@@ -153,10 +151,7 @@ const ProductForm: React.FC = () => {
         category_id: product.category_id,
         unitati_id: product.unitati_id,
       });
-      // Only show image preview if product has a real image (not placeholder)
-      if (hasRealImage(product) && product.image_versions?.thumbnail) {
-        setImagePreview(getProductImageUrl(product, 'thumbnail'));
-      }
+      // Single uploader preview removed
     }
   }, [product, isEditing]);
 
@@ -263,40 +258,48 @@ const ProductForm: React.FC = () => {
     }
   };
 
-  // Handle file selection
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file size (max 25MB)
-      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
-        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB) }));
-        return;
-      }
+  // Single uploader removed — keep state for backwards compatibility (no UI)
 
-      // Validate file type
+  // Handle multi-file selection for product creation
+  const handleCreateImagesChange = (files: FileList | null) => {
+    if (!files) return;
+    const errs: string[] = [];
+    const nextStaged: Array<{ file: File; previewUrl: string }>= [];
+    Array.from(files).forEach((file) => {
       if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
-        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS) }));
+        errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS));
         return;
       }
-
-      setImageFile(file);
-      setErrors(prev => ({ ...prev, image: '' }));
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+        errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB));
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      nextStaged.push({ file, previewUrl });
+    });
+    setCreateStagedFiles(prev => [...prev, ...nextStaged]);
+    setCreateImages(prev => [...prev, ...nextStaged.map(s => s.file)]);
+    setCreateImagesErrors(errs);
   };
 
-  // Remove image
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setShouldClearImage(true);
-    setErrors(prev => ({ ...prev, image: '' }));
+  const removeCreateStagedAt = (index: number) => {
+    setCreateStagedFiles(prev => {
+      const copy = [...prev];
+      const removed = copy.splice(index, 1)[0];
+      if (removed) {
+        URL.revokeObjectURL(removed.previewUrl);
+        setCreateImages(files => files.filter(f => f !== removed.file));
+      }
+      return copy;
+    });
   };
+
+  useEffect(() => {
+    return () => {
+      createStagedFiles.forEach(it => URL.revokeObjectURL(it.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
@@ -332,44 +335,20 @@ const ProductForm: React.FC = () => {
           data: updateData,
         });
 
-        // Handle image replacement
-        if (shouldClearImage && !imageFile) {
-          // User wants to remove the image - delete existing images
-          if (product?.images && product.images.length > 0) {
-            for (const image of product.images) {
-              await deleteProductImageMutation.mutateAsync({
-                productId: Number(id),
-                imageId: image.id,
-              });
-            }
-          }
-        } else if (imageFile) {
-          // User wants to upload a new image - delete old ones first if they exist
-          if (product?.images && product.images.length > 0) {
-            for (const image of product.images) {
-              await deleteProductImageMutation.mutateAsync({
-                productId: Number(id),
-                imageId: image.id,
-              });
-            }
-          }
-          
-          // Upload the new image
-          await uploadProductImageMutation.mutateAsync({
-            productId: Number(id),
-            image: imageFile,
-          });
-        }
+        // Single uploader behavior removed in edit mode
       } else {
         // For creation, send all required fields
         const createdProduct = await createProductMutation.mutateAsync(formData);
 
-        // Upload image if selected
-        if (imageFile) {
-          await uploadProductImageMutation.mutateAsync({
-            productId: createdProduct.id,
-            image: imageFile,
-          });
+        // Single uploader removed in create mode (use multi-upload previews instead)
+        // Upload multiple images selected via multi-upload (creation)
+        if (createImages.length > 0) {
+          for (const file of createImages) {
+            await uploadProductImageMutation.mutateAsync({
+              productId: createdProduct.id,
+              image: file,
+            });
+          }
         }
       }
 
@@ -581,67 +560,74 @@ const ProductForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Imaginea Produsului <span className="text-gray-500">(opțional)</span>
-            </label>
-            
-            {imagePreview ? (
-              <div className="space-y-3">
-                <div className="relative inline-block">
-                  <Image
-                    src={imagePreview}
-                    alt="Previzualizare produs"
-                    className="w-32 h-32 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500">
-                  Click the X to remove the image
-                </p>
-              </div>
-            ) : (
+          {/* Single uploader removed — use multi-upload below */}
+
+          {/* Multi-upload on creation */}
+          {!isEditing && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Imagini produs (opțional)</label>
               <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                errors.image ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                createImagesErrors.length > 0 ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
               }`}>
-                <Upload className={`w-8 h-8 mx-auto mb-2 ${
-                  errors.image ? 'text-red-400' : 'text-gray-400'
-                }`} />
-                <p className="text-sm text-gray-600 mb-2">
-                  {IMAGE_UPLOAD.UI_TEXT.UPLOAD_IMAGE}
-                </p>
+                <Upload className={`w-8 h-8 mx-auto mb-2 ${createImagesErrors.length > 0 ? 'text-red-400' : 'text-gray-400'}`} />
+                <p className="text-sm text-gray-600 mb-2">Adăugați imagini pentru produs (opțional)</p>
                 <p className="text-xs text-gray-500 mb-3">
                   {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
                 </p>
                 <input
+                  id="create-product-images-upload"
                   type="file"
                   accept="image/*"
-                  onChange={handleImageChange}
+                  multiple
                   className="hidden"
-                  id="image-upload"
+                  onChange={(e) => handleCreateImagesChange(e.target.files)}
                 />
                 <label
-                  htmlFor="image-upload"
+                  htmlFor="create-product-images-upload"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
                 >
-                  {IMAGE_UPLOAD.UI_TEXT.CHOOSE_IMAGE}
+                  Alege Imagini
                 </label>
-                {errors.image && (
-                  <p className="text-sm text-red-600 mt-2 flex items-center justify-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.image}
-                  </p>
-                )}
               </div>
-            )}
-          </div>
+              {createStagedFiles.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                  {createStagedFiles.map((item, idx) => (
+                    <div key={idx} className="relative w-24 h-24 rounded overflow-hidden border bg-gray-50">
+                      <img src={item.previewUrl} alt="preview" className="w-full h-full object-cover" />
+                      {/* primary badge on first staged */}
+                      {idx === 0 && (
+                        <span className="absolute top-1 left-1 text-[10px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Principală</span>
+                      )}
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 leading-none flex items-center justify-center"
+                        onClick={() => removeCreateStagedAt(idx)}
+                        aria-label="Elimină"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  </div>
+                </div>
+              )}
+              {createImagesErrors.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {createImagesErrors.map((e, i) => (
+                    <p key={i} className="text-sm text-red-600">{e}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Images Manager (only when editing existing product) */}
+          {isEditing && product && (
+            <div className="pt-6 border-t border-gray-200">
+              <ProductImagesManager productId={product.id} images={product.images || []} />
+            </div>
+          )}
 
           {/* Error Display */}
           {(createProductMutation.error || updateProductMutation.error || errors.submit) && (

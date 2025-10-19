@@ -274,6 +274,22 @@ export const getProductImageUrl = (product: any, version: 'original' | 'medium' 
   return `${baseUrl}/api/v1/static/placeholders/product_placeholder.jpg`;
 };
 
+// Utility function to build URL directly from a ProductImage entry
+export const getProductImageUrlFromImage = (
+  image: { image_versions?: Record<'original' | 'medium' | 'thumbnail', string> } | null | undefined,
+  version: 'original' | 'medium' | 'thumbnail' = 'thumbnail'
+): string => {
+  const baseUrl = getApiBaseUrl();
+  const imagePath = image?.image_versions?.[version];
+  if (!imagePath) {
+    return `${baseUrl}/api/v1/static/placeholders/product_placeholder.jpg`;
+  }
+  if (imagePath.startsWith('/api/v1/static/')) {
+    return `${baseUrl}${imagePath}`;
+  }
+  return `${baseUrl}/api/v1/static/uploads/${imagePath}`;
+};
+
 // Utility function for logo images
 export const getLogoUrl = (logoPath: string | null | undefined): string => {
   if (!logoPath) {
