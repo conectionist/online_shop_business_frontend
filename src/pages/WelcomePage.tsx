@@ -5,7 +5,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
-import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { Link } from 'react-router-dom';
@@ -371,19 +371,28 @@ const WelcomePage: React.FC = () => {
                           className="block"
                         >
                           <div className="p-4">
-                            <div className={components.interactive.imageContainer}>
+                            <div className={components.interactive.imageContainer + " relative"}>
                               {product.images && product.images.length > 0 ? (
-                                <img
-                                  src={getProductImageUrl(product, 'original')}
-                                  alt={product.nume}
-                                  className="w-full h-full object-cover"
-                                  ref={el => { imageRefs.current[product.id] = el; }}
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                    target.nextElementSibling?.classList.remove('hidden');
-                                  }}
-                                />
+                                <>
+                                  <img
+                                    src={getProductImageUrl(product, 'original')}
+                                    alt={product.nume}
+                                    className="w-full h-full object-cover"
+                                    ref={el => { imageRefs.current[product.id] = el; }}
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      target.nextElementSibling?.classList.remove('hidden');
+                                    }}
+                                  />
+                                  {/* Multiple images indicator */}
+                                  {product.images.length > 1 && (
+                                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-sm px-2.5 py-1.5 rounded-full flex items-center gap-1.5">
+                                      <Camera className="w-4 h-4" />
+                                      <span>{product.images.length}</span>
+                                    </div>
+                                  )}
+                                </>
                               ) : null}
                               {/* Fallback icon */}
                               <div className={`w-full h-full ${components.backgrounds.fallback} flex items-center justify-center ${product.images && product.images.length > 0 ? 'hidden' : ''}`}>
