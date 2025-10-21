@@ -186,7 +186,10 @@ const OrderForm: React.FC = () => {
     const orderData = buildOrderDataForSession(data);
 
     // Open WhatsApp immediately (within user gesture)
-    const whatsappText = encodeURIComponent(formatOrderTextUtil(orderData, { includeSeparator: true }));
+    const whatsappText = encodeURIComponent(formatOrderTextUtil(orderData, { 
+      includeSeparator: true,
+      listDate: publishedList?.data
+    }));
     const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
     const whatsappWindow = window.open(whatsappUrl, '_blank');
     if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {

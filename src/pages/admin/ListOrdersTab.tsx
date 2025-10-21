@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit, Info } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { useDeleteOrder, useUpdateOrder } from '@/hooks/useOrders';
-import { useListProductsOrdered } from '@/hooks/useLists';
+import { useListProductsOrdered, useList } from '@/hooks/useLists';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
@@ -52,6 +52,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     mergeSimilar ? { liste_id: listId, merge_similar: true } : { liste_id: listId }
   );
   const { data: listProductsData } = useListProductsOrdered(listId); // List-scoped products
+  const { data: list } = useList(listId); // Get list data for date
   const { data: deliveryTypes } = useDeliveryTypes(); // For delivery method names
   const { data: paymentMethods } = usePaymentMethods(); // For payment method names
   const { data: businessDetails } = useBusinessDetailsSingle(); // For delivery tax calculation
@@ -199,7 +200,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       getProductName,
       getPaymentMethodName,
       deliveryTypes,
-      businessDetails
+      businessDetails,
+      listDate: list?.data
     });
   };
 

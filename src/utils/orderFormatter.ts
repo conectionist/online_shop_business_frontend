@@ -8,6 +8,7 @@ export interface OrderFormatterConfig {
   businessDetails?: BusinessDetails | null;
   includeSeparator?: boolean;
   appendFooterText?: string;
+  listDate?: string;
 }
 
 export interface OrderConfirmationData {
@@ -149,6 +150,19 @@ export function formatOrderText(
     
   if (notes) {
     orderText += `Observații: ${notes}\n`;
+  }
+
+  // Add list date at the end
+  if (config?.listDate) {
+    const formatRomanianDate = (dateString: string) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ro-RO', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+    orderText += `${formatRomanianDate(config.listDate)}\n`;
   }
 
   // Optional footer text (e.g., customer marker)

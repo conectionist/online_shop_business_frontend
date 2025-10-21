@@ -55,7 +55,8 @@ const OrderConfirmation: React.FC = () => {
     if (!orderData) return '';
     return formatOrderTextUtil(orderData, {
       // Use admin-style separator for customer copy text
-      includeSeparator: true
+      includeSeparator: true,
+      listDate: publishedList?.data
     });
   };
 
