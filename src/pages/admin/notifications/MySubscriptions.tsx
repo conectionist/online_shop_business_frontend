@@ -20,7 +20,7 @@ const openDB = (): Promise<IDBDatabase> => {
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains('subscriptions')) {
-        db.createObjectStore('subscriptions', { keyPath: 'key' });
+        db.createObjectStore('subscriptions');
       }
     };
   });
@@ -32,7 +32,7 @@ const setItem = async (key: string, value: string): Promise<void> => {
       const db = await openDB();
       const transaction = db.transaction(['subscriptions'], 'readwrite');
       const store = transaction.objectStore('subscriptions');
-      await store.put({ key, value });
+      await store.put(value, key);
     } catch (e) {
       console.warn('IndexedDB storage failed, falling back to localStorage:', e);
       localStorage.setItem(key, value);
@@ -50,7 +50,7 @@ const getItem = async (key: string): Promise<string | null> => {
       const store = transaction.objectStore('subscriptions');
       const request = store.get(key);
       return new Promise((resolve) => {
-        request.onsuccess = () => resolve(request.result?.value || null);
+        request.onsuccess = () => resolve(request.result || null);
         request.onerror = () => {
           console.warn('IndexedDB read failed, falling back to localStorage');
           resolve(localStorage.getItem(key));

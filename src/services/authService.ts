@@ -200,24 +200,50 @@ class AuthService {
   // Clear push notification state (Samsung Internet compatible)
   private clearPushNotificationState(): void {
     try {
-      // Try IndexedDB first for Samsung Internet compatibility
-      if (navigator.userAgent.includes('SamsungBrowser') && 'indexedDB' in window) {
-        // Use IndexedDB for Samsung Internet
+      const isSamsung = /SamsungBrowser/i.test(navigator.userAgent);
+      const hasIndexedDB = 'indexedDB' in window;
+
+      if (isSamsung && hasIndexedDB) {
         const request = indexedDB.open('PushNotificationsDB', 1);
+
+        // Ensure the object store exists
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains('subscriptions')) {
+            db.createObjectStore('subscriptions');
+          }
+        };
+
         request.onsuccess = () => {
           const db = request.result;
-          const transaction = db.transaction(['subscriptions'], 'readwrite');
-          const store = transaction.objectStore('subscriptions');
-          store.delete('admin_push_subscription_id');
-          store.delete('admin_push_selected_topics');
+          const tx = db.transaction('subscriptions', 'readwrite');
+          const store = tx.objectStore('subscriptions');
+
+          // Delete stored keys safely
+          try {
+            store.delete('admin_push_subscription_id');
+            store.delete('admin_push_selected_topics');
+          } catch (err) {
+            console.warn('IndexedDB delete failed, falling back to localStorage', err);
+            localStorage.removeItem('admin_push_subscription_id');
+            localStorage.removeItem('admin_push_selected_topics');
+          }
+
+          tx.oncomplete = () => db.close();
+        };
+
+        request.onerror = () => {
+          console.warn('IndexedDB open failed, falling back to localStorage');
+          localStorage.removeItem('admin_push_subscription_id');
+          localStorage.removeItem('admin_push_selected_topics');
         };
       } else {
-        // Fallback to localStorage for other browsers
+        // Non-Samsung or no IndexedDB support
         localStorage.removeItem('admin_push_subscription_id');
         localStorage.removeItem('admin_push_selected_topics');
       }
     } catch (e) {
-      // Final fallback to localStorage
+      console.warn('Error clearing push state, fallback to localStorage', e);
       localStorage.removeItem('admin_push_subscription_id');
       localStorage.removeItem('admin_push_selected_topics');
     }
