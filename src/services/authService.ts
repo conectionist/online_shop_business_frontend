@@ -97,6 +97,9 @@ class AuthService {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     
+    // Clean up push notifications on logout (security requirement)
+    this.cleanupPushSubscriptions();
+    
     // Update auth store
     useAuthStore.getState().logout();
   }
@@ -168,6 +171,26 @@ class AuthService {
         }
       }
       throw error;
+    }
+  }
+
+  // Clean up push notifications on logout (security requirement)
+  private async cleanupPushSubscriptions(): Promise<void> {
+    try {
+      // Check if service worker and push manager are available
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription) {
+          // Unsubscribe from push notifications
+          await subscription.unsubscribe();
+          console.log('Push notifications unsubscribed on logout');
+        }
+      }
+    } catch (error) {
+      // Silently fail - don't block logout if push cleanup fails
+      console.warn('Failed to cleanup push subscriptions on logout:', error);
     }
   }
 }
