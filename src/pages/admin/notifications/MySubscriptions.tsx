@@ -8,78 +8,6 @@ import { pushNotificationService } from '@/services/pushNotifications';
 
 interface Topic { id: number; name: string }
 
-// Samsung Internet compatibility: Use IndexedDB as fallback for localStorage
-const isSamsungInternet = navigator.userAgent.includes('SamsungBrowser');
-
-// IndexedDB helper functions for Samsung Internet compatibility
-const openDB = (): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('PushNotificationsDB', 1);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains('subscriptions')) {
-        db.createObjectStore('subscriptions');
-      }
-    };
-  });
-};
-
-const setItem = async (key: string, value: string): Promise<void> => {
-  if (isSamsungInternet) {
-    try {
-      const db = await openDB();
-      const transaction = db.transaction(['subscriptions'], 'readwrite');
-      const store = transaction.objectStore('subscriptions');
-      await store.put(value, key);
-    } catch (e) {
-      console.warn('IndexedDB storage failed, falling back to localStorage:', e);
-      localStorage.setItem(key, value);
-    }
-  } else {
-    localStorage.setItem(key, value);
-  }
-};
-
-const getItem = async (key: string): Promise<string | null> => {
-  if (isSamsungInternet) {
-    try {
-      const db = await openDB();
-      const transaction = db.transaction(['subscriptions'], 'readonly');
-      const store = transaction.objectStore('subscriptions');
-      const request = store.get(key);
-      return new Promise((resolve) => {
-        request.onsuccess = () => resolve(request.result || null);
-        request.onerror = () => {
-          console.warn('IndexedDB read failed, falling back to localStorage');
-          resolve(localStorage.getItem(key));
-        };
-      });
-    } catch (e) {
-      console.warn('IndexedDB read failed, falling back to localStorage:', e);
-      return localStorage.getItem(key);
-    }
-  } else {
-    return localStorage.getItem(key);
-  }
-};
-
-const removeItem = async (key: string): Promise<void> => {
-  if (isSamsungInternet) {
-    try {
-      const db = await openDB();
-      const transaction = db.transaction(['subscriptions'], 'readwrite');
-      const store = transaction.objectStore('subscriptions');
-      await store.delete(key);
-    } catch (e) {
-      console.warn('IndexedDB delete failed, falling back to localStorage:', e);
-      localStorage.removeItem(key);
-    }
-  } else {
-    localStorage.removeItem(key);
-  }
-};
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -136,9 +64,9 @@ const MySubscriptions: React.FC = () => {
   useEffect(() => {
     async function restoreSubscriptionState() {
       try {
-        // Check if we have a stored subscription ID (using Samsung Internet compatible storage)
-        const storedSubscriptionId = await getItem('admin_push_subscription_id');
-        const storedSelectedTopics = await getItem('admin_push_selected_topics');
+        // Check if we have a stored subscription ID
+        const storedSubscriptionId = localStorage.getItem('admin_push_subscription_id');
+        const storedSelectedTopics = localStorage.getItem('admin_push_selected_topics');
         
         if (storedSubscriptionId) {
           // Check if we still have a browser subscription
@@ -159,8 +87,8 @@ const MySubscriptions: React.FC = () => {
             }
           } else {
             // Browser subscription is gone, clear stored data
-            await removeItem('admin_push_subscription_id');
-            await removeItem('admin_push_selected_topics');
+            localStorage.removeItem('admin_push_subscription_id');
+            localStorage.removeItem('admin_push_selected_topics');
           }
         }
       } catch (e) {
@@ -202,8 +130,8 @@ const MySubscriptions: React.FC = () => {
         user_agent: navigator.userAgent,
       });
       setSubscriptionId(res.id);
-      // Store subscription ID using Samsung Internet compatible storage
-      await setItem('admin_push_subscription_id', res.id.toString());
+      // Store subscription ID in localStorage for persistence
+      localStorage.setItem('admin_push_subscription_id', res.id.toString());
       showToast({ type: 'success', title: 'Activat', message: 'Notificările au fost activate pentru acest dispozitiv.' });
     } catch (e: any) {
       showToast({ type: 'error', title: 'Eroare', message: e?.message || 'Activarea notificărilor a eșuat.' });
@@ -224,15 +152,15 @@ const MySubscriptions: React.FC = () => {
         const next = new Set(selected);
         next.delete(topicId);
         setSelected(next);
-        // Update storage using Samsung Internet compatible method
-        await setItem('admin_push_selected_topics', JSON.stringify(Array.from(next)));
+        // Update localStorage
+        localStorage.setItem('admin_push_selected_topics', JSON.stringify(Array.from(next)));
       } else {
         await pushNotificationService.topicsSubscribe(subscriptionId, [topicId]);
         const next = new Set(selected);
         next.add(topicId);
         setSelected(next);
-        // Update storage using Samsung Internet compatible method
-        await setItem('admin_push_selected_topics', JSON.stringify(Array.from(next)));
+        // Update localStorage
+        localStorage.setItem('admin_push_selected_topics', JSON.stringify(Array.from(next)));
       }
     } catch (e) {
       showToast({ type: 'error', title: 'Eroare', message: 'Nu s-a putut actualiza abonarea pentru topic.' });

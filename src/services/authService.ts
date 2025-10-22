@@ -197,56 +197,10 @@ class AuthService {
     }
   }
 
-  // Clear push notification state (Samsung Internet compatible)
+  // Clear push notification state
   private clearPushNotificationState(): void {
-    try {
-      const isSamsung = /SamsungBrowser/i.test(navigator.userAgent);
-      const hasIndexedDB = 'indexedDB' in window;
-
-      if (isSamsung && hasIndexedDB) {
-        const request = indexedDB.open('PushNotificationsDB', 1);
-
-        // Ensure the object store exists
-        request.onupgradeneeded = () => {
-          const db = request.result;
-          if (!db.objectStoreNames.contains('subscriptions')) {
-            db.createObjectStore('subscriptions');
-          }
-        };
-
-        request.onsuccess = () => {
-          const db = request.result;
-          const tx = db.transaction('subscriptions', 'readwrite');
-          const store = tx.objectStore('subscriptions');
-
-          // Delete stored keys safely
-          try {
-            store.delete('admin_push_subscription_id');
-            store.delete('admin_push_selected_topics');
-          } catch (err) {
-            console.warn('IndexedDB delete failed, falling back to localStorage', err);
-            localStorage.removeItem('admin_push_subscription_id');
-            localStorage.removeItem('admin_push_selected_topics');
-          }
-
-          tx.oncomplete = () => db.close();
-        };
-
-        request.onerror = () => {
-          console.warn('IndexedDB open failed, falling back to localStorage');
-          localStorage.removeItem('admin_push_subscription_id');
-          localStorage.removeItem('admin_push_selected_topics');
-        };
-      } else {
-        // Non-Samsung or no IndexedDB support
-        localStorage.removeItem('admin_push_subscription_id');
-        localStorage.removeItem('admin_push_selected_topics');
-      }
-    } catch (e) {
-      console.warn('Error clearing push state, fallback to localStorage', e);
-      localStorage.removeItem('admin_push_subscription_id');
-      localStorage.removeItem('admin_push_selected_topics');
-    }
+    localStorage.removeItem('admin_push_subscription_id');
+    localStorage.removeItem('admin_push_selected_topics');
   }
 }
 
