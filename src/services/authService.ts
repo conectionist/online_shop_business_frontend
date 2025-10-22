@@ -100,9 +100,8 @@ class AuthService {
     // Clean up push notifications on logout (security requirement)
     this.cleanupPushSubscriptions();
     
-    // Clear push notification state
-    localStorage.removeItem('admin_push_subscription_id');
-    localStorage.removeItem('admin_push_selected_topics');
+    // Clear push notification state (Samsung Internet compatible)
+    this.clearPushNotificationState();
     
     // Update auth store
     useAuthStore.getState().logout();
@@ -195,6 +194,32 @@ class AuthService {
     } catch (error) {
       // Silently fail - don't block logout if push cleanup fails
       console.warn('Failed to cleanup push subscriptions on logout:', error);
+    }
+  }
+
+  // Clear push notification state (Samsung Internet compatible)
+  private clearPushNotificationState(): void {
+    try {
+      // Try IndexedDB first for Samsung Internet compatibility
+      if (navigator.userAgent.includes('SamsungBrowser') && 'indexedDB' in window) {
+        // Use IndexedDB for Samsung Internet
+        const request = indexedDB.open('PushNotificationsDB', 1);
+        request.onsuccess = () => {
+          const db = request.result;
+          const transaction = db.transaction(['subscriptions'], 'readwrite');
+          const store = transaction.objectStore('subscriptions');
+          store.delete('admin_push_subscription_id');
+          store.delete('admin_push_selected_topics');
+        };
+      } else {
+        // Fallback to localStorage for other browsers
+        localStorage.removeItem('admin_push_subscription_id');
+        localStorage.removeItem('admin_push_selected_topics');
+      }
+    } catch (e) {
+      // Final fallback to localStorage
+      localStorage.removeItem('admin_push_subscription_id');
+      localStorage.removeItem('admin_push_selected_topics');
     }
   }
 }
