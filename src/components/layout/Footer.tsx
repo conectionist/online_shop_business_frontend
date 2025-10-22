@@ -18,11 +18,13 @@ import {
 } from '@/utils/businessInfo';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import Modal from '@/components/ui/Modal';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { data: businessDetails } = useBusinessDetailsSingle();
   const { isIOS, isStandalone, isInstallAvailable, promptInstall } = usePWAInstall();
+  const { isSupported: isPushSupported, permission: pushPermission, isSubscribed: isPushSubscribed, subscribe: subscribeToPush } = usePushNotifications();
   const [iosHelpOpen, setIosHelpOpen] = useState(false);
   
   // Get business information using utility functions
@@ -45,6 +47,11 @@ const Footer: React.FC = () => {
       return;
     }
     await promptInstall();
+  };
+
+  const handleEnableNotifications = async () => {
+    if (!isPushSupported) return;
+    await subscribeToPush();
   };
 
   return (
@@ -208,6 +215,16 @@ const Footer: React.FC = () => {
                 >
                   Instalează aplicația
                 </button>
+              )}
+              {isPushSupported && !isPushSubscribed && pushPermission === 'default' && (
+                <div className="mt-2">
+                  <button
+                    onClick={handleEnableNotifications}
+                    className="text-xs underline text-amber-400 hover:text-amber-300"
+                  >
+                    Activează notificările
+                  </button>
+                </div>
               )}
             </div>
           </div>

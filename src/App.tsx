@@ -10,6 +10,9 @@ import ScrollToTop from './components/ScrollToTop'
 import WelcomePage from './pages/WelcomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/admin/Dashboard'
+import AdvancedOperations from '@/pages/admin/AdvancedOperations'
+import NotificationsHome from '@/pages/admin/notifications/NotificationsHome'
+import MySubscriptions from '@/pages/admin/notifications/MySubscriptions'
 import CategoriesList from './pages/admin/CategoriesList'
 import CategoryForm from './pages/admin/CategoryForm'
 import ProductsList from './pages/admin/ProductsList'
@@ -120,6 +123,9 @@ function App() {
             <Route path="lists/:id/edit" element={<ListForm />} />
             <Route path="lists/:id/products" element={<ListProducts />} />
             <Route path="lists/:id/manage" element={<ListManagement />} />
+            <Route path="advanced" element={<AdvancedOperations />} />
+            <Route path="advanced/notifications" element={<NotificationsHome />} />
+            <Route path="advanced/notifications/my-subscriptions" element={<MySubscriptions />} />
             {/* Future admin routes will go here */}
           </Route>
 
