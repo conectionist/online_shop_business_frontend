@@ -100,6 +100,10 @@ class AuthService {
     // Clean up push notifications on logout (security requirement)
     this.cleanupPushSubscriptions();
     
+    // Clear push notification state
+    localStorage.removeItem('admin_push_subscription_id');
+    localStorage.removeItem('admin_push_selected_topics');
+    
     // Update auth store
     useAuthStore.getState().logout();
   }

@@ -59,6 +59,47 @@ const MySubscriptions: React.FC = () => {
     loadTopics();
   }, []);
 
+  // Restore subscription state on page load
+  useEffect(() => {
+    async function restoreSubscriptionState() {
+      try {
+        // Check if we have a stored subscription ID
+        const storedSubscriptionId = localStorage.getItem('admin_push_subscription_id');
+        const storedSelectedTopics = localStorage.getItem('admin_push_selected_topics');
+        
+        if (storedSubscriptionId) {
+          // Check if we still have a browser subscription
+          const registration = await navigator.serviceWorker.ready;
+          const subscription = await registration.pushManager.getSubscription();
+          
+          if (subscription) {
+            // Restore subscription ID and selected topics
+            setSubscriptionId(parseInt(storedSubscriptionId));
+            
+            if (storedSelectedTopics) {
+              try {
+                const topicIds = JSON.parse(storedSelectedTopics);
+                setSelected(new Set(topicIds));
+              } catch (e) {
+                console.warn('Failed to parse stored topics:', e);
+              }
+            }
+          } else {
+            // Browser subscription is gone, clear stored data
+            localStorage.removeItem('admin_push_subscription_id');
+            localStorage.removeItem('admin_push_selected_topics');
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to restore subscription state:', e);
+      }
+    }
+    
+    if (isSupported && permission === 'granted') {
+      restoreSubscriptionState();
+    }
+  }, [isSupported, permission]);
+
   const handleEnable = useCallback(async () => {
     try {
       if (!isSupported) throw new Error('Browserul nu suportă notificări push.');
@@ -88,6 +129,8 @@ const MySubscriptions: React.FC = () => {
         user_agent: navigator.userAgent,
       });
       setSubscriptionId(res.id);
+      // Store subscription ID in localStorage for persistence
+      localStorage.setItem('admin_push_subscription_id', res.id.toString());
       showToast({ type: 'success', title: 'Activat', message: 'Notificările au fost activate pentru acest dispozitiv.' });
     } catch (e: any) {
       showToast({ type: 'error', title: 'Eroare', message: e?.message || 'Activarea notificărilor a eșuat.' });
@@ -108,11 +151,15 @@ const MySubscriptions: React.FC = () => {
         const next = new Set(selected);
         next.delete(topicId);
         setSelected(next);
+        // Update localStorage
+        localStorage.setItem('admin_push_selected_topics', JSON.stringify(Array.from(next)));
       } else {
         await pushNotificationService.topicsSubscribe(subscriptionId, [topicId]);
         const next = new Set(selected);
         next.add(topicId);
         setSelected(next);
+        // Update localStorage
+        localStorage.setItem('admin_push_selected_topics', JSON.stringify(Array.from(next)));
       }
     } catch (e) {
       showToast({ type: 'error', title: 'Eroare', message: 'Nu s-a putut actualiza abonarea pentru topic.' });
@@ -132,8 +179,13 @@ const MySubscriptions: React.FC = () => {
           <p className="text-sm text-gray-700">Permisiune notificări: {permission}</p>
         </div>
         <div className="mt-4">
-          <Button variant="primary" size="md" onClick={handleEnable} disabled={loading}>
-            {loading ? 'Se activează...' : 'Activează notificările'}
+          <Button 
+            variant="primary" 
+            size="md" 
+            onClick={handleEnable} 
+            disabled={loading || (subscriptionId !== null)}
+          >
+            {loading ? 'Se activează...' : subscriptionId ? 'Notificările sunt activate' : 'Activează notificările'}
           </Button>
         </div>
       </Card>
