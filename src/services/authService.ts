@@ -100,6 +100,9 @@ class AuthService {
     // Clean up push notifications on logout (security requirement)
     this.cleanupPushSubscriptions();
     
+    // Clear push notification state (Samsung Internet compatible)
+    this.clearPushNotificationState();
+    
     // Update auth store
     useAuthStore.getState().logout();
   }
@@ -192,6 +195,12 @@ class AuthService {
       // Silently fail - don't block logout if push cleanup fails
       console.warn('Failed to cleanup push subscriptions on logout:', error);
     }
+  }
+
+  // Clear push notification state
+  private clearPushNotificationState(): void {
+    localStorage.removeItem('admin_push_subscription_id');
+    localStorage.removeItem('admin_push_selected_topics');
   }
 }
 
