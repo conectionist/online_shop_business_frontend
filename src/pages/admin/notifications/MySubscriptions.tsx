@@ -3,6 +3,8 @@ import AdminPageHeader from '@/components/layout/AdminPageHeader';
 import { Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Loading from '@/components/ui/Loading';
+import ToggleSwitch from '@/components/ui/ToggleSwitch';
+import Tooltip from '@/components/ui/Tooltip';
 import { useToast } from '@/components/ui/ToastContainer';
 import { pushNotificationService } from '@/services/pushNotifications';
 
@@ -175,42 +177,70 @@ const MySubscriptions: React.FC = () => {
         subtitle="Activează notificările și alege topici pentru acest dispozitiv"
       />
 
-      <Card className="p-6">
-        <div className="space-y-2">
-          <p className="text-sm text-gray-700">Suport browser: {isSupported ? 'Da' : 'Nu'}</p>
-          <p className="text-sm text-gray-700">Permisiune notificări: {permission}</p>
-        </div>
-        <div className="mt-4">
-          <Button 
-            variant="primary" 
-            size="md" 
-            onClick={handleEnable} 
-            disabled={loading || (subscriptionId !== null)}
-          >
-            {loading ? 'Se activează...' : subscriptionId ? 'Notificările sunt activate' : 'Activează notificările'}
-          </Button>
+      <Card className="p-4 sm:p-6">
+        <div className="space-y-2 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="space-y-1">
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">Suport browser:</span> {isSupported ? 'Da' : 'Nu'}
+              </p>
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">Permisiune notificări:</span> {permission}
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <Button 
+                variant="primary" 
+                size="md" 
+                onClick={handleEnable} 
+                disabled={loading || (subscriptionId !== null)}
+                className="w-full sm:w-auto"
+              >
+                {loading ? 'Se activează...' : subscriptionId ? 'Notificările sunt activate' : 'Activează notificările'}
+              </Button>
+            </div>
+          </div>
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Topici disponibile</h3>
         {topics.length === 0 ? (
           <div className="py-4"><Loading text="Se încarcă topici..." /></div>
         ) : (
           <div className="space-y-3">
             {topics.map((t) => (
-              <div key={t.id} className="flex items-center justify-between border rounded-md p-3">
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-800">{t.name}</div>
-                  <div className="text-xs text-gray-500 mt-1">{t.description}</div>
+              <div key={t.id} className="flex items-center justify-between border rounded-md p-3 sm:p-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center">
+                    <Tooltip content={t.description} position="top" delay={300}>
+                      <div className="flex items-center text-sm font-medium text-gray-800 cursor-help">
+                        <span>{t.name}</span>
+                        <svg 
+                          className="ml-1 w-4 h-4 text-gray-400 hover:text-gray-600 transition-colors" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                          />
+                        </svg>
+                      </div>
+                    </Tooltip>
+                  </div>
                 </div>
-                <Button
-                  variant={selected.has(t.id) ? 'secondary' : 'primary'}
-                  size="sm"
-                  onClick={() => toggleTopic(t.id)}
-                >
-                  {selected.has(t.id) ? 'Dezactivează' : 'Activează'}
-                </Button>
+                <div className="flex-shrink-0 ml-3">
+                  <ToggleSwitch
+                    checked={selected.has(t.id)}
+                    onChange={() => toggleTopic(t.id)}
+                    size="md"
+                    disabled={!subscriptionId}
+                  />
+                </div>
               </div>
             ))}
           </div>
