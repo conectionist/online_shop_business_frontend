@@ -100,9 +100,6 @@ class AuthService {
     // Clean up push notifications on logout (security requirement)
     this.cleanupPushSubscriptions();
     
-    // Clear push notification state (Samsung Internet compatible)
-    this.clearPushNotificationState();
-    
     // Update auth store
     useAuthStore.getState().logout();
   }
@@ -186,8 +183,13 @@ class AuthService {
         const subscription = await registration.pushManager.getSubscription();
         
         if (subscription) {
-          // Unsubscribe from push notifications
+          // Unsubscribe from browser
           await subscription.unsubscribe();
+          
+          // Also tell the server to remove this browser's subscription
+          const { pushNotificationService } = await import('./pushNotifications');
+          await pushNotificationService.unsubscribe(subscription.endpoint);
+          
           console.log('Push notifications unsubscribed on logout');
         }
       }
@@ -197,11 +199,6 @@ class AuthService {
     }
   }
 
-  // Clear push notification state
-  private clearPushNotificationState(): void {
-    localStorage.removeItem('admin_push_subscription_id');
-    localStorage.removeItem('admin_push_selected_topics');
-  }
 }
 
 // Export singleton instance
