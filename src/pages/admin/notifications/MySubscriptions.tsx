@@ -6,7 +6,7 @@ import Loading from '@/components/ui/Loading';
 import { useToast } from '@/components/ui/ToastContainer';
 import { pushNotificationService } from '@/services/pushNotifications';
 
-interface Topic { id: number; name: string }
+interface Topic { id: number; name: string; description: string; subscribed: boolean }
 
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -51,8 +51,24 @@ const MySubscriptions: React.FC = () => {
   useEffect(() => {
     async function loadTopics() {
       try {
-        const t = await pushNotificationService.getTopics();
-        setTopics(t);
+        // Get all available topics and admin's subscribed topics
+        const [allTopics, subscribedTopics] = await Promise.all([
+          pushNotificationService.getAllTopics(),
+          pushNotificationService.getAdminTopics()
+        ]);
+        
+        // Merge them to show all topics with subscription status
+        const subscribedIds = new Set(subscribedTopics.map(t => t.id));
+        const topicsWithStatus = allTopics.map(topic => ({
+          ...topic,
+          subscribed: subscribedIds.has(topic.id)
+        }));
+        
+        setTopics(topicsWithStatus);
+        
+        // Set selected topics based on server data
+        const selectedIds = topicsWithStatus.filter(topic => topic.subscribed).map(topic => topic.id);
+        setSelected(new Set(selectedIds));
       } catch (e) {
         // ignore or toast later on demand
       }
@@ -66,7 +82,6 @@ const MySubscriptions: React.FC = () => {
       try {
         // Check if we have a stored subscription ID
         const storedSubscriptionId = localStorage.getItem('admin_push_subscription_id');
-        const storedSelectedTopics = localStorage.getItem('admin_push_selected_topics');
         
         if (storedSubscriptionId) {
           // Check if we still have a browser subscription
@@ -74,21 +89,11 @@ const MySubscriptions: React.FC = () => {
           const subscription = await registration.pushManager.getSubscription();
           
           if (subscription) {
-            // Restore subscription ID and selected topics
+            // Restore subscription ID
             setSubscriptionId(parseInt(storedSubscriptionId));
-            
-            if (storedSelectedTopics) {
-              try {
-                const topicIds = JSON.parse(storedSelectedTopics);
-                setSelected(new Set(topicIds));
-              } catch (e) {
-                console.warn('Failed to parse stored topics:', e);
-              }
-            }
           } else {
             // Browser subscription is gone, clear stored data
             localStorage.removeItem('admin_push_subscription_id');
-            localStorage.removeItem('admin_push_selected_topics');
           }
         }
       } catch (e) {
@@ -148,19 +153,15 @@ const MySubscriptions: React.FC = () => {
     try {
       const isOn = selected.has(topicId);
       if (isOn) {
-        await pushNotificationService.topicsUnsubscribe(subscriptionId, [topicId]);
+        await pushNotificationService.adminTopicsUnsubscribe(subscriptionId, [topicId]);
         const next = new Set(selected);
         next.delete(topicId);
         setSelected(next);
-        // Update localStorage
-        localStorage.setItem('admin_push_selected_topics', JSON.stringify(Array.from(next)));
       } else {
-        await pushNotificationService.topicsSubscribe(subscriptionId, [topicId]);
+        await pushNotificationService.adminTopicsSubscribe(subscriptionId, [topicId]);
         const next = new Set(selected);
         next.add(topicId);
         setSelected(next);
-        // Update localStorage
-        localStorage.setItem('admin_push_selected_topics', JSON.stringify(Array.from(next)));
       }
     } catch (e) {
       showToast({ type: 'error', title: 'Eroare', message: 'Nu s-a putut actualiza abonarea pentru topic.' });
@@ -199,7 +200,10 @@ const MySubscriptions: React.FC = () => {
           <div className="space-y-3">
             {topics.map((t) => (
               <div key={t.id} className="flex items-center justify-between border rounded-md p-3">
-                <div className="text-sm font-medium text-gray-800">{t.name}</div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-800">{t.name}</div>
+                  <div className="text-xs text-gray-500 mt-1">{t.description}</div>
+                </div>
                 <Button
                   variant={selected.has(t.id) ? 'secondary' : 'primary'}
                   size="sm"
