@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, ArrowLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +10,133 @@ import { OrderCreate } from '@/types/api';
 import { components } from '@/utils/theme';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
 
+interface CopyOrderButtonProps {
+  formatOrderText: () => string;
+  submitOrderToServer: (source: string) => Promise<void>;
+}
+
+const CopyOrderButton: React.FC<CopyOrderButtonProps> = ({
+  formatOrderText,
+  submitOrderToServer,
+}) => {
+  const [copied, setCopied] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const timeoutRef = useRef<number | null>(null);
+
+  const fallbackCopyText = (text: string): boolean => {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+
+      // iOS quirks
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      textarea.style.top = `${window.scrollY || 0}px`; // keep inside viewport on iOS
+      textarea.style.fontSize = '12pt'; // prevents zoom on focus
+
+      document.body.appendChild(textarea);
+
+      // Preserve selection
+      const selection = document.getSelection();
+      let savedRange: Range | null = null;
+      if (selection && selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0);
+      }
+
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length); // iOS fix
+
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+
+      // Cleanup
+      document.body.removeChild(textarea);
+
+      // Restore previous selection
+      if (selection) {
+        selection.removeAllRanges();
+        if (savedRange) selection.addRange(savedRange);
+      }
+
+      return ok;
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+      return false;
+    }
+  };
+
+  const handleClick = async () => {
+    setErrorMsg('');
+    const text = formatOrderText();
+
+    try {
+      // Do the copy immediately (before async operations)
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ok = fallbackCopyText(text);
+        if (!ok) throw new Error('Fallback copy failed');
+      }
+
+      // Success
+      setCopied(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
+
+      // Now safe to do async operations
+      try {
+        await submitOrderToServer('copy_button');
+      } catch (submitErr) {
+        console.error('Submit failed after copy:', submitErr);
+      }
+    } catch (err) {
+      console.warn('navigator.clipboard.writeText failed, trying fallback', err);
+      const fallbackOk = fallbackCopyText(text);
+      if (fallbackOk) {
+        setCopied(true);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
+
+        try {
+          await submitOrderToServer('copy_button');
+        } catch (submitErr) {
+          console.error('Submit failed after fallback copy:', submitErr);
+        }
+        return;
+      }
+
+      console.error('Both clipboard API and fallback copy failed', err);
+      setErrorMsg(
+        'Nu s-a putut copia automat textul. Te rugăm să selectezi manual textul și să-l copiezi.'
+      );
+    }
+  };
+
+  return (
+    <div>
+      <Button
+        variant="primary"
+        onClick={handleClick}
+        className={components.button.primary("w-full sm:w-auto")}
+        aria-pressed={copied}
+      >
+        <Copy className="w-4 h-4 mr-2" />
+        {copied ? 'Copiat' : 'Copiază comanda'}
+      </Button>
+
+      {errorMsg && (
+        <div role="alert" className="mt-2 text-sm text-red-600">
+          {errorMsg}
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface OrderData {
   prenume: string;
@@ -30,7 +157,6 @@ interface OrderData {
 const OrderConfirmation: React.FC = () => {
   const navigate = useNavigate();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
-  const [copied, setCopied] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
   
@@ -60,47 +186,6 @@ const OrderConfirmation: React.FC = () => {
     });
   };
 
-  const copyToClipboard = async () => {
-    // First submit the order to the server
-    await submitOrderToServer('copy_button');
-    
-    // Then proceed with copying to clipboard
-    const orderText = formatOrderText();
-    try {
-      // Try modern clipboard API first
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(orderText);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } else {
-        // Fallback for older browsers or when clipboard API is not available
-        const textArea = document.createElement('textarea');
-        textArea.value = orderText;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        if (successful) {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        } else {
-          console.error('Failed to copy using fallback method');
-          // Show a user-friendly error message
-          alert('Nu s-a putut copia textul. Vă rugăm să selectați și copiați manual textul de mai sus.');
-        }
-      }
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-      // Show a user-friendly error message
-      alert('Nu s-a putut copia textul. Vă rugăm să selectați și copiați manual textul de mai sus.');
-    }
-  };
 
   const submitOrderToServer = async (source?: string) => {
     if (!orderData || !publishedList) {
@@ -233,14 +318,10 @@ const OrderConfirmation: React.FC = () => {
               </div>
 
               <div>
-                <Button
-                  variant="primary"
-                  onClick={copyToClipboard}
-                  className={components.button.primary("w-full sm:w-auto")}
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  {copied ? 'Copiat!' : 'Copiază Comanda'}
-                </Button>
+                <CopyOrderButton
+                  formatOrderText={formatOrderText}
+                  submitOrderToServer={submitOrderToServer}
+                />
               </div>
             </div>
           )}
