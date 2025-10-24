@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.35.0 - 2025-10-24
+
+### Added
+- Admin Orders: Deep-link highlight and auto-scroll by URL (`highlight_order` query param)
+  - Smooth scrolls to the order and highlights it with a brief pulse and fade-out
+  - Works with both grouped and ungrouped views
+  - Desktop/mobile compatible with scroll container detection and fallback
+
 ## 2.32.0 - 2025-10-17
 
 ### Changed

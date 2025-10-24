@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit, Info } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { useDeleteOrder, useUpdateOrder } from '@/hooks/useOrders';
@@ -46,6 +47,11 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
   const [showMergeInfo, setShowMergeInfo] = useState(false);
   const mergeInfoRef = useRef<HTMLDivElement | null>(null);
+
+  // URL param based highlighting
+  const [searchParams] = useSearchParams();
+  const [highlightedOrderId, setHighlightedOrderId] = useState<number | null>(null);
+  const [highlightPhase, setHighlightPhase] = useState<'active' | 'fade' | null>(null);
 
   // Fetch orders for this specific list
   const { data: orders, isLoading, error } = useOrders(
@@ -618,6 +624,76 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // When a highlight_order query param is present, scroll to that order and highlight it
+  // Find nearest scrollable parent; fallback to window
+  const getScrollParent = (node: Element | null): Element | Window => {
+    let current: Element | null = node;
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current);
+      const overflowY = style.overflowY;
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        return current;
+      }
+      current = current.parentElement;
+    }
+    return window;
+  };
+
+  const smoothScrollToElement = (container: Element | Window, el: Element) => {
+    if (container === window) {
+      const rect = el.getBoundingClientRect();
+      const absoluteTop = rect.top + window.pageYOffset - (window.innerHeight / 2) + (rect.height / 2);
+      window.scrollTo({ top: absoluteTop, behavior: 'smooth' });
+      return;
+    }
+    const c = container as HTMLElement;
+    const containerRect = c.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const delta = (elRect.top - containerRect.top) - (c.clientHeight / 2) + (elRect.height / 2);
+    c.scrollTo({ top: c.scrollTop + delta, behavior: 'smooth' });
+  };
+
+  React.useEffect(() => {
+    const param = searchParams.get('highlight_order');
+    if (!param || !orders || orders.length === 0) return;
+    const id = Number(param);
+    if (!id || !Number.isFinite(id)) return;
+
+    // Set highlight state
+    setHighlightedOrderId(id);
+    setHighlightPhase('active');
+
+    // Allow the list to render before scrolling
+    setTimeout(() => {
+      const el = document.getElementById(`order-${id}`);
+      if (el) {
+        const container = getScrollParent(el);
+        smoothScrollToElement(container, el);
+
+        // Safety fallback: if still not visible shortly after, try native scrollIntoView
+        setTimeout(() => {
+          const rect = el.getBoundingClientRect();
+          const fullyInView = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
+          if (!fullyInView) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 150);
+      }
+    }, 0);
+
+    // Smooth fade-out sequence
+    const fadeTimeout = window.setTimeout(() => setHighlightPhase('fade'), 2400);
+    const clearTimeoutId = window.setTimeout(() => {
+      setHighlightedOrderId(null);
+      setHighlightPhase(null);
+    }, 3200);
+
+    return () => {
+      window.clearTimeout(fadeTimeout);
+      window.clearTimeout(clearTimeoutId);
+    };
+  }, [searchParams, orders]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -954,7 +1030,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                       return comparison;
                     })
                     .map((order) => (
-                  <Card key={order.id} className="p-6">
+                  <div key={order.id} id={`order-${order.id}`}>
+                  <Card className={`p-6 ${highlightedOrderId === order.id ? (highlightPhase === 'active' ? 'ring-2 ring-amber-400 bg-amber-50 animate-pulse' : 'ring-1 ring-amber-200 bg-amber-50 transition-[box-shadow,background-color] duration-700') : ''}`}>
                     <div className="space-y-4">
                       {/* Order row with optional checkbox on the left */}
                       <div className="flex items-center">
@@ -1019,6 +1096,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                       </div>
                     </div>
                   </Card>
+                  </div>
                 ))}
               </div>
             </div>
@@ -1028,7 +1106,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             return (
               <div className="space-y-4">
                 {sortedOrders.map((order) => (
-                  <Card key={order.id} className="p-6">
+                  <div key={order.id} id={`order-${order.id}`}>
+                  <Card className={`p-6 ${highlightedOrderId === order.id ? (highlightPhase === 'active' ? 'ring-2 ring-amber-400 bg-amber-50 animate-pulse' : 'ring-1 ring-amber-200 bg-amber-50 transition-[box-shadow,background-color] duration-700') : ''}`}>
                     <div className="space-y-4">
                       {/* Order row with optional checkbox on the left */}
                       <div className="flex items-center">
@@ -1091,6 +1170,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                       </div>
                     </div>
                   </Card>
+                  </div>
                 ))}
               </div>
             );
