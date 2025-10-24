@@ -126,7 +126,7 @@ const CopyOrderButton: React.FC<CopyOrderButtonProps> = ({
         aria-pressed={copied}
       >
         <Copy className="w-4 h-4 mr-2" />
-        {copied ? 'Copiat ✅' : 'Copiază comanda'}
+        {copied ? 'Copiat' : 'Copiază comanda'}
       </Button>
 
       {errorMsg && (
