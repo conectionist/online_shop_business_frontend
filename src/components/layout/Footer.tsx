@@ -226,6 +226,15 @@ const Footer: React.FC = () => {
                   </button>
                 </div>
               )}
+              {/* Subtle admin entry point */}
+              <div className="mt-1">
+                <Link
+                  to="/admin"
+                  className="text-[11px] text-gray-500 hover:text-amber-300 underline underline-offset-2"
+                >
+                  Admin
+                </Link>
+              </div>
             </div>
           </div>
         </div>
