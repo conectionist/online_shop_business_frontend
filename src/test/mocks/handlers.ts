@@ -112,6 +112,21 @@ export const createTestProducts = () => [
     images: [{ id: 4, filename: 'cozonac.jpg', is_primary: true }],
     stoc_produs: 0,
   },
+  {
+    id: 5,
+    nume: 'Franzela cu susan',
+    description: 'Franzelă crocantă cu susan auriu, perfectă pentru micul dejun.',
+    pret: 4.50,
+    cantitate: 1,
+    unitati_id: 1,
+    category_id: 1,
+    images: [
+      { id: 5, filename: 'franzela-1.jpg', is_primary: true },
+      { id: 6, filename: 'franzela-2.jpg', is_primary: false },
+      { id: 7, filename: 'franzela-3.jpg', is_primary: false },
+    ],
+    stoc_produs: 25,
+  },
 ]
 
 export const createTestList = () => ({
@@ -152,6 +167,21 @@ export const createTestListProductsOrdered = () => ({
           category_id: 1,
           images: [{ id: 2, filename: 'paine-neagra.jpg', is_primary: true }],
           stoc_produs: 30,
+        },
+        {
+          id: 5,
+          nume: 'Franzela cu susan',
+          description: 'Franzelă crocantă cu susan auriu, perfectă pentru micul dejun.',
+          pret: 4.50,
+          cantitate: 1,
+          unitati_id: 1,
+          category_id: 1,
+          images: [
+            { id: 5, filename: 'franzela-1.jpg', is_primary: true },
+            { id: 6, filename: 'franzela-2.jpg', is_primary: false },
+            { id: 7, filename: 'franzela-3.jpg', is_primary: false },
+          ],
+          stoc_produs: 25,
         },
       ],
     },
