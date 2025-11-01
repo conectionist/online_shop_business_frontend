@@ -1,13 +1,31 @@
 # Android Admin App - UI/UX Enhancements Summary
 
 ## Document Updated
-`ANDROID_ADMIN_APP_DESIGN_REFINED.md` has been enhanced with a comprehensive **Mobile UI/UX Design** section.
+`ANDROID_ADMIN_APP_UX_ARCHITECTURAL_DESIGN_sonnet4.5.md` has been enhanced with comprehensive **Mobile UI/UX Design** patterns, **custom brand theme**, and **advanced gesture controls**.
+
+## Latest Updates (Version 3.0)
+
+### 🎨 Custom Brand Theme (Amber/Orange)
+- ✅ Added custom theme matching website brand colors
+- ✅ Amber 500 (#F59E0B) as primary color
+- ✅ Orange 600 (#EA580C) as secondary color
+- ✅ Subtle amber backgrounds for brand consistency
+- ✅ Support for both dynamic colors (Android 12+) and static brand colors
+
+### 👆 Enhanced Gesture Controls  
+- ✅ Added swipe-to-delete and swipe-to-edit for orders
+- ✅ Visual feedback with color-coded backgrounds
+- ✅ Icons and labels during swipe for clarity
+- ✅ Confirmation dialogs for destructive actions
+- ✅ Undo support via Snackbar
+
+---
 
 ## What Was Added
 
-### 🎨 New Section: "Mobile UI/UX Design - Android Patterns"
+### 🎨 Main Section: "Mobile UI/UX Design - Android Patterns"
 
-This major addition (~1,700 lines) provides detailed Android implementation guidance for mobile UI/UX:
+This major section (~1,700 lines) provides detailed Android implementation guidance for mobile UI/UX:
 
 #### 1. **Navigation Architecture** ⭐
 - Bottom Navigation Bar (5 primary destinations)
@@ -93,6 +111,13 @@ All patterns include **production-ready Kotlin/Compose code**:
 
 ## Key Design Decisions
 
+### 0. **Brand Theme Integration**
+- **Why**: Consistent branding across web and mobile platforms
+- **Colors**: Amber (#F59E0B) and Orange (#EA580C) from website
+- **Implementation**: Custom ColorScheme with brand colors
+- **Flexibility**: Optional dynamic colors with brand accent override for Android 12+
+- **Benefits**: Strong brand recognition, professional look, matches existing web UI
+
 ### 1. **Bottom Navigation Pattern**
 - **Why**: One-handed use, always visible, thumb-zone accessibility
 - **Implementation**: NavigationBar with 5 primary sections (Dashboard, Products, Lists, Orders, More)
@@ -113,10 +138,14 @@ All patterns include **production-ready Kotlin/Compose code**:
 - **Pattern**: Navigate to dedicated screen with TopAppBar back button
 - **Example**: Order detail, product detail screens
 
-### 5. **Card-Based Lists**
-- **Why**: Touch-friendly, accommodates variable content, supports gestures
-- **Implementation**: `LazyColumn` with `Card` items, swipe-to-delete support
-- **Features**: Rich content, images, actions, badges
+### 5. **Card-Based Lists with Swipe Gestures**
+- **Why**: Touch-friendly, accommodates variable content, supports intuitive gestures
+- **Implementation**: `LazyColumn` with `Card` items wrapped in `SwipeToDismissBox`
+- **Gestures**: 
+  - Swipe right → Delete (red background with icon)
+  - Swipe left → Edit (primary color background with icon)
+- **Features**: Rich content, images, actions, badges, visual swipe feedback
+- **UX Enhancement**: Clear icons and text during swipe for user confidence
 
 ## Integration with Existing Architecture
 
@@ -162,13 +191,45 @@ The UI/UX patterns integrate seamlessly with:
 ## File Location
 
 ```
-docs/Android/ANDROID_ADMIN_APP_DESIGN_REFINED.md
+docs/Android_v3_includes_ux_and_UI/ANDROID_ADMIN_APP_UX_ARCHITECTURAL_DESIGN_sonnet4.5.md
 ```
 
-**New Section**: Lines ~1535-3267 (Mobile UI/UX Design)
+**Main Section**: Lines ~1535-3267 (Mobile UI/UX Design)
+**Theme Section**: Lines ~3618-3710 (Custom Brand Theme)
+**Swipe Gestures**: Lines ~2740-2894 (Order Management with Swipe Actions)
 
 ---
 
-**Status**: ✅ Complete - Ready for review and implementation
+## Enhancements from Other Proposals
+
+### From Composer Proposal
+✅ **Custom Brand Theme** - Integrated amber/orange color scheme
+- Primary: Amber 500 (#F59E0B)
+- Secondary: Orange 600 (#EA580C)  
+- Background: Subtle amber tints (#FFFBEB, #FFF7ED)
+- Maintains Material Design 3 principles
+
+### From Grok Proposal
+✅ **Swipe Gesture Controls** - Added to order management
+- Swipe right to delete with confirmation
+- Swipe left to edit
+- Visual feedback with icons and colors
+- Undo support via Snackbar
+
+---
+
+## Why This Combination Works
+
+1. **Brand Consistency**: Custom theme creates visual harmony with web app
+2. **Mobile Optimization**: All patterns designed for one-handed thumb use
+3. **Intuitive Gestures**: Swipe actions are iOS and Android standard patterns
+4. **Production Ready**: Complete code examples with proper state management
+5. **Scalable**: Clear component structure for future enhancements
+
+---
+
+**Status**: ✅ Complete - Enhanced with brand theme and gesture controls
+**Version**: 3.0
 **Date**: November 1, 2025
+**Ready For**: Implementation
 

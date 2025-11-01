@@ -2737,73 +2737,156 @@ fun DeliveryTypeHeader(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderListItem(
     order: Order,
     onClick: () -> Unit,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth()
+    // Swipe to dismiss with actions (from Grok proposal)
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { direction ->
+            when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onDelete()
+                    true
+                }
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onEdit()
+                    false // Don't dismiss, just trigger edit
+                }
+                else -> false
+            }
+        }
+    )
+    
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier,
+        backgroundContent = {
+            // Swipe background with icons
+            val color = when (dismissState.dismissDirection) {
+                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.errorContainer
+                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.primaryContainer
+                else -> Color.Transparent
+            }
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = when (dismissState.dismissDirection) {
+                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                    else -> Alignment.Center
+                }
+            ) {
+                when (dismissState.dismissDirection) {
+                    SwipeToDismissBoxValue.StartToEnd -> {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Filled.Delete,
+                                contentDescription = "Șterge",
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Text(
+                                "Șterge",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    SwipeToDismissBoxValue.EndToStart -> {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Editează",
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Icon(
+                                Icons.Filled.Edit,
+                                contentDescription = "Editează",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Card(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            // Customer name and date
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = order.nume_client,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = order.data_plasarii.formatDate(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            // Order summary (products count, total)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                AssistChip(
-                    onClick = {},
-                    label = { Text("${order.products.size} produse") },
-                    leadingIcon = { Icon(Icons.Outlined.Inventory, null, Modifier.size(16.dp)) }
-                )
-                AssistChip(
-                    onClick = {},
-                    label = { Text("${order.total} RON") },
-                    leadingIcon = { Icon(Icons.Outlined.AttachMoney, null, Modifier.size(16.dp)) }
-                )
-            }
-            
-            // Payment method
-            if (order.paymentMethod != null) {
+                // Customer name and date
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Outlined.Payment,
-                        null,
-                        Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    Text(
+                        text = order.nume_client,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = order.paymentMethod.name,
+                        text = order.data_plasarii.formatDate(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+                
+                // Order summary (products count, total)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("${order.products.size} produse") },
+                        leadingIcon = { Icon(Icons.Outlined.Inventory, null, Modifier.size(16.dp)) }
+                    )
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("${order.total} RON") },
+                        leadingIcon = { Icon(Icons.Outlined.AttachMoney, null, Modifier.size(16.dp)) }
+                    )
+                }
+                
+                // Payment method
+                if (order.paymentMethod != null) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.Payment,
+                            null,
+                            Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = order.paymentMethod.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
@@ -2910,6 +2993,15 @@ fun OrderDetailScreen(
 - ✅ Clear visual hierarchy using Material 3 cards
 - ✅ Touch-friendly list items with adequate spacing
 - ✅ Badge indicators for order counts per delivery type
+- ✅ **Swipe gestures for quick actions** (swipe left to edit, swipe right to delete)
+- ✅ **Visual feedback** with color-coded backgrounds for swipe actions
+
+**Swipe Gesture Usage:**
+- **Swipe right (StartToEnd)**: Delete order with red background
+- **Swipe left (EndToStart)**: Edit order with primary color background
+- **Visual indicators**: Icons and text show during swipe for clear feedback
+- **Confirmation**: Delete action can trigger a confirmation dialog if needed
+- **Undo support**: Consider adding Snackbar with undo option after delete
 
 ---
 
@@ -3617,44 +3709,55 @@ fun StockChip(quantity: Int, unit: String) {
 
 ## 📱 UI/UX Enhancements
 
-### Material Design 3 Theme (Enhanced)
+### Material Design 3 Theme (Enhanced with Brand Colors)
+
+**Note:** This theme uses amber/orange colors to match the web application's brand identity while maintaining Material Design 3 principles.
 
 ```kotlin
-// Theme.kt (Enhanced with dynamic colors)
+// Theme.kt (Enhanced with brand amber/orange colors)
 @Composable
 fun AdminAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Disabled to use brand colors
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
+        // Option: Use dynamic colors with brand accent override for Android 12+
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context)
-            else dynamicLightColorScheme(context)
+            val dynamicScheme = if (darkTheme) dynamicDarkColorScheme(context)
+                else dynamicLightColorScheme(context)
+            // Override with brand colors
+            dynamicScheme.copy(
+                primary = Color(0xFFF59E0B), // Amber 500 - matches website
+                secondary = Color(0xFFEA580C), // Orange 600 - matches website
+                tertiary = Color(0xFFF97316)  // Orange 500
+            )
         }
         darkTheme -> darkColorScheme(
-            primary = Color(0xFF6200EE),
-            onPrimary = Color.White,
-            secondary = Color(0xFF03DAC6),
-            onSecondary = Color.Black,
-            tertiary = Color(0xFFBB86FC),
+            primary = Color(0xFFF59E0B), // Amber 500 - brand primary
+            onPrimary = Color(0xFF1C1917), // Dark text on amber
+            secondary = Color(0xFFEA580C), // Orange 600 - brand secondary
+            onSecondary = Color.White,
+            tertiary = Color(0xFFF97316), // Orange 500
             background = Color(0xFF121212),
             surface = Color(0xFF1E1E1E),
+            surfaceVariant = Color(0xFF2E2E2E),
             error = Color(0xFFCF6679),
             // Success colors (custom)
             successContainer = Color(0xFF1B5E20),
             onSuccessContainer = Color(0xFFC8E6C9)
         )
         else -> lightColorScheme(
-            primary = Color(0xFF6200EE),
+            primary = Color(0xFFF59E0B), // Amber 500 - brand primary (matches website)
             onPrimary = Color.White,
-            secondary = Color(0xFF03DAC6),
-            onSecondary = Color.Black,
-            tertiary = Color(0xFFBB86FC),
-            background = Color(0xFFFFFBFE),
+            secondary = Color(0xFFEA580C), // Orange 600 - brand secondary (matches website)
+            onSecondary = Color.White,
+            tertiary = Color(0xFFF97316), // Orange 500
+            background = Color(0xFFFFFBEB), // Amber 50 - subtle brand background
             surface = Color.White,
-            error = Color(0xFFB00020),
+            surfaceVariant = Color(0xFFFFF7ED), // Orange 50 variant
+            error = Color(0xFFDC2626), // Red 600
             // Success colors (custom)
             successContainer = Color(0xFF4CAF50),
             onSuccessContainer = Color.White
