@@ -14,7 +14,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./assets/logo.jpg:/usr/share/nginx/html/assets/logo.jpg 
+      - ./assets/logo.jpg:/usr/share/nginx/html/assets/logo.jpg
+      - ./assets/payment-types:/usr/share/nginx/html/assets/payment-types:ro
       - ./public/legal:/usr/share/nginx/html/legal:ro
     deploy:
       resources:

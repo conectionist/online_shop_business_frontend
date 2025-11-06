@@ -70,6 +70,14 @@ export const queryKeys = {
     detail: (id: number) => [...queryKeys.paymentMethods.details(), id] as const,
   },
 
+  // Payment Types
+  paymentTypes: {
+    all: ['payment-types'] as const,
+    lists: () => [...queryKeys.paymentTypes.all, 'list'] as const,
+    list: (filters: Record<string, any>) => 
+      [...queryKeys.paymentTypes.lists(), filters] as const,
+  },
+
   // Delivery Schedules
   deliverySchedules: {
     all: ['delivery-schedules'] as const,

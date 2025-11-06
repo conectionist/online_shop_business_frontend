@@ -163,16 +163,30 @@ export interface PaymentMethod {
   id: number;
   name: string;
   description: string;
+  payment_type_id?: number;
+  required_data?: Record<string, any>;
+  required_fields_schema?: Record<string, any>;
 }
 
 export interface PaymentMethodCreate {
   name: string;
   description: string;
+  payment_type_id?: number;
+  required_data?: Record<string, any>;
 }
 
 export interface PaymentMethodUpdate {
   name?: string;
   description?: string;
+  payment_type_id?: number;
+  required_data?: Record<string, any>;
+}
+
+// Payment Type Types
+export interface PaymentType {
+  id: number;
+  name: string;
+  friendly_name: string;
 }
 
 // Delivery Schedule Types

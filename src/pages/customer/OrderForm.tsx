@@ -6,6 +6,7 @@ import { useListDeliveryTypes } from '@/hooks/useLists';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useCartStore } from '@/stores/cartStore';
 import { ArrowLeft, User, CreditCard, Truck, MapPin, Phone } from 'lucide-react';
+import { PaymentTypeIcon } from '@/utils/paymentTypes';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -321,22 +322,77 @@ const OrderForm: React.FC = () => {
             </h2>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 Selectează metoda de plată *
               </label>
-              <Select
-                options={paymentMethods?.map(pm => ({
-                  value: pm.id.toString(),
-                  label: pm.name
-                })) || []}
-                value={watchedPaymentMethod?.toString() || ''}
-                onChange={(value) => {
-                  setValue('payment_method_id', parseInt(value));
-                }}
-                placeholder="Alege metoda de plată"
-              />
+              <div className="space-y-2">
+                {paymentMethods
+                  ?.slice()
+                  .sort((a, b) => a.description.localeCompare(b.description))
+                  .map((pm) => {
+                  const isSelected = watchedPaymentMethod === pm.id;
+                  return (
+                    <label
+                      key={pm.id}
+                      className={`
+                        flex items-center p-2.5 rounded-lg border-2 cursor-pointer transition-all
+                        ${isSelected 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        name="payment_method_id"
+                        value={pm.id}
+                        checked={isSelected}
+                        onChange={(e) => {
+                          setValue('payment_method_id', parseInt(e.target.value), { shouldValidate: true });
+                        }}
+                        className="mr-3 h-4 w-4 text-green-600 focus:ring-green-500"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <PaymentTypeIcon 
+                            paymentTypeId={pm.payment_type_id || 0} 
+                            size={18}
+                            className="flex-shrink-0"
+                          />
+                          <span className="font-medium text-gray-900 leading-tight">{pm.description}</span>
+                        </div>
+                        
+                        {/* Business payment details for Revolut */}
+                        {pm.payment_type_id === 4 && pm.required_data?.phone_number && (
+                          <div className="mt-1.5 ml-[30px] text-sm text-gray-600">
+                            <span className="font-medium">{pm.required_data.phone_number}</span>
+                          </div>
+                        )}
+                        
+                        {/* Business payment details for Bank Transfer */}
+                        {pm.payment_type_id === 5 && pm.required_data && (
+                          <div className="mt-1.5 ml-[30px] text-sm text-gray-600 space-y-0.5">
+                            {pm.required_data.iban && (
+                              <div>
+                                <span className="font-medium text-xs sm:text-sm">
+                                  IBAN: {pm.required_data.iban.replace(/\s+/g, '')}
+                                </span>
+                              </div>
+                            )}
+                            {pm.required_data.recipient_name && (
+                              <div>
+                                <span className="font-medium">Destinatar: {pm.required_data.recipient_name}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
               {errors.payment_method_id && (
-                <p className="text-red-500 text-sm mt-1">{errors.payment_method_id.message}</p>
+                <p className="text-red-500 text-sm mt-2">{errors.payment_method_id.message}</p>
               )}
             </div>
           </div>

@@ -20,16 +20,27 @@ const PaymentMethodsList: React.FC = () => {
   // Fetch all payment methods
   const { data: paymentMethods, isLoading, error } = usePaymentMethods();
 
-  // Filter payment methods based on search term
+  // Filter and sort payment methods based on search term
   const filteredPaymentMethods = useMemo(() => {
-    if (!paymentMethods || !searchTerm.trim()) {
+    if (!paymentMethods) {
       return paymentMethods;
     }
     
-    const searchLower = searchTerm.toLowerCase();
-    return paymentMethods.filter(method => 
-      method.name.toLowerCase().includes(searchLower)
-    );
+    let filtered = paymentMethods;
+    
+    // Filter by search term if provided
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = paymentMethods.filter(method => 
+        method.name.toLowerCase().includes(searchLower) ||
+        method.description.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Sort alphabetically by description
+    return filtered
+      .slice()
+      .sort((a, b) => a.description.localeCompare(b.description));
   }, [paymentMethods, searchTerm]);
 
   // Delete payment method mutation
