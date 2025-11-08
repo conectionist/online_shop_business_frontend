@@ -353,25 +353,20 @@ const OrderForm: React.FC = () => {
                         className="mr-3 h-4 w-4 text-green-600 focus:ring-green-500"
                       />
                       <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <PaymentTypeIcon 
-                            paymentTypeId={pm.payment_type_id || 0} 
-                            size={18}
-                            className="flex-shrink-0"
-                          />
+                        <div className="flex items-center justify-between">
                           <span className="font-medium text-gray-900 leading-tight">{pm.description}</span>
                         </div>
                         
                         {/* Business payment details for Revolut */}
                         {pm.payment_type_id === 4 && pm.required_data?.phone_number && (
-                          <div className="mt-1.5 ml-[30px] text-sm text-gray-600">
+                          <div className="mt-1.5 text-sm text-gray-600">
                             <span className="font-medium">{pm.required_data.phone_number}</span>
                           </div>
                         )}
                         
                         {/* Business payment details for Bank Transfer */}
                         {pm.payment_type_id === 5 && pm.required_data && (
-                          <div className="mt-1.5 ml-[30px] text-sm text-gray-600 space-y-0.5">
+                          <div className="mt-1.5 text-sm text-gray-600 space-y-0.5">
                             {pm.required_data.iban && (
                               <div>
                                 <span className="font-medium text-xs sm:text-sm">
@@ -387,6 +382,11 @@ const OrderForm: React.FC = () => {
                           </div>
                         )}
                       </div>
+                      <PaymentTypeIcon 
+                        paymentTypeId={pm.payment_type_id || 0} 
+                        size={18}
+                        className="flex-shrink-0 ml-3"
+                      />
                     </label>
                   );
                 })}
