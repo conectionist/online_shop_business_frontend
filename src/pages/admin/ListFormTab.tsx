@@ -255,27 +255,6 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
 
   return (
     <div className="space-y-6">
-      {/* Preview Toggle */}
-      <div className="flex justify-end">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowPreview(!showPreview)}
-        >
-          {showPreview ? (
-            <>
-              <EyeOff className="w-4 h-4 mr-2" />
-              Ascunde Preview
-            </>
-          ) : (
-            <>
-              <Eye className="w-4 h-4 mr-2" />
-              Arată Preview
-            </>
-          )}
-        </Button>
-      </div>
-
       {/* Form */}
       <Card className="p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -462,7 +441,7 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-6 border-t border-gray-200">
             <Button
               type="submit"
               variant="primary"
@@ -477,6 +456,24 @@ const ListFormTab: React.FC<ListFormTabProps> = ({ listId, onSaveSuccess }) => {
                 <>
                   <Save className="w-4 h-4 mr-2" />
                   {isEditing ? 'Actualizează' : 'Creează'} Lista
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowPreview(!showPreview)}
+            >
+              {showPreview ? (
+                <>
+                  <EyeOff className="w-4 h-4 mr-2" />
+                  Ascunde Preview
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4 mr-2" />
+                  Arată Preview
                 </>
               )}
             </Button>
