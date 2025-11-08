@@ -9,7 +9,6 @@ import { ArrowLeft, User, CreditCard, Truck, MapPin, Phone } from 'lucide-react'
 import { PaymentTypeIcon } from '@/utils/paymentTypes';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
 import { requiresAddress, getDeliveryTax } from '@/utils/delivery';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { components } from '@/utils/theme';
@@ -404,30 +403,56 @@ const OrderForm: React.FC = () => {
               Metoda de Livrare
             </h2>
             
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Selectează metoda de livrare *
-                </label>
-                <Select
-                  options={listDeliveryTypes?.map(dt => ({
-                    value: dt.id.toString(),
-                    label: dt.denumire
-                  })) || []}
-                  value={watchedDeliveryType?.toString() || ''}
-                  onChange={(value) => {
-                    setValue('delivery_type_id', parseInt(value));
-                  }}
-                  placeholder="Alege metoda de livrare"
-                />
-                {errors.delivery_type_id && (
-                  <p className="text-red-500 text-sm mt-1">{errors.delivery_type_id.message}</p>
-                )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Selectează metoda de livrare *
+              </label>
+              <div className="space-y-2">
+                {listDeliveryTypes
+                  ?.slice()
+                  .sort((a, b) => a.order_index - b.order_index)
+                  .map((dt) => {
+                  const isSelected = watchedDeliveryType === dt.id;
+                  return (
+                    <label
+                      key={dt.id}
+                      className={`
+                        flex items-center p-2.5 rounded-lg border-2 cursor-pointer transition-all
+                        ${isSelected 
+                          ? 'border-orange-500 bg-orange-50' 
+                          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        name="delivery_type_id"
+                        value={dt.id}
+                        checked={isSelected}
+                        onChange={(e) => {
+                          setValue('delivery_type_id', parseInt(e.target.value), { shouldValidate: true });
+                        }}
+                        className="mr-3 h-4 w-4 text-orange-600 focus:ring-orange-500"
+                      />
+                      <div className="flex-1">
+                        <span className="font-medium text-gray-900 leading-tight">{dt.denumire}</span>
+                        {dt.description && (
+                          <div className="mt-1 text-sm text-gray-600">
+                            {dt.description}
+                          </div>
+                        )}
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
+              {errors.delivery_type_id && (
+                <p className="text-red-500 text-sm mt-2">{errors.delivery_type_id.message}</p>
+              )}
 
               {/* Address field - only show if delivery type requires address */}
               {selectedDeliveryType && requiresAddress(selectedDeliveryType) && (
-                <div>
+                <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
                     <MapPin className="w-4 h-4 mr-1" />
                     Adresa de livrare
