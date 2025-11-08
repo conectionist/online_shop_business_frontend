@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit, Info } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
@@ -45,8 +45,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [mergeSimilar, setMergeSimilar] = useState(false);
   const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
-  const [showMergeInfo, setShowMergeInfo] = useState(false);
-  const mergeInfoRef = useRef<HTMLDivElement | null>(null);
+  const [showMergeInfoModal, setShowMergeInfoModal] = useState(false);
 
   // URL param based highlighting
   const [searchParams] = useSearchParams();
@@ -602,27 +601,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           closeDropdown();
         }
       }
-      // Close merge info popover when clicking outside
-      if (showMergeInfo) {
-        const target = event.target as Node;
-        if (mergeInfoRef.current && !mergeInfoRef.current.contains(target)) {
-          setShowMergeInfo(false);
-        }
-      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openDropdown, showMergeInfo]);
+  }, [openDropdown]);
 
-  // Close popover on Escape
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowMergeInfo(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
 
   // When a highlight_order query param is present, scroll to that order and highlight it
   // Find nearest scrollable parent; fallback to window
@@ -872,7 +856,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 </h4>
                 
                 {/* Merge Similar Orders */}
-                <div className="flex items-center space-x-2" ref={mergeInfoRef}>
+                <div className="flex items-center space-x-2">
                   <input
                     id="merge-similar-toggle"
                     type="checkbox"
@@ -885,21 +869,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setShowMergeInfo((v) => !v)}
+                    onClick={() => setShowMergeInfoModal(true)}
                     className="inline-flex items-center justify-center p-0.5 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     aria-label="Deschide explicația pentru unirea comenzilor"
                   >
                     <Info className="w-4 h-4 text-gray-400" />
                   </button>
-                  {showMergeInfo && (
-                    <div className="relative">
-                      <div className="absolute z-50 mt-2 w-96 max-w-[28rem] rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-700 shadow-lg">
-                        Dacă un client dă o comandă și apoi își amintește că mai vrea un produs sau mai multe și mai plasează o comandă, vor apărea două comenzi listate aici.
-                        <br />
-                        Bifând această căsuță, comenzile care aparțin aceluiași client pot fi unite într-una singură.
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Multi-select Toggle */}
@@ -925,8 +900,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
           <h2 className="text-xl font-semibold text-gray-900">
             Comenzi pentru această listă
           </h2>
@@ -935,10 +910,8 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
           </p>
         </div>
 
-        
-
         {/* 3-dot Menu */}
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <button
             onClick={toggleDropdown}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -998,10 +971,10 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
               <div key={dt.id} className="space-y-4">
                 {/* Delivery Type Header */}
                 <div className="border-b border-gray-200 pb-2">
-                  <h3 className="text-lg font-semibold text-gray-800">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
                     {dt.denumire}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     {ordersByDeliveryTypeId[dt.id].length} {ordersByDeliveryTypeId[dt.id].length === 1 ? 'comandă' : 'comenzi'}
                   </p>
                 </div>
@@ -1031,12 +1004,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                     })
                     .map((order) => (
                   <div key={order.id} id={`order-${order.id}`}>
-                  <Card className={`p-6 ${highlightedOrderId === order.id ? (highlightPhase === 'active' ? 'ring-2 ring-amber-400 bg-amber-50 animate-pulse' : 'ring-1 ring-amber-200 bg-amber-50 transition-[box-shadow,background-color] duration-700') : ''}`}>
-                    <div className="space-y-4">
+                  <Card className={`p-4 sm:p-6 ${highlightedOrderId === order.id ? (highlightPhase === 'active' ? 'ring-2 ring-amber-400 bg-amber-50 animate-pulse' : 'ring-1 ring-amber-200 bg-amber-50 transition-[box-shadow,background-color] duration-700') : ''}`}>
+                    <div className="space-y-3 sm:space-y-4">
                       {/* Order row with optional checkbox on the left */}
-                      <div className="flex items-center">
+                      <div className="flex items-start">
                         {multiSelectEnabled && (
-                          <div className="mr-3 self-center">
+                          <div className="mr-3 self-start mt-1">
                             <input
                               aria-label="Selectează comanda"
                               type="checkbox"
@@ -1058,19 +1031,20 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                         )}
 
                         {/* Order Display - Similar to OrderConfirmation */}
-                        <div className="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
-                          <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
+                        <div className="flex-1 bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200 min-w-0 overflow-hidden">
+                          <pre className="whitespace-pre-line text-sm font-mono text-gray-800 break-words overflow-wrap-anywhere">
                             {formatOrderText(order)}
                           </pre>
                         </div>
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex items-center justify-start space-x-2">
+                      <div className="flex flex-wrap items-center justify-start gap-2">
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => handleViewOrder(order)}
+                          className="flex-1 sm:flex-initial"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Vezi
@@ -1079,7 +1053,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleEditOrder(order)}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 flex-1 sm:flex-initial"
                         >
                           <Edit className="h-4 w-4 mr-1" />
                           Editează
@@ -1088,7 +1062,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleDeleteOrder(order)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-initial"
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           Șterge
@@ -1107,12 +1081,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
               <div className="space-y-4">
                 {sortedOrders.map((order) => (
                   <div key={order.id} id={`order-${order.id}`}>
-                  <Card className={`p-6 ${highlightedOrderId === order.id ? (highlightPhase === 'active' ? 'ring-2 ring-amber-400 bg-amber-50 animate-pulse' : 'ring-1 ring-amber-200 bg-amber-50 transition-[box-shadow,background-color] duration-700') : ''}`}>
-                    <div className="space-y-4">
+                  <Card className={`p-4 sm:p-6 ${highlightedOrderId === order.id ? (highlightPhase === 'active' ? 'ring-2 ring-amber-400 bg-amber-50 animate-pulse' : 'ring-1 ring-amber-200 bg-amber-50 transition-[box-shadow,background-color] duration-700') : ''}`}>
+                    <div className="space-y-3 sm:space-y-4">
                       {/* Order row with optional checkbox on the left */}
-                      <div className="flex items-center">
+                      <div className="flex items-start">
                         {multiSelectEnabled && (
-                          <div className="mr-3 self-center">
+                          <div className="mr-3 self-start mt-1">
                             <input
                               aria-label="Selectează comanda"
                               type="checkbox"
@@ -1132,19 +1106,20 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                         )}
 
                         {/* Order Display - Same detailed format as grouped */}
-                        <div className="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
-                          <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
+                        <div className="flex-1 bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200 min-w-0 overflow-hidden">
+                          <pre className="whitespace-pre-line text-sm font-mono text-gray-800 break-words overflow-wrap-anywhere">
                             {formatOrderText(order)}
                           </pre>
                         </div>
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex items-center justify-start space-x-2">
+                      <div className="flex flex-wrap items-center justify-start gap-2">
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => handleViewOrder(order)}
+                          className="flex-1 sm:flex-initial"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Vezi
@@ -1153,7 +1128,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleEditOrder(order)}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 flex-1 sm:flex-initial"
                         >
                           <Edit className="h-4 w-4 mr-1" />
                           Editează
@@ -1162,7 +1137,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleDeleteOrder(order)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-initial"
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           Șterge
@@ -1182,11 +1157,11 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       {Object.keys(orderTotals).length > 0 && (
         <Card>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 min-w-0">
                 Total Comenzi per Produs
               </h3>
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <button
                   onClick={() => setTotalsMenuOpen(v => !v)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -1420,6 +1395,23 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             isLoading={updateOrderMutation.isPending}
           />
         )}
+      </Modal>
+
+      {/* Merge Info Modal */}
+      <Modal
+        isOpen={showMergeInfoModal}
+        onClose={() => setShowMergeInfoModal(false)}
+        title="Unește comenzile acelorași clienți"
+        size="md"
+      >
+        <div className="space-y-3 text-gray-700">
+          <p>
+            Dacă un client dă o comandă și apoi își amintește că mai vrea un produs sau mai multe și mai plasează o comandă, vor apărea două comenzi listate aici.
+          </p>
+          <p>
+            Bifând această căsuță, comenzile care aparțin aceluiași client pot fi unite într-una singură.
+          </p>
+        </div>
       </Modal>
     </div>
   );
