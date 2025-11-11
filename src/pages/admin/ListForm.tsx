@@ -546,7 +546,10 @@ const ListForm: React.FC = () => {
                   <h4 className="font-medium text-gray-900 mb-2">Metode de Plată</h4>
                   <div className="text-sm text-gray-600">
                     {paymentMethods && paymentMethods.length > 0 
-                      ? paymentMethods.map(pm => (
+                      ? paymentMethods
+                          .slice()
+                          .sort((a, b) => a.description.localeCompare(b.description))
+                          .map(pm => (
                           <div key={pm.id} className="mb-1 last:mb-0">
                             {pm.description}
                           </div>

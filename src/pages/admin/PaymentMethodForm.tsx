@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useCreatePaymentMethod, useUpdatePaymentMethod, usePaymentMethod } from '@/hooks/usePaymentMethods';
+import { usePaymentTypes } from '@/hooks/usePaymentTypes';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { PaymentMethodCreate } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
@@ -20,11 +22,14 @@ const PaymentMethodForm: React.FC = () => {
   const [formData, setFormData] = useState<PaymentMethodCreate>({
     name: '',
     description: '',
+    payment_type_id: undefined,
+    required_data: {},
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Queries and mutations
   const { data: paymentMethod, isLoading: isLoadingPaymentMethod } = usePaymentMethod(Number(id));
+  const { data: paymentTypes } = usePaymentTypes();
   const createPaymentMethodMutation = useCreatePaymentMethod();
   const updatePaymentMethodMutation = useUpdatePaymentMethod();
   
@@ -37,6 +42,8 @@ const PaymentMethodForm: React.FC = () => {
       setFormData({
         name: paymentMethod.name,
         description: paymentMethod.description,
+        payment_type_id: paymentMethod.payment_type_id,
+        required_data: paymentMethod.required_data || {},
       });
     }
   }, [paymentMethod, isEditing]);
@@ -61,6 +68,22 @@ const PaymentMethodForm: React.FC = () => {
       newErrors.description = 'Descrierea metodei de plată trebuie să aibă mai puțin de 100 de caractere';
     }
 
+    // Validate required_data based on payment type
+    if (formData.payment_type_id === 4) {
+      // Revolut requires phone_number
+      if (!formData.required_data?.phone_number?.trim()) {
+        newErrors.phone_number = 'Numărul de telefon este obligatoriu pentru Revolut';
+      }
+    } else if (formData.payment_type_id === 5) {
+      // Bank Transfer requires iban and recipient_name
+      if (!formData.required_data?.iban?.trim()) {
+        newErrors.iban = 'IBAN-ul este obligatoriu pentru transfer bancar';
+      }
+      if (!formData.required_data?.recipient_name?.trim()) {
+        newErrors.recipient_name = 'Numele destinatarului este obligatoriu pentru transfer bancar';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -73,14 +96,23 @@ const PaymentMethodForm: React.FC = () => {
       return;
     }
 
+    // Prepare submission data - clean up empty required_data for types that don't need it
+    const submissionData: PaymentMethodCreate = {
+      ...formData,
+      required_data: 
+        formData.payment_type_id === 4 || formData.payment_type_id === 5
+          ? formData.required_data
+          : (Object.keys(formData.required_data || {}).length > 0 ? formData.required_data : undefined),
+    };
+
     try {
       if (isEditing) {
         await updatePaymentMethodMutation.mutateAsync({
           id: Number(id),
-          data: formData,
+          data: submissionData,
         });
       } else {
-        await createPaymentMethodMutation.mutateAsync(formData);
+        await createPaymentMethodMutation.mutateAsync(submissionData);
       }
 
       // Navigate back to payment methods list
@@ -103,6 +135,39 @@ const PaymentMethodForm: React.FC = () => {
   // Handle input changes
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Handle payment type change
+  const handlePaymentTypeChange = (value: string) => {
+    const paymentTypeId = value ? parseInt(value) : undefined;
+    setFormData(prev => ({
+      ...prev,
+      payment_type_id: paymentTypeId,
+      required_data: {}, // Reset required_data when payment type changes
+    }));
+    // Clear related errors
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.phone_number;
+      delete newErrors.iban;
+      delete newErrors.recipient_name;
+      return newErrors;
+    });
+  };
+
+  // Handle required_data field changes
+  const handleRequiredDataChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      required_data: {
+        ...prev.required_data,
+        [field]: value,
+      },
+    }));
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -171,6 +236,73 @@ const PaymentMethodForm: React.FC = () => {
               Descrierea afișată clienților (max 100 caractere)
             </p>
           </div>
+
+          {/* Payment Type Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tipul de Plată
+            </label>
+            <Select
+              options={paymentTypes?.map(pt => ({
+                value: pt.id.toString(),
+                label: pt.friendly_name,
+              })) || []}
+              value={formData.payment_type_id?.toString() || ''}
+              onChange={handlePaymentTypeChange}
+              placeholder="Selectează tipul de plată"
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              Selectează tipul de plată pentru această metodă
+            </p>
+          </div>
+
+          {/* Dynamic Required Data Fields */}
+          {formData.payment_type_id === 4 && (
+            <div>
+              <Input
+                label="Număr de Telefon Revolut"
+                value={formData.required_data?.phone_number || ''}
+                onChange={(e) => handleRequiredDataChange('phone_number', e.target.value)}
+                placeholder="0740123456"
+                error={errors.phone_number}
+                required
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Numărul de telefon Revolut al afacerii (unde se primesc plățile)
+              </p>
+            </div>
+          )}
+
+          {formData.payment_type_id === 5 && (
+            <>
+              <div>
+                <Input
+                  label="IBAN"
+                  value={formData.required_data?.iban || ''}
+                  onChange={(e) => handleRequiredDataChange('iban', e.target.value)}
+                  placeholder="RO49 AAAA 1B31 0075 9384 0000"
+                  error={errors.iban}
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  IBAN-ul contului bancar al afacerii
+                </p>
+              </div>
+              <div>
+                <Input
+                  label="Nume Destinatar"
+                  value={formData.required_data?.recipient_name || ''}
+                  onChange={(e) => handleRequiredDataChange('recipient_name', e.target.value)}
+                  placeholder="Numele deținătorului contului"
+                  error={errors.recipient_name}
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Numele deținătorului contului bancar
+                </p>
+              </div>
+            </>
+          )}
 
           {/* Error Display */}
           {(createPaymentMethodMutation.error || updatePaymentMethodMutation.error || errors.submit) && (

@@ -282,7 +282,10 @@ export const EditOrderForm: React.FC<EditOrderFormProps> = ({
             <Select
               value={watch('payment_method_id').toString()}
               onChange={(value) => setValue('payment_method_id', parseInt(value), { shouldDirty: true })}
-              options={paymentMethods.map(pm => ({
+              options={paymentMethods
+                .slice()
+                .sort((a, b) => a.description.localeCompare(b.description))
+                .map(pm => ({
                 value: pm.id.toString(),
                 label: pm.name
               }))}
