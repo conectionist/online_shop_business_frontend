@@ -54,8 +54,11 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [highlightPhase, setHighlightPhase] = useState<'active' | 'fade' | null>(null);
 
   // Fetch orders for this specific list
+  // Quickfix: explicitly request up to 250 orders so we don't silently drop orders above the backend's default limit
   const { data: orders, isLoading, error } = useOrders(
-    mergeSimilar ? { liste_id: listId, merge_similar: true } : { liste_id: listId }
+    mergeSimilar
+      ? { liste_id: listId, merge_similar: true, limit: 250, skip: 0 }
+      : { liste_id: listId, limit: 250, skip: 0 }
   );
   const { data: listProductsData } = useListProductsOrdered(listId); // List-scoped products
   const { data: list } = useList(listId); // Get list data for date
