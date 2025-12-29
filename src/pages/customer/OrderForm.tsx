@@ -120,14 +120,30 @@ const OrderForm: React.FC = () => {
   }
 
 
-  // Parse error response to extract out-of-stock product IDs
+  // Parse error response to extract out-of-stock product IDs using structured error format (API v4.0.0+)
   const parseOutOfStockProducts = (error: any): number[] => {
     const productIds: number[] = [];
     
     try {
       const errorDetail = error?.response?.data?.detail;
-      if (typeof errorDetail === 'string') {
-        // Try to extract product IDs from error message like "Insufficient stock for product 1 in list 15"
+      
+      // Handle structured error format (API v4.0.0+)
+      if (typeof errorDetail === 'object' && errorDetail?.error_code === 'INSUFFICIENT_STOCK') {
+        // Direct access to product_id - no parsing needed!
+        if (errorDetail.product_id) {
+          productIds.push(errorDetail.product_id);
+        }
+      } else if (Array.isArray(errorDetail)) {
+        // Handle multiple errors (if API returns array of errors)
+        errorDetail.forEach((err: any) => {
+          if (err?.error_code === 'INSUFFICIENT_STOCK' && err?.product_id) {
+            if (!productIds.includes(err.product_id)) {
+              productIds.push(err.product_id);
+            }
+          }
+        });
+      } else if (typeof errorDetail === 'string') {
+        // Fallback for legacy string format (if still in use)
         const matches = errorDetail.match(/product\s+(\d+)/gi);
         if (matches) {
           matches.forEach(match => {
@@ -140,20 +156,6 @@ const OrderForm: React.FC = () => {
             }
           });
         }
-      } else if (Array.isArray(errorDetail)) {
-        // Handle array of errors
-        errorDetail.forEach((err: any) => {
-          if (err?.loc && Array.isArray(err.loc) && err.loc.includes('items')) {
-            // Try to extract product ID from validation error
-            const productIdMatch = err.msg?.match(/product\s+(\d+)/i);
-            if (productIdMatch) {
-              const productId = parseInt(productIdMatch[1], 10);
-              if (!productIds.includes(productId)) {
-                productIds.push(productId);
-              }
-            }
-          }
-        });
       }
     } catch (e) {
       console.error('Error parsing out-of-stock products:', e);
@@ -189,21 +191,34 @@ const OrderForm: React.FC = () => {
       return { success: true, status: 200 };
     } catch (error: any) {
       const status = error?.response?.status;
+      const errorDetail = error?.response?.data?.detail;
       
+      // Handle structured errors (API v4.0.0+)
       if (status === 409) {
-        // Duplicate order: treat as success (server handles duplicates)
+        // Check error_code to distinguish between duplicate and insufficient stock
+        if (typeof errorDetail === 'object' && errorDetail?.error_code) {
+          if (errorDetail.error_code === 'DUPLICATE_ORDER') {
+            // Duplicate order: treat as success (server handles duplicates)
+            return { success: true, status: 409 };
+          } else if (errorDetail.error_code === 'INSUFFICIENT_STOCK') {
+            // Insufficient stock: extract product IDs from structured format
+            const outOfStockProductIds = parseOutOfStockProducts(error);
+            return { success: false, status: 409, outOfStockProductIds };
+          }
+        }
+        // Fallback: if no error_code or unknown error_code, assume duplicate (legacy behavior)
         return { success: true, status: 409 };
       } else if (status === 400) {
-        // Insufficient stock: extract product IDs
+        // Legacy: 400 status for out-of-stock (backward compatibility)
         const outOfStockProductIds = parseOutOfStockProducts(error);
         return { success: false, status: 400, outOfStockProductIds };
-      } else if (status === 500 || status >= 500) {
+      } else if (status && (status === 500 || status >= 500)) {
         // Server error
         return { success: false, status: 500 };
       } else {
         // Other errors
         console.error('Failed to submit order to server:', error);
-        return { success: false, status };
+        return { success: false, status: status || undefined };
       }
     }
   };
@@ -280,7 +295,7 @@ const OrderForm: React.FC = () => {
         // Navigate to confirmation page (only if window.open succeeded)
         navigate('/order-confirmation');
       }, 0);
-    } else if (result.status === 400 && result.outOfStockProductIds && result.outOfStockProductIds.length > 0) {
+    } else if ((result.status === 400 || result.status === 409) && result.outOfStockProductIds && result.outOfStockProductIds.length > 0) {
       // Insufficient stock: show modal and remove products from cart
       const removedProducts = items
         .filter(item => result.outOfStockProductIds!.includes(item.id))
