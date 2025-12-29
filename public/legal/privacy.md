@@ -2,8 +2,14 @@
 
 Această politică explică ce date colectăm și cum le folosim.
 
-## Analitice (Plausible)
-Folosim Plausible Analytics pentru măsurarea audienței site-ului fără cookie-uri sau identificatori persistenți. Plausible colectează doar informații agregate și anonimizate (de ex. URL vizitat, referer, tipul de dispozitiv, agentul utilizatorului, adresa IP pseudonimizată) pentru a ne ajuta să înțelegem traficul și a îmbunătăți serviciile. Datele sunt găzduite în UE. Nu realizăm profilare și nu urmărim utilizatorii între site-uri. Temeiul legal: interes legitim pentru măsurarea audienței.
+## Analitice
+Folosim servicii de analiză pentru măsurarea audienței site-ului și îmbunătățirea experienței utilizatorilor:
+
+**Plausible Analytics**: Folosim Plausible Analytics pentru măsurarea audienței site-ului fără cookie-uri sau identificatori persistenți. Plausible colectează doar informații agregate și anonimizate (de ex. URL vizitat, referer, tipul de dispozitiv, agentul utilizatorului, adresa IP pseudonimizată) pentru a ne ajuta să înțelegem traficul și a îmbunătăți serviciile. Datele sunt găzduite în UE. Nu realizăm profilare și nu urmărim utilizatorii între site-uri.
+
+**Rybbit Analytics**: Folosim Rybbit Analytics ca serviciu suplimentar de analiză pentru monitorizarea performanței site-ului. Rybbit colectează date agregate despre utilizarea site-ului (de ex. pagini vizitate, surse de trafic, tipuri de dispozitive) pentru a ne ajuta să înțelegem comportamentul utilizatorilor și să optimizăm serviciile. Datele sunt procesate în conformitate cu standardele de confidențialitate și nu sunt folosite pentru profilare sau urmărire între site-uri.
+
+Temeiul legal pentru utilizarea ambelor servicii de analiză: interes legitim pentru măsurarea audienței și îmbunătățirea serviciilor (art. 6(1)(f) GDPR).
 
 ## Datele colectate
 Colectăm datele strict necesare pentru procesarea comenzilor și îmbunătățirea serviciilor: nume, prenume, adresă de livrare (dacă este cazul), număr de telefon, metode de plată selectate și preferințe de livrare.

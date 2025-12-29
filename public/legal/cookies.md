@@ -10,4 +10,8 @@ Cookie-urile sunt fișiere text mici stocate pe dispozitivul dumneavoastră pent
 Puteți controla sau șterge cookie-urile din setările browserului. Rețineți că blocarea cookie-urilor strict necesare poate afecta funcționarea site-ului.
 
 ## Analitice (fără cookie-uri)
-Utilizăm Plausible Analytics, o soluție de analiză care nu folosește cookie-uri și nu creează profiluri individuale. Colectarea datelor se face într-o manieră agregată și pseudonimizată, exclusiv pentru măsurarea audienței.
+Utilizăm servicii de analiză care nu folosesc cookie-uri și nu creează profiluri individuale:
+
+- **Plausible Analytics**: O soluție de analiză care nu folosește cookie-uri și nu creează profiluri individuale. Colectarea datelor se face într-o manieră agregată și pseudonimizată, exclusiv pentru măsurarea audienței.
+
+- **Rybbit Analytics**: Un serviciu suplimentar de analiză care colectează date agregate despre utilizarea site-ului fără utilizarea cookie-urilor pentru urmărire persistentă. Datele sunt procesate în mod agregat și pseudonimizat pentru analiza traficului și optimizarea serviciilor.
