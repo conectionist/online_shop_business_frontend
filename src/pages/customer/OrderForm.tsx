@@ -5,7 +5,7 @@ import { usePublishedList } from '@/hooks/useLists';
 import { useListDeliveryTypes } from '@/hooks/useLists';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useCartStore } from '@/stores/cartStore';
-import { ArrowLeft, User, CreditCard, Truck, MapPin, Phone } from 'lucide-react';
+import { ArrowLeft, User, CreditCard, Truck, MapPin, Phone, AlertCircle, Loader2 } from 'lucide-react';
 import { PaymentTypeIcon } from '@/utils/paymentTypes';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -16,6 +16,7 @@ import { PHONE_REGEX } from '@/utils/validation';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
+import Modal from '@/components/ui/Modal';
 
 interface OrderFormData {
   nume: string;
@@ -29,7 +30,7 @@ interface OrderFormData {
 
 const OrderForm: React.FC = () => {
   const navigate = useNavigate();
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart, removeItem } = useCartStore();
 
   // Get the current published list and list-specific delivery types
   const { data: publishedList, isLoading: isLoadingList } = usePublishedList();
@@ -38,6 +39,10 @@ const OrderForm: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
 
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [outOfStockModalOpen, setOutOfStockModalOpen] = useState(false);
+  const [outOfStockProducts, setOutOfStockProducts] = useState<Array<{ id: number; nume: string }>>([]);
+  const [serverErrorModalOpen, setServerErrorModalOpen] = useState(false);
 
   // Prepare order creation
   const createOrderMutation = useCreateOrder();
@@ -115,8 +120,52 @@ const OrderForm: React.FC = () => {
   }
 
 
-  const submitOrderToServer = async (orderData: ReturnType<typeof buildOrderDataForSession>, source?: string) => {
-    if (!publishedList) return;
+  // Parse error response to extract out-of-stock product IDs
+  const parseOutOfStockProducts = (error: any): number[] => {
+    const productIds: number[] = [];
+    
+    try {
+      const errorDetail = error?.response?.data?.detail;
+      if (typeof errorDetail === 'string') {
+        // Try to extract product IDs from error message like "Insufficient stock for product 1 in list 15"
+        const matches = errorDetail.match(/product\s+(\d+)/gi);
+        if (matches) {
+          matches.forEach(match => {
+            const idMatch = match.match(/\d+/);
+            if (idMatch) {
+              const productId = parseInt(idMatch[0], 10);
+              if (!productIds.includes(productId)) {
+                productIds.push(productId);
+              }
+            }
+          });
+        }
+      } else if (Array.isArray(errorDetail)) {
+        // Handle array of errors
+        errorDetail.forEach((err: any) => {
+          if (err?.loc && Array.isArray(err.loc) && err.loc.includes('items')) {
+            // Try to extract product ID from validation error
+            const productIdMatch = err.msg?.match(/product\s+(\d+)/i);
+            if (productIdMatch) {
+              const productId = parseInt(productIdMatch[1], 10);
+              if (!productIds.includes(productId)) {
+                productIds.push(productId);
+              }
+            }
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error parsing out-of-stock products:', e);
+    }
+    
+    return productIds;
+  };
+
+  const submitOrderToServer = async (orderData: ReturnType<typeof buildOrderDataForSession>, source?: string): Promise<{ success: boolean; status?: number; outOfStockProductIds?: number[] }> => {
+    if (!publishedList) {
+      return { success: false };
+    }
 
     const orderCreateData: OrderCreate = {
       nume_client: `${orderData.prenume} ${orderData.nume}`.trim(),
@@ -137,13 +186,24 @@ const OrderForm: React.FC = () => {
 
     try {
       await createOrderMutation.mutateAsync({ orderData: orderCreateData, source });
+      return { success: true, status: 200 };
     } catch (error: any) {
       const status = error?.response?.status;
+      
       if (status === 409) {
-        // Duplicate order: handle silently (likely quick double action)
-        console.info('Duplicate order (409) handled silently.');
+        // Duplicate order: treat as success (server handles duplicates)
+        return { success: true, status: 409 };
+      } else if (status === 400) {
+        // Insufficient stock: extract product IDs
+        const outOfStockProductIds = parseOutOfStockProducts(error);
+        return { success: false, status: 400, outOfStockProductIds };
+      } else if (status === 500 || status >= 500) {
+        // Server error
+        return { success: false, status: 500 };
       } else {
+        // Other errors
         console.error('Failed to submit order to server:', error);
+        return { success: false, status };
       }
     }
   };
@@ -184,27 +244,64 @@ const OrderForm: React.FC = () => {
     }
 
     const orderData = buildOrderDataForSession(data);
+    setIsSubmittingOrder(true);
 
-    // Open WhatsApp immediately (within user gesture)
-    const whatsappText = encodeURIComponent(formatOrderTextUtil(orderData, { 
-      includeSeparator: true,
-      listDate: publishedList?.data
-    }));
-    const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
-    const whatsappWindow = window.open(whatsappUrl, '_blank');
-    if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
-      window.location.href = whatsappUrl;
+    // Submit the order to the server first (before opening WhatsApp)
+    const result = await submitOrderToServer(orderData, 'whatsapp_button');
+
+    setIsSubmittingOrder(false);
+
+    // Handle different response statuses
+    if (result.success && result.status && (result.status === 200 || result.status === 409)) {
+      // Success or duplicate (treated as success)
+      const whatsappText = encodeURIComponent(formatOrderTextUtil(orderData, { 
+        includeSeparator: true,
+        listDate: publishedList?.data
+      }));
+      const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
+      
+      // Persist for confirmation page
+      sessionStorage.setItem('orderData', JSON.stringify(orderData));
+
+      // Clear cart
+      clearCart();
+
+      // Open WhatsApp using setTimeout(0) to preserve gesture context on iOS
+      // This queues the open in the next event loop tick, which helps on iOS Safari
+      setTimeout(() => {
+        // Try to open in new window first
+        const whatsappWindow = window.open(whatsappUrl, '_blank');
+        if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
+          // Fallback: redirect directly (works on all platforms including iOS)
+          window.location.href = whatsappUrl;
+          return; // Don't navigate to confirmation if redirecting
+        }
+
+        // Navigate to confirmation page (only if window.open succeeded)
+        navigate('/order-confirmation');
+      }, 0);
+    } else if (result.status === 400 && result.outOfStockProductIds && result.outOfStockProductIds.length > 0) {
+      // Insufficient stock: show modal and remove products from cart
+      const removedProducts = items
+        .filter(item => result.outOfStockProductIds!.includes(item.id))
+        .map(item => ({ id: item.id, nume: item.nume }));
+      
+      setOutOfStockProducts(removedProducts);
+      
+      // Remove out-of-stock products from cart
+      result.outOfStockProductIds.forEach(productId => {
+        removeItem(productId);
+      });
+      
+      setOutOfStockModalOpen(true);
+    } else if (result.status && (result.status === 500 || result.status >= 500)) {
+      // Server error: show generic error message
+      setServerErrorModalOpen(true);
+    } else {
+      // Other errors: show generic error
+      console.error('Unexpected error during order submission');
+      setServerErrorModalOpen(true);
     }
-
-    // Submit the order to the server (fire-and-forget, with duplicate guard)
-    await submitOrderToServer(orderData, 'whatsapp_button');
-
-    // Persist for confirmation page and then navigate there
-    sessionStorage.setItem('orderData', JSON.stringify(orderData));
-
-    // Clear cart and navigate to confirmation page
-    clearCart();
-    navigate('/order-confirmation');
   };
 
   if (items.length === 0) {
@@ -525,13 +622,92 @@ const OrderForm: React.FC = () => {
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSubmittingOrder}
               className={components.button.primary("px-8 py-3")}
             >
-              {isSubmitting ? 'Se procesează...' : 'Trimite comanda pe Whatsapp'}
+              {isSubmitting || isSubmittingOrder ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Se procesează...
+                </>
+              ) : (
+                'Trimite comanda pe Whatsapp'
+              )}
             </Button>
           </div>
         </form>
+
+        {/* Out of Stock Modal */}
+        <Modal
+          isOpen={outOfStockModalOpen}
+          onClose={() => setOutOfStockModalOpen(false)}
+          title="Produse indisponibile"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3 p-4 bg-orange-50 border border-orange-200 rounded-md">
+              <AlertCircle className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-orange-800">
+                  Următoarele produse nu mai sunt disponibile și au fost eliminate automat din coșul tău:
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {outOfStockProducts.map((product) => (
+                <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <span className="font-medium text-gray-900">{product.nume}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-4 border-t border-gray-200">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setOutOfStockModalOpen(false);
+                  // If cart is now empty, navigate to products page
+                  if (items.length === 0) {
+                    navigate('/');
+                  }
+                }}
+                className="w-full"
+              >
+                Am înțeles
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Server Error Modal */}
+        <Modal
+          isOpen={serverErrorModalOpen}
+          onClose={() => setServerErrorModalOpen(false)}
+          title="Eroare la procesarea comenzii"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3 p-4 bg-red-50 border border-red-200 rounded-md">
+              <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-red-800">
+                  Serverul întâmpină probleme tehnice în acest moment. Te rugăm să încerci din nou mai târziu.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-200">
+              <Button
+                variant="primary"
+                onClick={() => setServerErrorModalOpen(false)}
+                className="w-full"
+              >
+                Am înțeles
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </div>
   );
