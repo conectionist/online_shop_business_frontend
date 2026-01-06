@@ -285,7 +285,7 @@ const ArchivedProductsPage: React.FC = () => {
                       >
                         {/* Large Top Image */}
                         <Link 
-                          to={`/product/${product.id}?archived=true`}
+                          to={`/product/${product.id}`}
                           className="block"
                         >
                           <div className="p-4">
@@ -327,7 +327,7 @@ const ArchivedProductsPage: React.FC = () => {
                                 {/* Product Name */}
                                 <div>
                                   <Link 
-                                    to={`/product/${product.id}?archived=true`}
+                                    to={`/product/${product.id}`}
                                     className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
                                   >
                                     <h5 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">

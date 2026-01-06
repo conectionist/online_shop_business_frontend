@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Package, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
@@ -15,36 +15,41 @@ import { components } from '@/utils/theme';
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  
-  // Check if we're in archived mode
-  const isArchivedMode = searchParams.get('archived') === 'true';
   
   const { addItem, getTotalItems } = useCartStore();
   const { data: publishedList } = usePublishedList();
   const { data: lastExpiredList } = useLastExpiredList();
   
-  // Use the appropriate list based on mode
-  const currentList = isArchivedMode ? lastExpiredList : publishedList;
-  const { data: listProductsData } = useListProductsOrdered(currentList?.id || 0);
+  // Try to get products from published list first, then expired list
+  const { data: publishedListProductsData } = useListProductsOrdered(publishedList?.id || 0);
+  const { data: expiredListProductsData } = useListProductsOrdered(lastExpiredList?.id || 0);
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
 
-  // Extract products from the new ordered structure
-  const listProducts = React.useMemo(() => {
-    if (!listProductsData?.categories) return [];
-    
-    // Flatten all products from all categories
-    return listProductsData.categories.flatMap((category: any) => 
+  // Extract products from published list
+  const publishedListProducts = React.useMemo(() => {
+    if (!publishedListProductsData?.categories) return [];
+    return publishedListProductsData.categories.flatMap((category: any) => 
       category.products.map((product: any) => ({
         ...product,
-        category_id: category.id // Ensure category_id is set
+        category_id: category.id
       }))
     );
-  }, [listProductsData]);
+  }, [publishedListProductsData]);
+
+  // Extract products from expired list
+  const expiredListProducts = React.useMemo(() => {
+    if (!expiredListProductsData?.categories) return [];
+    return expiredListProductsData.categories.flatMap((category: any) => 
+      category.products.map((product: any) => ({
+        ...product,
+        category_id: category.id
+      }))
+    );
+  }, [expiredListProductsData]);
 
   // Helper functions
   const getCategoryName = (categoryId: number) => {
@@ -55,8 +60,13 @@ const ProductPage: React.FC = () => {
     return units?.find(u => u.id === unitId)?.denumire || 'unitate';
   };
 
-  // Find the product
-  const product = listProducts?.find((p: any) => p.id === parseInt(productId || '0'));
+  // Try to find product in published list first, then in expired list
+  const productIdNum = parseInt(productId || '0');
+  const productInPublishedList = publishedListProducts?.find((p: any) => p.id === productIdNum);
+  const productInExpiredList = expiredListProducts?.find((p: any) => p.id === productIdNum);
+  
+  const product = productInPublishedList || productInExpiredList;
+  const isArchivedMode = !productInPublishedList && !!productInExpiredList;
 
   // Inject product schema markup for SEO - must be before any early returns
   useEffect(() => {
@@ -97,11 +107,11 @@ const ProductPage: React.FC = () => {
               </p>
               <Button 
                 variant="primary" 
-                onClick={() => navigate(isArchivedMode ? '/products/archived' : '/')}
+                onClick={() => navigate('/')}
                 className={components.button.primary()}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Înapoi la {isArchivedMode ? 'Produse Arhivate' : 'Produse'}
+                Înapoi la Produse
               </Button>
             </div>
           </div>
