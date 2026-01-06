@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
-import { usePublishedList, useListProductsOrdered, useListDeliveryTypes } from '@/hooks/useLists';
+import { usePublishedList, useLastExpiredList, useListProductsOrdered, useListDeliveryTypes } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
@@ -13,10 +13,12 @@ import { getAppName, getLogoPath } from '@/utils/appConfig';
 import { getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
+import { formatDateRomanian } from '@/utils/dateFormatters';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
   const { data: publishedList, isLoading, error } = usePublishedList();
+  const { data: lastExpiredList } = useLastExpiredList();
   
   
   // Fetch data for the published list
@@ -218,9 +220,33 @@ const WelcomePage: React.FC = () => {
       <div className="text-center py-12">
         <div className="max-w-md mx-auto px-6 sm:px-6">
           <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-gray-900 mb-4 whitespace-pre-line">
-            {businessDetails?.list_not_available_msg || 'Lista de produse nu a fost publicată încă. Vă rugăm să reveniți mai târziu.'}
-          </h1>
+          
+          {lastExpiredList ? (
+            <>
+              <h1 className="text-xl font-bold text-gray-900 mb-4">
+                Nu mai primim comenzi pentru<br />{formatDateRomanian(lastExpiredList.data)}.
+              </h1>
+              <p className="text-gray-700 mb-6">
+                Pentru a vedea ce produse au fost disponibile,<br />apasă{' '}
+                <Link 
+                  to="/products/archived" 
+                  className="text-amber-600 hover:text-amber-700 font-semibold underline"
+                >
+                  aici
+                </Link>
+                .
+              </p>
+              <div className="mt-8 pt-8 border-t border-gray-200">
+                <p className="text-gray-600 whitespace-pre-line">
+                  {businessDetails?.list_not_available_msg || 'Lista de produse nu a fost publicată încă. Vă rugăm să reveniți mai târziu.'}
+                </p>
+              </div>
+            </>
+          ) : (
+            <h1 className="text-xl font-bold text-gray-900 mb-4 whitespace-pre-line">
+              {businessDetails?.list_not_available_msg || 'Lista de produse nu a fost publicată încă. Vă rugăm să reveniți mai târziu.'}
+            </h1>
+          )}
         </div>
       </div>
     );

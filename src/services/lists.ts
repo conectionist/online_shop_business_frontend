@@ -60,6 +60,50 @@ export const listService = {
     }
   },
 
+  // Get the last expired published list (for customers to view archived products) (PUBLIC - no auth required)
+  getLastExpiredPublishedList: async (): Promise<List | null> => {
+    try {
+      const response = await apiClient.get('/liste');
+      const lists = response.data;
+      const now = new Date();
+
+      // Filter for published, non-deleted lists that have expired
+      const expiredPublishedLists = lists.filter((list: List) => {
+        if (!list.is_published || list.is_deleted) {
+          return false;
+        }
+
+        const { expiration_date } = list as { expiration_date?: string | null };
+        
+        // If no expiration date, treat as never expires (not an expired list)
+        if (!expiration_date) {
+          return false;
+        }
+
+        // Check if expired
+        const expiresAt = new Date(expiration_date);
+        return expiresAt.getTime() <= now.getTime();
+      });
+
+      // If no expired published lists, return null
+      if (expiredPublishedLists.length === 0) {
+        return null;
+      }
+
+      // Return the most recently expired one (highest expiration_date)
+      const lastExpiredList = expiredPublishedLists.reduce((latest: List, current: List) => {
+        const latestExpiration = new Date((latest as any).expiration_date).getTime();
+        const currentExpiration = new Date((current as any).expiration_date).getTime();
+        return currentExpiration > latestExpiration ? current : latest;
+      });
+
+      return lastExpiredList;
+    } catch (error) {
+      console.error('Error fetching last expired published list:', error);
+      return null;
+    }
+  },
+
   // Get a single list by ID (PUBLIC - no auth required)
   getList: async (id: number): Promise<List> => {
     const response = await apiClient.get(`/liste/${id}`);

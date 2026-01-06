@@ -36,6 +36,7 @@ import CartPage from './pages/customer/CartPage'
 import OrderForm from './pages/customer/OrderForm'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
 import ProductPage from './pages/customer/ProductPage'
+import ArchivedProductsPage from './pages/customer/ArchivedProductsPage'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import AppLayout from './components/layout/AppLayout'
@@ -81,6 +82,7 @@ function App() {
             <Route path="/order-form" element={<OrderForm />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/product/:productId" element={<ProductPage />} />
+            <Route path="/products/archived" element={<ArchivedProductsPage />} />
             <Route path="/politica-confidentialitate" element={<PrivacyPolicy />} />
             <Route path="/politica-cookie-uri" element={<CookiesPolicy />} />
             <Route path="/politica-retur" element={<ReturnsPolicy />} />

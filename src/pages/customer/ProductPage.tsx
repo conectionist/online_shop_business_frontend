@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ArrowLeft, Package, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
-import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
+import { usePublishedList, useLastExpiredList, useListProductsOrdered } from '@/hooks/useLists';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { getProductImageUrl, getProductImageUrlFromImage } from '@/services/api';
@@ -15,13 +15,21 @@ import { components } from '@/utils/theme';
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   
+  // Check if we're in archived mode
+  const isArchivedMode = searchParams.get('archived') === 'true';
+  
   const { addItem, getTotalItems } = useCartStore();
   const { data: publishedList } = usePublishedList();
-  const { data: listProductsData } = useListProductsOrdered(publishedList?.id || 0);
+  const { data: lastExpiredList } = useLastExpiredList();
+  
+  // Use the appropriate list based on mode
+  const currentList = isArchivedMode ? lastExpiredList : publishedList;
+  const { data: listProductsData } = useListProductsOrdered(currentList?.id || 0);
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
 
@@ -89,11 +97,11 @@ const ProductPage: React.FC = () => {
               </p>
               <Button 
                 variant="primary" 
-                onClick={() => navigate('/')}
+                onClick={() => navigate(isArchivedMode ? '/products/archived' : '/')}
                 className={components.button.primary()}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Înapoi la Produse
+                Înapoi la {isArchivedMode ? 'Produse Arhivate' : 'Produse'}
               </Button>
             </div>
           </div>
@@ -115,6 +123,11 @@ const ProductPage: React.FC = () => {
   const productCanonical = `${window.location.origin}/product/${product.id}`;
 
   const addToCart = () => {
+    // Don't allow adding to cart in archived mode
+    if (isArchivedMode) {
+      return;
+    }
+    
     if (!publishedList?.id) 
       return;
     
@@ -169,19 +182,21 @@ const ProductPage: React.FC = () => {
         twitterCard="summary_large_image"
       />
 
-      {/* Floating Cart Icon */}
-      <div className="fixed top-4 right-4 z-50">
-        <Link to="/cart">
-          <div className={components.interactive.floatingCart}>
-            <ShoppingCart className="h-6 w-6 text-amber-700" />
-            {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
-                {getTotalItems()}
-              </span>
-            )}
-          </div>
-        </Link>
-      </div>
+      {/* Floating Cart Icon - Hidden in archived mode */}
+      {!isArchivedMode && (
+        <div className="fixed top-4 right-4 z-50">
+          <Link to="/cart">
+            <div className={components.interactive.floatingCart}>
+              <ShoppingCart className="h-6 w-6 text-amber-700" />
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
+                  {getTotalItems()}
+                </span>
+              )}
+            </div>
+          </Link>
+        </div>
+      )}
 
       <div className={components.page.container}>
         <div className="max-w-4xl mx-auto px-4">
@@ -189,11 +204,11 @@ const ProductPage: React.FC = () => {
           <div className="mb-6">
             <Button
               variant="secondary"
-              onClick={() => navigate('/')}
+              onClick={() => navigate(isArchivedMode ? '/products/archived' : '/')}
               className={components.interactive.backButton + " mb-4"}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Înapoi la Produse
+              Înapoi la {isArchivedMode ? 'Produse Arhivate' : 'Produse'}
             </Button>
           </div>
 
@@ -292,58 +307,71 @@ const ProductPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Add to Cart Section */}
-                <div className="space-y-6 pt-6 border-t border-amber-100">
-                  {isUnavailable && (
-                    <div className="flex justify-center">
-                      <div className="text-sm font-bold inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700">
-                        Nu mai avem momentan
+                {/* Add to Cart Section - Hidden in archived mode */}
+                {!isArchivedMode && (
+                  <div className="space-y-6 pt-6 border-t border-amber-100">
+                    {isUnavailable && (
+                      <div className="flex justify-center">
+                        <div className="text-sm font-bold inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700">
+                          Nu mai avem momentan
+                        </div>
+                      </div>
+                    )}
+                    {/* Quantity Selector */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-lg font-medium text-gray-700">
+                          Cantitate
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleQuantityChange(quantity - 1)}
+                            disabled={quantity <= 1}
+                            className={components.interactive.quantityButton}
+                          >
+                            <Minus className="w-5 h-5" />
+                          </Button>
+                          <span className="text-2xl font-bold text-amber-700 w-16 text-center">
+                            {quantity}
+                          </span>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleQuantityChange(quantity + 1)}
+                            // disabled={quantity >= product.stoc_produs}
+                            className={components.interactive.quantityButton}
+                          >
+                            <Plus className="w-5 h-5" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  )}
-                  {/* Quantity Selector */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-lg font-medium text-gray-700">
-                        Cantitate
-                      </label>
-                      <div className="flex items-center space-x-4">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleQuantityChange(quantity - 1)}
-                          disabled={quantity <= 1}
-                          className={components.interactive.quantityButton}
-                        >
-                          <Minus className="w-5 h-5" />
-                        </Button>
-                        <span className="text-2xl font-bold text-amber-700 w-16 text-center">
-                          {quantity}
-                        </span>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleQuantityChange(quantity + 1)}
-                          // disabled={quantity >= product.stoc_produs}
-                          className={components.interactive.quantityButton}
-                        >
-                          <Plus className="w-5 h-5" />
-                        </Button>
-                      </div>
+
+                    {/* Add to Cart Button */}
+                    <Button
+                      variant="primary"
+                      onClick={addToCart}
+                      className={components.button.primary("w-full h-14 text-lg font-semibold")}
+                      disabled={isUnavailable}
+                    >
+                      <Plus className="w-5 h-5 mr-3" />
+                      {isUnavailable ? 'Indisponibil' : 'Adaugă în coș'}
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Archived mode message */}
+                {isArchivedMode && (
+                  <div className="pt-6 border-t border-amber-100">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+                      <p className="text-amber-800 font-medium text-sm">
+                        Acest produs a fost disponibil recent, dar momentan nu este pe stoc.
+                      </p>
                     </div>
                   </div>
-
-                  {/* Add to Cart Button */}
-                  <Button
-                    variant="primary"
-                    onClick={addToCart}
-                    className={components.button.primary("w-full h-14 text-lg font-semibold")}
-                    disabled={isUnavailable}
-                  >
-                    <Plus className="w-5 h-5 mr-3" />
-                    {isUnavailable ? 'Indisponibil' : 'Adaugă în coș'}
-                  </Button>
-                </div>
+                )}
               </div>
             </div>
           </div>
