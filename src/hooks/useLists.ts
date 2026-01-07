@@ -21,6 +21,15 @@ export const usePublishedList = () => {
   });
 };
 
+// Hook to get the last expired published list (for customers to view archived products)
+export const useLastExpiredList = () => {
+  return useQuery({
+    queryKey: [...queryKeys.lists.list({}), 'last-expired'],
+    queryFn: () => listService.getLastExpiredPublishedList(),
+    staleTime: 2 * 60 * 1000, // 2 minutes - shorter cache for customer-facing data
+  });
+};
+
 // Hook to get a single list
 export const useList = (id: number) => {
   return useQuery({
