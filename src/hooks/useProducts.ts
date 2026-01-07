@@ -17,6 +17,11 @@ export const useProducts = (filters?: ProductFilters) => {
   });
 };
 
+// Alias for fetching all products (for catalog page)
+export const useAllProducts = () => {
+  return useProducts({ limit: 1000, skip: 0 });
+};
+
 // Hook to fetch a single product
 export const useProduct = (id: number) => {
   return useQuery({

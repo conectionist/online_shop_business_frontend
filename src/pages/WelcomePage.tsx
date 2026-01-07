@@ -227,9 +227,9 @@ const WelcomePage: React.FC = () => {
                 Nu mai primim comenzi pentru<br />{formatDateRomanian(lastExpiredList.data)}.
               </h1>
               <p className="text-gray-700 mb-6">
-                Pentru a vedea ce produse au fost disponibile,<br />apasă{' '}
+                Pentru a vedea toate produsele,<br />apasă{' '}
                 <Link 
-                  to="/products/archived" 
+                  to="/catalog" 
                   className="text-amber-600 hover:text-amber-700 font-semibold underline"
                 >
                   aici

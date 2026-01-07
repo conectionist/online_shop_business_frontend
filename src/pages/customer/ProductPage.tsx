@@ -214,11 +214,11 @@ const ProductPage: React.FC = () => {
           <div className="mb-6">
             <Button
               variant="secondary"
-              onClick={() => navigate(isArchivedMode ? '/products/archived' : '/')}
+              onClick={() => navigate(!productInPublishedList ? '/catalog' : '/')}
               className={components.interactive.backButton + " mb-4"}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Înapoi la {isArchivedMode ? 'Produse Arhivate' : 'Produse'}
+              Înapoi la {!productInPublishedList ? 'Catalog' : 'Produse'}
             </Button>
           </div>
 
@@ -377,7 +377,7 @@ const ProductPage: React.FC = () => {
                   <div className="pt-6 border-t border-amber-100">
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
                       <p className="text-amber-800 font-medium text-sm">
-                        Acest produs a fost disponibil recent, dar momentan nu este pe stoc.
+                        Acest produs nu este disponibil momentan.
                       </p>
                     </div>
                   </div>
