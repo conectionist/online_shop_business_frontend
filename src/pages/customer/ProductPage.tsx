@@ -28,7 +28,7 @@ const ProductPage: React.FC = () => {
   const { data: product, isLoading: isLoadingProduct } = useProduct(productIdNum);
   
   // Get published list products to check availability
-  const { data: publishedListProductsData } = useListProductsOrdered(publishedList?.id || 0);
+  const { data: publishedListProductsData, isLoading: isLoadingPublishedProducts } = useListProductsOrdered(publishedList?.id || 0);
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
 
@@ -78,7 +78,7 @@ const ProductPage: React.FC = () => {
     };
   }, [product, categories, units]);
 
-  if (isLoadingProduct) {
+  if (isLoadingProduct || isLoadingPublishedProducts) {
     return (
       <div className="text-center py-12">
         <div className="max-w-md mx-auto px-6 sm:px-6">
@@ -124,7 +124,8 @@ const ProductPage: React.FC = () => {
 
   const productImages = displayProduct.images || [];
   const hasMultipleImages = productImages.length > 1;
-  const isUnavailable = displayProduct.stoc_produs === 0 || isArchivedMode;
+  // Product is unavailable if it's in archived mode OR if it's in published list but out of stock
+  const isUnavailable = isArchivedMode || (productInPublishedList && displayProduct.stoc_produs === 0);
 
   // Generate product-specific SEO data
   const productTitle = displayProduct.nume;

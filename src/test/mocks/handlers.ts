@@ -253,6 +253,18 @@ export const handlers = [
     return HttpResponse.json(createTestPaymentMethods())
   }),
 
+  // Individual product by ID
+  http.get(`${API}/products/:id`, ({ params }) => {
+    const { id } = params
+    const products = createTestProducts()
+    const product = products.find(p => p.id === parseInt(id as string))
+    
+    if (product) {
+      return HttpResponse.json(product)
+    }
+    return new HttpResponse(null, { status: 404 })
+  }),
+
   // List products ordered
   http.get(`${API}/liste/:listId/products/ordered`, ({ params }) => {
     const { listId } = params
