@@ -48,6 +48,22 @@ const CatalogPage: React.FC = () => {
     return ids;
   }, [listProductsData]);
 
+  // Map productId -> per-list stock (stoc_produs) as provided by the published list endpoint.
+  // Note: stoc_produs may be null/undefined depending on backend rules (e.g., unlimited / not tracked),
+  // so we treat "explicit 0" as unavailable and everything else as available.
+  const publishedListStockByProductId = React.useMemo(() => {
+    const map = new Map<number, number | null | undefined>();
+    if (!listProductsData?.categories) return map;
+
+    listProductsData.categories.forEach((category: any) => {
+      category.products.forEach((product: any) => {
+        map.set(product.id, product?.stoc_produs);
+      });
+    });
+
+    return map;
+  }, [listProductsData]);
+
   // Group all products by category
   const productsByCategory = React.useMemo(() => {
     if (!allProducts || !categories) return {};
@@ -86,7 +102,16 @@ const CatalogPage: React.FC = () => {
 
   // Check if product is available for purchase
   const isProductAvailable = (product: any) => {
-    return publishedProductIds.has(product.id) && product.stoc_produs > 0;
+    if (!publishedProductIds.has(product.id)) return false;
+
+    const listStock = publishedListStockByProductId.get(product.id);
+
+    // If backend explicitly says 0 stock in the published list, it's unavailable.
+    if (typeof listStock === 'number') return listStock > 0;
+
+    // If list stock is null/undefined (or not provided), treat as available.
+    // Backend should still validate on checkout if any other rules apply.
+    return true;
   };
 
   // Add to cart with quantity logic
@@ -334,7 +359,9 @@ const CatalogPage: React.FC = () => {
                   {products.map((product: any, index: number) => {
                     const available = isProductAvailable(product);
                     const currentQuantity = quantities[product.id] || 1;
-                    const isUnavailable = product.stoc_produs === 0;
+                    const listStock = publishedListStockByProductId.get(product.id);
+                    const isInPublishedList = publishedProductIds.has(product.id);
+                    const isUnavailable = isInPublishedList && typeof listStock === 'number' && listStock === 0;
                     
                     return (
                       <div
@@ -450,9 +477,10 @@ const CatalogPage: React.FC = () => {
 
                                 <Button
                                   variant="primary"
+                                  size="sm"
                                   onClick={() => addToCartWithQuantity(product)}
                                   disabled={addingToCart[product.id]}
-                                  className={`${components.button.primary()} w-full`}
+                                  className={components.button.primary("w-full sm:w-auto font-medium py-2 px-4 rounded-lg mt-1")}
                                 >
                                   {addingToCart[product.id] ? (
                                     <span className="flex items-center justify-center">
