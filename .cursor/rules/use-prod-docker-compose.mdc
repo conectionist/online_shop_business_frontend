@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+When building, use the production docker-compose.yml, instead of the dev one unless specified otherwise.
+docker compose up -d --build
