@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Package, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Package, Plus, Minus, ShoppingCart, Share2, Copy, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
@@ -19,6 +19,7 @@ const ProductPage: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   
   const { addItem, getTotalItems } = useCartStore();
   const { data: publishedList } = usePublishedList();
@@ -179,6 +180,43 @@ const ProductPage: React.FC = () => {
     if (newQuantity >= 1) {
       setQuantity(newQuantity);
     }
+  };
+
+  const copyProductLink = async () => {
+    const productUrl = `${window.location.origin}/product/${displayProduct.id}`;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(productUrl);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = productUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      }
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+    }
+  };
+
+  const shareViaWhatsApp = () => {
+    const productUrl = `${window.location.origin}/product/${displayProduct.id}`;
+    const productName = displayProduct.nume;
+    
+    const shareText = `${productName} ${productUrl}`;
+    const whatsappText = encodeURIComponent(shareText);
+    const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -385,6 +423,40 @@ const ProductPage: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Share Section */}
+                <div className="space-y-3 pt-6 border-t border-amber-100">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Distribuie produsul
+                  </h3>
+                  <div className="flex flex-col items-start gap-3">
+                    <Button
+                      variant="secondary"
+                      onClick={shareViaWhatsApp}
+                      className={components.button.secondary("w-auto")}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Distribuie pe WhatsApp
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={copyProductLink}
+                      className={components.button.secondary("w-auto")}
+                    >
+                      {linkCopied ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Link copiat!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copiază linkul
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
