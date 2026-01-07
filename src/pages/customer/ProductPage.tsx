@@ -3,7 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Package, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
-import { usePublishedList, useLastExpiredList, useListProductsOrdered } from '@/hooks/useLists';
+import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
+import { useProduct } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { getProductImageUrl, getProductImageUrlFromImage } from '@/services/api';
@@ -21,15 +22,17 @@ const ProductPage: React.FC = () => {
   
   const { addItem, getTotalItems } = useCartStore();
   const { data: publishedList } = usePublishedList();
-  const { data: lastExpiredList } = useLastExpiredList();
   
-  // Try to get products from published list first, then expired list
+  // Fetch product directly from database
+  const productIdNum = parseInt(productId || '0');
+  const { data: product, isLoading: isLoadingProduct } = useProduct(productIdNum);
+  
+  // Get published list products to check availability
   const { data: publishedListProductsData } = useListProductsOrdered(publishedList?.id || 0);
-  const { data: expiredListProductsData } = useListProductsOrdered(lastExpiredList?.id || 0);
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
 
-  // Extract products from published list
+  // Extract products from published list to check if current product is available
   const publishedListProducts = React.useMemo(() => {
     if (!publishedListProductsData?.categories) return [];
     return publishedListProductsData.categories.flatMap((category: any) => 
@@ -40,16 +43,12 @@ const ProductPage: React.FC = () => {
     );
   }, [publishedListProductsData]);
 
-  // Extract products from expired list
-  const expiredListProducts = React.useMemo(() => {
-    if (!expiredListProductsData?.categories) return [];
-    return expiredListProductsData.categories.flatMap((category: any) => 
-      category.products.map((product: any) => ({
-        ...product,
-        category_id: category.id
-      }))
-    );
-  }, [expiredListProductsData]);
+  // Check if product is in published list
+  const productInPublishedList = publishedListProducts?.find((p: any) => p.id === productIdNum);
+  
+  // Use published list product data if available (includes stoc_produs), otherwise use direct fetch
+  const displayProduct = productInPublishedList || product;
+  const isArchivedMode = !productInPublishedList;
 
   // Helper functions
   const getCategoryName = (categoryId: number) => {
@@ -59,14 +58,6 @@ const ProductPage: React.FC = () => {
   const getUnitName = (unitId: number) => {
     return units?.find(u => u.id === unitId)?.denumire || 'unitate';
   };
-
-  // Try to find product in published list first, then in expired list
-  const productIdNum = parseInt(productId || '0');
-  const productInPublishedList = publishedListProducts?.find((p: any) => p.id === productIdNum);
-  const productInExpiredList = expiredListProducts?.find((p: any) => p.id === productIdNum);
-  
-  const product = productInPublishedList || productInExpiredList;
-  const isArchivedMode = !productInPublishedList && !!productInExpiredList;
 
   // Inject product schema markup for SEO - must be before any early returns
   useEffect(() => {
@@ -86,6 +77,17 @@ const ProductPage: React.FC = () => {
       removeSchemaMarkup('product');
     };
   }, [product, categories, units]);
+
+  if (isLoadingProduct) {
+    return (
+      <div className="text-center py-12">
+        <div className="max-w-md mx-auto px-6 sm:px-6">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Se încarcă produsul...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -120,17 +122,17 @@ const ProductPage: React.FC = () => {
     );
   }
 
-  const productImages = product.images || [];
+  const productImages = displayProduct.images || [];
   const hasMultipleImages = productImages.length > 1;
-  const isUnavailable = product.stoc_produs === 0;
+  const isUnavailable = displayProduct.stoc_produs === 0 || isArchivedMode;
 
   // Generate product-specific SEO data
-  const productTitle = product.nume;
-  const productDescription = product.description || 
-    `${product.nume} - produs proaspăt de brutărie cu maia. ${getCategoryName(product.category_id)}. Preț: ${product.pret} RON pentru ${product.cantitate} ${getUnitName(product.unitati_id)}. Comandă online cu livrare rapidă în Iasi.`;
-  const productKeywords = `${product.nume}, ${getCategoryName(product.category_id)}, brutărie, maia, produse proaspete, comandă online, livrare, panificatie, românia, iasi`;
-  const productImage = productImages.length > 0 ? getProductImageUrl(product, 'original') : undefined;
-  const productCanonical = `${window.location.origin}/product/${product.id}`;
+  const productTitle = displayProduct.nume;
+  const productDescription = displayProduct.description || 
+    `${displayProduct.nume} - produs proaspăt de brutărie cu maia. ${getCategoryName(displayProduct.category_id)}. Preț: ${displayProduct.pret} RON pentru ${displayProduct.cantitate} ${getUnitName(displayProduct.unitati_id)}. Comandă online cu livrare rapidă în Iasi.`;
+  const productKeywords = `${displayProduct.nume}, ${getCategoryName(displayProduct.category_id)}, brutărie, maia, produse proaspete, comandă online, livrare, panificatie, românia, iasi`;
+  const productImage = productImages.length > 0 ? getProductImageUrl(displayProduct, 'original') : undefined;
+  const productCanonical = `${window.location.origin}/product/${displayProduct.id}`;
 
   const addToCart = () => {
     // Don't allow adding to cart in archived mode
@@ -146,21 +148,21 @@ const ProductPage: React.FC = () => {
     }
     // Get current cart state to check if item exists
     const currentItems = useCartStore.getState().items;
-    const existingItem = currentItems.find(item => item.id === product.id);
+    const existingItem = currentItems.find(item => item.id === displayProduct.id);
     
     if (existingItem) {
       // If item already exists, add the selected quantity to the existing quantity
       const newQuantity = existingItem.quantity + quantity;
-      useCartStore.getState().updateQuantity(product.id, newQuantity);
+      useCartStore.getState().updateQuantity(displayProduct.id, newQuantity);
     } else {
       // If it's a new item, add it with the selected quantity
       addItem({
-        id: product.id,
-        nume: product.nume,
-        pret: product.pret,
-        unitati_id: product.unitati_id,
-        unitate_denumire: getUnitName(product.unitati_id),
-        images: product.images,
+        id: displayProduct.id,
+        nume: displayProduct.nume,
+        pret: displayProduct.pret,
+        unitati_id: displayProduct.unitati_id,
+        unitate_denumire: getUnitName(displayProduct.unitati_id),
+        images: displayProduct.images,
         listId: publishedList.id
       });
       
@@ -187,7 +189,7 @@ const ProductPage: React.FC = () => {
         keywords={productKeywords}
         canonical={productCanonical}
         ogImage={productImage}
-        ogImageAlt={`Imagine pentru ${productTitle} - ${getCategoryName(product.category_id)}`}
+        ogImageAlt={`Imagine pentru ${productTitle} - ${getCategoryName(displayProduct.category_id)}`}
         ogType="product"
         twitterCard="summary_large_image"
       />
@@ -231,7 +233,7 @@ const ProductPage: React.FC = () => {
                   {productImages.length > 0 ? (
                     <img
                       src={getProductImageUrlFromImage(productImages[selectedImageIndex], 'original')}
-                      alt={product.nume}
+                      alt={displayProduct.nume}
                       className="w-full h-full object-cover"
                       onClick={() => setIsLightboxOpen(true)}
                       onError={(e) => {
@@ -262,7 +264,7 @@ const ProductPage: React.FC = () => {
                       >
                         <img
                           src={getProductImageUrlFromImage(image, 'thumbnail')}
-                          alt={`${product.nume} - imagine ${index + 1}`}
+                          alt={`${displayProduct.nume} - imagine ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
                       </button>
@@ -274,7 +276,7 @@ const ProductPage: React.FC = () => {
                   index={selectedImageIndex}
                   images={productImages.map((img: any, idx: number) => ({
                     src: getProductImageUrlFromImage(img, 'original'),
-                    alt: `${product.nume} - imagine ${idx + 1}`,
+                    alt: `${displayProduct.nume} - imagine ${idx + 1}`,
                   }))}
                   onClose={() => setIsLightboxOpen(false)}
                 />
@@ -285,10 +287,10 @@ const ProductPage: React.FC = () => {
                 {/* Product Header */}
                 <div className="space-y-4">
                   <div className={components.interactive.categoryBadge}>
-                    {getCategoryName(product.category_id)}
+                    {getCategoryName(displayProduct.category_id)}
                   </div>
                   <h1 className="text-4xl font-bold text-gray-900 leading-tight">
-                    {product.nume}
+                    {displayProduct.nume}
                   </h1>
                 </div>
 
@@ -297,21 +299,21 @@ const ProductPage: React.FC = () => {
                   <div className={components.interactive.priceCard}>
                     <div className="text-center">
                       <p className="text-2xl font-bold text-amber-700">
-                        {product.pret} RON / {product.cantitate} {getUnitName(product.unitati_id)}
+                        {displayProduct.pret} RON / {displayProduct.cantitate} {getUnitName(displayProduct.unitati_id)}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Description */}
-                {product.description && (
+                {displayProduct.description && (
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-gray-900">
                       Despre acest produs
                     </h3>
                     <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-amber-100">
                       <p className="text-gray-700 leading-relaxed text-base">
-                        {product.description}
+                        {displayProduct.description}
                       </p>
                     </div>
                   </div>
