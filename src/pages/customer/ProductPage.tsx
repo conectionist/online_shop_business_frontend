@@ -79,14 +79,63 @@ const ProductPage: React.FC = () => {
     };
   }, [product, categories, units]);
 
+  // Show skeleton loader with layout immediately for better UX
   if (isLoadingProduct || isLoadingPublishedProducts) {
     return (
-      <div className="text-center py-12">
-        <div className="max-w-md mx-auto px-6 sm:px-6">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Se încarcă produsul...</p>
+      <>
+        <SEO 
+          title="Se încarcă produsul..."
+          description="Se încarcă informațiile despre produs."
+          robots="noindex, nofollow"
+        />
+        <div className={components.page.container}>
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="mb-6">
+              <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className={components.card.main + " overflow-hidden"}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+                {/* Image Gallery Skeleton */}
+                <div className="space-y-6">
+                  <div className={components.interactive.imageContainer}>
+                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse"></div>
+                  </div>
+                  <div className="flex space-x-3 overflow-x-auto pb-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex-shrink-0 w-20 h-20 rounded-xl bg-gray-200 animate-pulse"></div>
+                    ))}
+                  </div>
+                </div>
+                {/* Product Details Skeleton */}
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <div className="h-6 w-24 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-10 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-32 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="space-y-6 pt-6 border-t border-amber-100">
+                    <div className="flex items-center justify-between">
+                      <div className="h-6 w-20 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="flex items-center space-x-4">
+                        <div className="h-10 w-10 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-8 w-12 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-10 w-10 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div className="h-14 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -271,9 +320,16 @@ const ProductPage: React.FC = () => {
                 <div className={components.interactive.imageContainer}>
                   {productImages.length > 0 ? (
                     <img
-                      src={getProductImageUrlFromImage(productImages[selectedImageIndex], 'original')}
+                      srcSet={`
+                        ${getProductImageUrlFromImage(productImages[selectedImageIndex], 'thumbnail')} 300w,
+                        ${getProductImageUrlFromImage(productImages[selectedImageIndex], 'medium')} 600w,
+                        ${getProductImageUrlFromImage(productImages[selectedImageIndex], 'original')} 1200w
+                      `}
+                      sizes="(max-width: 640px) 400px, (max-width: 1024px) 500px, 600px"
+                      src={getProductImageUrlFromImage(productImages[selectedImageIndex], 'medium')}
                       alt={displayProduct.nume}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                       onClick={() => setIsLightboxOpen(true)}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -302,9 +358,15 @@ const ProductPage: React.FC = () => {
                         }`}
                       >
                         <img
+                          srcSet={`
+                            ${getProductImageUrlFromImage(image, 'thumbnail')} 80w,
+                            ${getProductImageUrlFromImage(image, 'medium')} 160w
+                          `}
+                          sizes="80px"
                           src={getProductImageUrlFromImage(image, 'thumbnail')}
                           alt={`${displayProduct.nume} - imagine ${index + 1}`}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                       </button>
                     ))}
