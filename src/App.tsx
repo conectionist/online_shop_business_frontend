@@ -37,6 +37,7 @@ import OrderForm from './pages/customer/OrderForm'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
 import ProductPage from './pages/customer/ProductPage'
 import CatalogPage from './pages/customer/CatalogPage'
+import CategoryCatalogPage from './pages/customer/CategoryCatalogPage'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import AppLayout from './components/layout/AppLayout'
@@ -83,6 +84,7 @@ function App() {
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/product/:productId" element={<ProductPage />} />
             <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/catalog/category/:categoryId" element={<CategoryCatalogPage />} />
             <Route path="/politica-confidentialitate" element={<PrivacyPolicy />} />
             <Route path="/politica-cookie-uri" element={<CookiesPolicy />} />
             <Route path="/politica-retur" element={<ReturnsPolicy />} />
