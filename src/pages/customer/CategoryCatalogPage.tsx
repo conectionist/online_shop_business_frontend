@@ -492,8 +492,8 @@ const CategoryCatalogPage: React.FC = () => {
                               ${getProductImageUrl(product, 'medium')} 600w,
                               ${getProductImageUrl(product, 'original')} 1200w
                             `}
-                            sizes="(max-width: 640px) 400px, (max-width: 1024px) 500px, 600px"
-                            src={getProductImageUrl(product, 'medium')}
+                            sizes="(max-width: 640px) 300px, (max-width: 1024px) 500px, 600px"
+                            src={getProductImageUrl(product, 'thumbnail')}
                             alt={product.nume}
                             className="w-full h-full object-cover"
                             loading="lazy"
