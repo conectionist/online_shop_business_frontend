@@ -235,14 +235,58 @@ const CategoryCatalogPage: React.FC = () => {
   const isLoading = isLoadingCategory || isLoadingProducts;
   const error = categoryError || productsError;
 
+  // Show skeleton loaders instead of spinner for better UX
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <div className="max-w-md mx-auto px-6 sm:px-6">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Se încarcă...</p>
+      <>
+        <SEO
+          title="Catalog Produse"
+          description="Produsele din categorie."
+          robots="index, follow"
+        />
+        <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
+          <div className="max-w-4xl mx-auto px-6 py-8">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-full max-w-[280px]">
+                <div className="aspect-square rounded-xl overflow-hidden relative border border-gray-200 shadow-sm bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse"></div>
+              </div>
+              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-10 w-40 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
         </div>
-      </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
+          <div className="space-y-6">
+            {[1, 2, 3, 4].map((index) => (
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+                <div className="p-4">
+                  <div className={`${components.interactive.imageContainer} relative`}>
+                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300"></div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                    <div className="space-y-1">
+                      <div className="h-4 bg-gray-200 rounded w-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                    </div>
+                    <div className="h-5 bg-gray-200 rounded w-32 mx-auto"></div>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-center space-x-4">
+                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
+                      <div className="h-6 w-12 bg-gray-200 rounded"></div>
+                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -324,9 +368,16 @@ const CategoryCatalogPage: React.FC = () => {
             <div className="w-full max-w-[280px]">
               <div className="aspect-square rounded-xl overflow-hidden relative border border-gray-200 shadow-sm">
                 <img
+                  srcSet={`
+                    ${getCategoryImageUrl(category, 'thumbnail')} 300w,
+                    ${getCategoryImageUrl(category, 'medium')} 600w,
+                    ${getCategoryImageUrl(category, 'original')} 1200w
+                  `}
+                  sizes="(max-width: 640px) 100vw, 280px"
                   src={getCategoryImageUrl(category, 'medium')}
                   alt={category.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
@@ -422,7 +473,7 @@ const CategoryCatalogPage: React.FC = () => {
                 key={product.id}
                 className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden group animate-fade-in-up"
                 style={{
-                  animationDelay: `${index * 100}ms`,
+                  animationDelay: `${Math.min(index * 50, 500)}ms`,
                   animationFillMode: 'both'
                 }}
               >
@@ -436,9 +487,16 @@ const CategoryCatalogPage: React.FC = () => {
                         <>
                           <img
                             ref={(el) => { imageRefs.current[product.id] = el; }}
-                            src={getProductImageUrl(product, 'original')}
+                            srcSet={`
+                              ${getProductImageUrl(product, 'thumbnail')} 300w,
+                              ${getProductImageUrl(product, 'medium')} 600w,
+                              ${getProductImageUrl(product, 'original')} 1200w
+                            `}
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
+                            src={getProductImageUrl(product, 'medium')}
                             alt={product.nume}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';

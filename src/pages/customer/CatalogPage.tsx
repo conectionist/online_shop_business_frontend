@@ -227,14 +227,97 @@ const CatalogPage: React.FC = () => {
   const isLoading = isLoadingCategories || (viewMode === 'products' && isLoadingProducts);
   const error = categoriesError || (viewMode === 'products' && productsError);
 
-  if (isLoading) {
+  // Show skeleton loaders instead of spinner for better UX
+  if (isLoading && viewMode === 'categories') {
     return (
-      <div className="text-center py-12">
-        <div className="max-w-md mx-auto px-6 sm:px-6">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Se încarcă...</p>
+      <>
+        <SEO
+          title="Catalog Produse"
+          description="Explorează categoriile și alege produsele preferate."
+          robots="index, follow"
+        />
+        <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
+          <div className="max-w-4xl mx-auto px-6 py-8">
+            <div className="text-center">
+              <div className="flex items-center justify-center space-x-4 mb-4">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0 bg-gray-200 animate-pulse"></div>
+                <div className="text-left">
+                  <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+        <div className="max-w-4xl mx-auto px-6 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            {[1, 2, 3, 4, 5, 6].map((index) => (
+              <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm animate-pulse">
+                <div className="aspect-square rounded-xl bg-gradient-to-br from-gray-200 to-gray-300"></div>
+                <div className="px-4 py-4 text-center">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (isLoading && viewMode === 'products') {
+    return (
+      <>
+        <SEO
+          title="Catalog Produse"
+          description="Explorează categoriile și alege produsele preferate."
+          robots="index, follow"
+        />
+        <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
+          <div className="max-w-4xl mx-auto px-6 py-8">
+            <div className="text-center">
+              <div className="flex items-center justify-center space-x-4 mb-4">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0 bg-gray-200 animate-pulse"></div>
+                <div className="text-left">
+                  <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
+          <div className="space-y-6">
+            {[1, 2, 3, 4].map((index) => (
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+                <div className="p-4">
+                  <div className={`${components.interactive.imageContainer} relative`}>
+                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300"></div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                    <div className="space-y-1">
+                      <div className="h-4 bg-gray-200 rounded w-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                    </div>
+                    <div className="h-5 bg-gray-200 rounded w-32 mx-auto"></div>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-center space-x-4">
+                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
+                      <div className="h-6 w-12 bg-gray-200 rounded"></div>
+                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -422,9 +505,16 @@ const CatalogPage: React.FC = () => {
                     <div className="aspect-square rounded-xl overflow-hidden relative">
                       {hasImage ? (
                         <img
+                          srcSet={`
+                            ${getCategoryImageUrl(category, 'thumbnail')} 300w,
+                            ${getCategoryImageUrl(category, 'medium')} 600w,
+                            ${getCategoryImageUrl(category, 'original')} 1200w
+                          `}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           src={getCategoryImageUrl(category, 'medium')}
                           alt={category.name}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -534,7 +624,7 @@ const CatalogPage: React.FC = () => {
                     key={product.id}
                     className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden group animate-fade-in-up"
                     style={{
-                      animationDelay: `${index * 100}ms`,
+                      animationDelay: `${Math.min(index * 50, 500)}ms`,
                       animationFillMode: 'both'
                     }}
                   >
@@ -548,9 +638,16 @@ const CatalogPage: React.FC = () => {
                             <>
                               <img
                                 ref={(el) => { imageRefs.current[product.id] = el; }}
-                                src={getProductImageUrl(product, 'original')}
+                                srcSet={`
+                                  ${getProductImageUrl(product, 'thumbnail')} 300w,
+                                  ${getProductImageUrl(product, 'medium')} 600w,
+                                  ${getProductImageUrl(product, 'original')} 1200w
+                                `}
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
+                                src={getProductImageUrl(product, 'medium')}
                                 alt={product.nume}
                                 className="w-full h-full object-cover"
+                                loading="lazy"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
