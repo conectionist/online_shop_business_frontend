@@ -4,7 +4,7 @@ import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useProducts } from '@/hooks/useProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { useCategory } from '@/hooks/useCategories';
-import { Package, Camera, ArrowLeft, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Package, Camera, ArrowLeft, Plus, Minus, ShoppingCart, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { getCategoryImageUrl, getProductImageUrl } from '@/services/api';
@@ -34,6 +34,8 @@ const CategoryCatalogPage: React.FC = () => {
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
   const [quantities, setQuantities] = React.useState<{ [key: number]: number }>({});
   const [expandedDescriptions, setExpandedDescriptions] = React.useState<{ [key: number]: boolean }>({});
+  const [searchTerm, setSearchTerm] = React.useState<string>('');
+  const [sortBy, setSortBy] = React.useState<'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'age-newest' | 'age-oldest'>('name-asc');
 
   const cartIconRef = useRef<HTMLDivElement>(null);
   const imageRefs = useRef<{ [key: number]: HTMLImageElement | null }>({});
@@ -186,6 +188,50 @@ const CategoryCatalogPage: React.FC = () => {
     return cut + '…';
   };
 
+  // Helper function to remove diacritics for search
+  const removeDiacritics = (str: string): string => {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  };
+
+  // Filter and sort products
+  const filteredAndSortedProducts = React.useMemo(() => {
+    if (!products) return [];
+
+    // Filter by search term (product name only, case-insensitive and diacritic-insensitive)
+    let filtered = products;
+    if (searchTerm.trim()) {
+      const searchNormalized = removeDiacritics(searchTerm.toLowerCase());
+      filtered = products.filter(product => {
+        const productNameNormalized = removeDiacritics(product.nume.toLowerCase());
+        return productNameNormalized.includes(searchNormalized);
+      });
+    }
+
+    // Sort products
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return a.nume.localeCompare(b.nume, 'ro');
+        case 'name-desc':
+          return b.nume.localeCompare(a.nume, 'ro');
+        case 'price-asc':
+          return a.pret - b.pret;
+        case 'price-desc':
+          return b.pret - a.pret;
+        case 'age-newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'age-oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [products, searchTerm, sortBy]);
+
   const isLoading = isLoadingCategory || isLoadingProducts;
   const error = categoryError || productsError;
 
@@ -245,36 +291,7 @@ const CategoryCatalogPage: React.FC = () => {
     );
   }
 
-  if (!products || products.length === 0) {
-    return (
-      <>
-        <SEO
-          title={`Catalog - ${category.name}`}
-          description={`Nu există produse disponibile în categoria ${category.name}.`}
-          robots="index, follow"
-        />
-        <div className="text-center py-12">
-          <div className="max-w-md mx-auto px-6 sm:px-6">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-gray-900 mb-4">
-              Nu există produse în categoria „{category.name}”.
-            </h1>
-            <p className="text-gray-600 mb-6">
-              Vă rugăm să reveniți mai târziu sau să explorați alte categorii.
-            </p>
-            <Button
-              variant="primary"
-              onClick={() => navigate('/catalog')}
-              className={components.button.primary()}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Înapoi la catalog
-            </Button>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // Note: We don't early return for empty products array - let the main render handle it with search/sort controls
 
   return (
     <>
@@ -334,8 +351,66 @@ const CategoryCatalogPage: React.FC = () => {
 
       {/* Products Section */}
       <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
+        {/* Search and Sort Controls */}
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search Input */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Caută produse..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+              />
+            </div>
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2 sm:w-auto">
+              <label htmlFor="sort-select" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                Sortează după:
+              </label>
+              <select
+                id="sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white"
+              >
+                <option value="name-asc">Nume (A-Z)</option>
+                <option value="name-desc">Nume (Z-A)</option>
+                <option value="price-asc">Preț (crescător)</option>
+                <option value="price-desc">Preț (descrescător)</option>
+                <option value="age-newest">Cel mai nou</option>
+                <option value="age-oldest">Cel mai vechi</option>
+              </select>
+            </div>
+          </div>
+          {/* Results Count */}
+          {searchTerm.trim() && (
+            <p className="text-sm text-gray-600">
+              {filteredAndSortedProducts.length === 0
+                ? 'Nu s-au găsit produse'
+                : `${filteredAndSortedProducts.length} ${filteredAndSortedProducts.length === 1 ? 'produs găsit' : 'produse găsite'}`
+              }
+            </p>
+          )}
+        </div>
+
         <div className="space-y-6">
-          {products.map((product: any, index: number) => {
+          {filteredAndSortedProducts.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchTerm.trim() ? 'Nu s-au găsit produse' : 'Nu există produse în această categorie'}
+              </h3>
+              <p className="text-gray-600">
+                {searchTerm.trim()
+                  ? 'Încearcă să modifici termenii de căutare.'
+                  : 'Vă rugăm să reveniți mai târziu sau să explorați alte categorii.'}
+              </p>
+            </div>
+          ) : (
+            filteredAndSortedProducts.map((product: any, index: number) => {
             const available = isProductAvailable(product);
             const currentQuantity = quantities[product.id] || 1;
             const listStock = publishedListStockByProductId.get(product.id);
@@ -485,7 +560,8 @@ const CategoryCatalogPage: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+            })
+          )}
         </div>
 
         <div className="mt-8 text-center">
