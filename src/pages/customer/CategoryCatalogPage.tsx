@@ -4,6 +4,7 @@ import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useProducts } from '@/hooks/useProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { useCategory } from '@/hooks/useCategories';
+import { useImageSize } from '@/hooks/useImageSize';
 import { Package, Camera, ArrowLeft, Plus, Minus, ShoppingCart, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
@@ -15,6 +16,7 @@ import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 
 const CategoryCatalogPage: React.FC = () => {
   const navigate = useNavigate();
+  const imageSize = useImageSize();
   const { categoryId } = useParams<{ categoryId: string }>();
   const numericCategoryId = Number(categoryId);
 
@@ -368,13 +370,7 @@ const CategoryCatalogPage: React.FC = () => {
             <div className="w-full max-w-[280px]">
               <div className="aspect-square rounded-xl overflow-hidden relative border border-gray-200 shadow-sm">
                 <img
-                  srcSet={`
-                    ${getCategoryImageUrl(category, 'thumbnail')} 300w,
-                    ${getCategoryImageUrl(category, 'medium')} 600w,
-                    ${getCategoryImageUrl(category, 'original')} 1200w
-                  `}
-                  sizes="(max-width: 640px) 200px, 280px"
-                  src={getCategoryImageUrl(category, 'medium')}
+                  src={getCategoryImageUrl(category, imageSize)}
                   alt={category.name}
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -487,13 +483,7 @@ const CategoryCatalogPage: React.FC = () => {
                         <>
                           <img
                             ref={(el) => { imageRefs.current[product.id] = el; }}
-                            srcSet={`
-                              ${getProductImageUrl(product, 'thumbnail')} 300w,
-                              ${getProductImageUrl(product, 'medium')} 600w,
-                              ${getProductImageUrl(product, 'original')} 1200w
-                            `}
-                            sizes="(max-width: 640px) 200px, (max-width: 1024px) 400px, 500px"
-                            src={getProductImageUrl(product, 'thumbnail')}
+                            src={getProductImageUrl(product, imageSize)}
                             alt={product.nume}
                             className="w-full h-full object-cover"
                             loading="lazy"

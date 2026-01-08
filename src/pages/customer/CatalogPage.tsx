@@ -5,6 +5,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useUnits } from '@/hooks/useUnits';
+import { useImageSize } from '@/hooks/useImageSize';
 import { Package, ArrowLeft, Camera, Plus, Minus, ShoppingCart, Grid3x3, List, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
@@ -16,6 +17,7 @@ import SEO from '@/components/SEO';
 
 const CatalogPage: React.FC = () => {
   const navigate = useNavigate();
+  const imageSize = useImageSize();
   const { data: businessDetails } = useBusinessDetailsSingle();
   const { data: categories, isLoading: isLoadingCategories, error: categoriesError } = useCategories();
   const { data: allProducts, isLoading: isLoadingProducts, error: productsError } = useProducts({ limit: 1000, skip: 0 });
@@ -505,13 +507,7 @@ const CatalogPage: React.FC = () => {
                     <div className="aspect-square rounded-xl overflow-hidden relative">
                       {hasImage ? (
                         <img
-                          srcSet={`
-                            ${getCategoryImageUrl(category, 'thumbnail')} 300w,
-                            ${getCategoryImageUrl(category, 'medium')} 600w,
-                            ${getCategoryImageUrl(category, 'original')} 1200w
-                          `}
-                          sizes="(max-width: 640px) 200px, (max-width: 1024px) 250px, 280px"
-                          src={getCategoryImageUrl(category, 'medium')}
+                          src={getCategoryImageUrl(category, imageSize)}
                           alt={category.name}
                           className="w-full h-full object-cover"
                           loading="lazy"
@@ -638,13 +634,7 @@ const CatalogPage: React.FC = () => {
                             <>
                               <img
                                 ref={(el) => { imageRefs.current[product.id] = el; }}
-                                srcSet={`
-                                  ${getProductImageUrl(product, 'thumbnail')} 300w,
-                                  ${getProductImageUrl(product, 'medium')} 600w,
-                                  ${getProductImageUrl(product, 'original')} 1200w
-                                `}
-                                sizes="(max-width: 640px) 200px, (max-width: 1024px) 400px, 500px"
-                                src={getProductImageUrl(product, 'thumbnail')}
+                                src={getProductImageUrl(product, imageSize)}
                                 alt={product.nume}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
