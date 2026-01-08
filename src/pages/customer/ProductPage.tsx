@@ -325,7 +325,7 @@ const ProductPage: React.FC = () => {
                         ${getProductImageUrlFromImage(productImages[selectedImageIndex], 'medium')} 600w,
                         ${getProductImageUrlFromImage(productImages[selectedImageIndex], 'original')} 1200w
                       `}
-                      sizes="(max-width: 640px) 300px, (max-width: 1024px) 500px, 600px"
+                      sizes="(max-width: 640px) 200px, (max-width: 1024px) 400px, 500px"
                       src={getProductImageUrlFromImage(productImages[selectedImageIndex], 'thumbnail')}
                       alt={displayProduct.nume}
                       className="w-full h-full object-cover"

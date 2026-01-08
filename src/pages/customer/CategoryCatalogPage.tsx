@@ -373,7 +373,7 @@ const CategoryCatalogPage: React.FC = () => {
                     ${getCategoryImageUrl(category, 'medium')} 600w,
                     ${getCategoryImageUrl(category, 'original')} 1200w
                   `}
-                  sizes="(max-width: 640px) 280px, 280px"
+                  sizes="(max-width: 640px) 200px, 280px"
                   src={getCategoryImageUrl(category, 'medium')}
                   alt={category.name}
                   className="w-full h-full object-cover"
@@ -492,7 +492,7 @@ const CategoryCatalogPage: React.FC = () => {
                               ${getProductImageUrl(product, 'medium')} 600w,
                               ${getProductImageUrl(product, 'original')} 1200w
                             `}
-                            sizes="(max-width: 640px) 300px, (max-width: 1024px) 500px, 600px"
+                            sizes="(max-width: 640px) 200px, (max-width: 1024px) 400px, 500px"
                             src={getProductImageUrl(product, 'thumbnail')}
                             alt={product.nume}
                             className="w-full h-full object-cover"
