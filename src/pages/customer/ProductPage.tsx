@@ -7,6 +7,7 @@ import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useProduct } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
+import { useImageSize } from '@/hooks/useImageSize';
 import { getProductImageUrl, getProductImageUrlFromImage } from '@/services/api';
 import AppLightbox from '@/components/ui/Lightbox';
 import SEO from '@/components/SEO';
@@ -16,6 +17,7 @@ import { components } from '@/utils/theme';
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const imageSize = useImageSize();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -320,13 +322,7 @@ const ProductPage: React.FC = () => {
                 <div className={components.interactive.imageContainer}>
                   {productImages.length > 0 ? (
                     <img
-                      srcSet={`
-                        ${getProductImageUrlFromImage(productImages[selectedImageIndex], 'thumbnail')} 300w,
-                        ${getProductImageUrlFromImage(productImages[selectedImageIndex], 'medium')} 600w,
-                        ${getProductImageUrlFromImage(productImages[selectedImageIndex], 'original')} 1200w
-                      `}
-                      sizes="(max-width: 640px) 200px, (max-width: 1024px) 400px, 500px"
-                      src={getProductImageUrlFromImage(productImages[selectedImageIndex], 'thumbnail')}
+                      src={getProductImageUrlFromImage(productImages[selectedImageIndex], imageSize)}
                       alt={displayProduct.nume}
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -358,11 +354,6 @@ const ProductPage: React.FC = () => {
                         }`}
                       >
                         <img
-                          srcSet={`
-                            ${getProductImageUrlFromImage(image, 'thumbnail')} 80w,
-                            ${getProductImageUrlFromImage(image, 'medium')} 160w
-                          `}
-                          sizes="80px"
                           src={getProductImageUrlFromImage(image, 'thumbnail')}
                           alt={`${displayProduct.nume} - imagine ${index + 1}`}
                           className="w-full h-full object-cover"
