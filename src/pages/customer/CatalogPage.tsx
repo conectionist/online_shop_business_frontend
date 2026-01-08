@@ -5,7 +5,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
 import { useUnits } from '@/hooks/useUnits';
-import { Package, ArrowLeft, Camera, Plus, Minus, ShoppingCart, Grid3x3, List } from 'lucide-react';
+import { Package, ArrowLeft, Camera, Plus, Minus, ShoppingCart, Grid3x3, List, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { getAppName, getLogoPath } from '@/utils/appConfig';
@@ -28,6 +28,8 @@ const CatalogPage: React.FC = () => {
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
   const [quantities, setQuantities] = React.useState<{ [key: number]: number }>({});
   const [expandedDescriptions, setExpandedDescriptions] = React.useState<{ [key: number]: boolean }>({});
+  const [searchTerm, setSearchTerm] = React.useState<string>('');
+  const [sortBy, setSortBy] = React.useState<'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'age-newest' | 'age-oldest'>('name-asc');
 
   const cartIconRef = useRef<HTMLDivElement>(null);
   const imageRefs = useRef<{ [key: number]: HTMLImageElement | null }>({});
@@ -177,6 +179,50 @@ const CatalogPage: React.FC = () => {
     const cut = lastSpace > 0 ? slice.slice(0, lastSpace) : slice;
     return cut + '…';
   };
+
+  // Helper function to remove diacritics for search
+  const removeDiacritics = (str: string): string => {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  };
+
+  // Filter and sort products
+  const filteredAndSortedProducts = React.useMemo(() => {
+    if (!allProducts) return [];
+
+    // Filter by search term (product name only, case-insensitive and diacritic-insensitive)
+    let filtered = allProducts;
+    if (searchTerm.trim()) {
+      const searchNormalized = removeDiacritics(searchTerm.toLowerCase());
+      filtered = allProducts.filter(product => {
+        const productNameNormalized = removeDiacritics(product.nume.toLowerCase());
+        return productNameNormalized.includes(searchNormalized);
+      });
+    }
+
+    // Sort products
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return a.nume.localeCompare(b.nume, 'ro');
+        case 'name-desc':
+          return b.nume.localeCompare(a.nume, 'ro');
+        case 'price-asc':
+          return a.pret - b.pret;
+        case 'price-desc':
+          return b.pret - a.pret;
+        case 'age-newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'age-oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [allProducts, searchTerm, sortBy]);
 
   const isLoading = isLoadingCategories || (viewMode === 'products' && isLoadingProducts);
   const error = categoriesError || (viewMode === 'products' && productsError);
@@ -407,6 +453,51 @@ const CatalogPage: React.FC = () => {
       {/* Products Section */}
       {viewMode === 'products' && (
         <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
+          {/* Search and Sort Controls */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Caută produse..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                />
+              </div>
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2 sm:w-auto">
+                <label htmlFor="sort-select" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Ordonează după:
+                </label>
+                <select
+                  id="sort-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white"
+                >
+                  <option value="name-asc">Nume (A-Z)</option>
+                  <option value="name-desc">Nume (Z-A)</option>
+                  <option value="price-asc">Preț (crescător)</option>
+                  <option value="price-desc">Preț (descrescător)</option>
+                  <option value="age-newest">Cel mai nou</option>
+                  <option value="age-oldest">Cel mai vechi</option>
+                </select>
+              </div>
+            </div>
+            {/* Results Count */}
+            {searchTerm.trim() && (
+              <p className="text-sm text-gray-600">
+                {filteredAndSortedProducts.length === 0
+                  ? 'Nu s-au găsit produse'
+                  : `${filteredAndSortedProducts.length} ${filteredAndSortedProducts.length === 1 ? 'produs găsit' : 'produse găsite'}`
+                }
+              </p>
+            )}
+          </div>
+
           {!allProducts || allProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -417,9 +508,21 @@ const CatalogPage: React.FC = () => {
                 Vă rugăm să reveniți mai târziu sau să explorați categorii.
               </p>
             </div>
+          ) : filteredAndSortedProducts.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchTerm.trim() ? 'Nu s-au găsit produse' : 'Nu există produse disponibile'}
+              </h3>
+              <p className="text-gray-600">
+                {searchTerm.trim()
+                  ? 'Încearcă să modifici termenii de căutare.'
+                  : 'Vă rugăm să reveniți mai târziu sau să explorați categorii.'}
+              </p>
+            </div>
           ) : (
             <div className="space-y-6">
-              {allProducts.map((product: any, index: number) => {
+              {filteredAndSortedProducts.map((product: any, index: number) => {
                 const available = isProductAvailable(product);
                 const currentQuantity = quantities[product.id] || 1;
                 const listStock = publishedListStockByProductId.get(product.id);

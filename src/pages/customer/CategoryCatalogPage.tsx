@@ -367,9 +367,9 @@ const CategoryCatalogPage: React.FC = () => {
             </div>
             {/* Sort Dropdown */}
             <div className="flex items-center gap-2 sm:w-auto">
-              <label htmlFor="sort-select" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Sortează după:
-              </label>
+                <label htmlFor="sort-select" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Ordonează după:
+                </label>
               <select
                 id="sort-select"
                 value={sortBy}
