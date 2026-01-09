@@ -1440,9 +1440,6 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             Ești sigur că vrei să ștergi comanda pentru clientul{' '}
             <span className="font-medium">{orderToDelete?.nume_client}</span>?
           </p>
-          <p className="text-sm text-gray-500">
-            Această acțiune nu poate fi anulată.
-          </p>
           <div className="flex justify-end space-x-3">
             <Button
               variant="secondary"
