@@ -5,6 +5,7 @@ import { Category } from '@/types/api';
 // Types for category operations
 export interface CreateCategoryData {
   name: string;
+  order_index: number;
   primary_image?: File;
 }
 
@@ -12,6 +13,7 @@ export interface UpdateCategoryData {
   id: number;
   name?: string;
   clear_image?: boolean;
+  order_index?: number;
 }
 
 export interface CategoryFilters {
@@ -71,6 +73,9 @@ export const categoryService = {
       if (categoryData.clear_image) {
         formData.append('clear_image', 'true');
       }
+      if (categoryData.order_index !== undefined) {
+        formData.append('order_index', categoryData.order_index.toString());
+      }
       
       const response = await apiClient.patch(`/categories/${id}`, formData, {
         headers: {
@@ -99,6 +104,14 @@ export const categoryService = {
           'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
         },
       });
+      return response.data;
+    });
+  },
+
+  // Bulk reorder categories (PROTECTED - requires auth)
+  reorder: async (categoryIds: number[]): Promise<Category[]> => {
+    return authService.makeAuthenticatedRequest(async () => {
+      const response = await apiClient.put<Category[]>('/categories/reorder', categoryIds);
       return response.data;
     });
   },

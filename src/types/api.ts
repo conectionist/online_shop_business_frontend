@@ -73,17 +73,20 @@ export interface Category {
     thumbnail: string;
   };
   is_deleted: boolean;
+  order_index: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface CategoryCreate {
   name: string;
+  order_index: number;
 }
 
 export interface CategoryUpdate {
   name?: string;
   clear_image?: boolean;
+  order_index?: number;
 }
 
 // List Types

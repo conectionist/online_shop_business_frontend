@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
-import { useCategories } from '@/hooks/useCategories';
-import { useDeleteCategory } from '@/hooks/useCategories';
+import { Plus, Search, Edit, Trash2, Eye, ArrowUp, ArrowDown } from 'lucide-react';
+import { useCategories, useDeleteCategory, useReorderCategories } from '@/hooks/useCategories';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { Category } from '@/types/api';
 import { getCategoryImageUrl, getApiBaseUrl } from '@/services/api';
 import { Button } from '@/components/ui/Button';
@@ -23,17 +23,64 @@ const CategoriesList: React.FC = () => {
   // Fetch all categories
   const { data: categories, isLoading, error } = useCategories();
 
+  // Local ordered list for reordering UI
+  const [orderedCategories, setOrderedCategories] = useState<Category[] | null>(null);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+
+  useEffect(() => {
+    if (categories) {
+      setOrderedCategories(categories);
+    }
+  }, [categories]);
+
   // Filter categories based on search term
   const filteredCategories = useMemo(() => {
-    if (!categories || !searchTerm.trim()) {
-      return categories;
+    const source = orderedCategories || categories;
+    if (!source || !searchTerm.trim()) {
+      return source;
     }
     
     const searchLower = searchTerm.toLowerCase();
-    return categories.filter(category => 
-      category.name.toLowerCase().includes(searchLower)
+    return source.filter(category => 
+      category.name.toLowerCase().includes(searchLower) ||
+      String(category.order_index).includes(searchLower)
     );
-  }, [categories, searchTerm]);
+  }, [orderedCategories, categories, searchTerm]);
+
+  // Bulk reorder mutation
+  const reorderCategories = useReorderCategories();
+  const { handleError } = useErrorHandler();
+
+  const moveItem = async (id: number, direction: 'up' | 'down') => {
+    if (isSavingOrder || !categories || !orderedCategories) return;
+
+    const currentIndex = orderedCategories.findIndex(c => c.id === id);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= orderedCategories.length) return;
+
+    // 1. Reorder the 2 affected cards in the UI immediately
+    const newOrder = [...orderedCategories];
+    [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
+    
+    setOrderedCategories(newOrder);
+    setIsSavingOrder(true);
+
+    try {
+      // 2. Send the complete ordered array of IDs to the backend
+      const categoryIds = newOrder.map(item => item.id);
+      await reorderCategories.mutateAsync(categoryIds);
+      
+      // The mutation's onSuccess will automatically update the cache with the server response
+    } catch (error: any) {
+      // 3. If request fails, revert the order back to the way it was
+      setOrderedCategories(categories || null);
+      handleError(error, 'Reordonare categorii');
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
 
   // Delete category mutation
   const deleteCategoryMutation = useDeleteCategory();
@@ -103,42 +150,65 @@ const CategoriesList: React.FC = () => {
         </Button>
       </AdminPageHeader>
 
-      {/* Categories Grid */}
+      {/* Categories Reorderable List */}
       {filteredCategories && filteredCategories.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCategories.map((category) => (
+        <div className="space-y-3">
+          {filteredCategories.map((category, idx) => (
             <Card key={category.id} className="hover:shadow-lg transition-shadow">
-              <div className="space-y-4">
-                {/* Category Image */}
-                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                  {category.image_versions?.medium ? (
-                    <Image
-                      src={getCategoryImageUrl(category, 'medium')}
-                      alt={category.name}
-                      fallback={`${getApiBaseUrl()}/api/v1/static/placeholders/category_placeholder.jpg`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <Eye className="w-8 h-8" />
+              <div className="p-4">
+                {/* Top row: info on left, arrows on right */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-2 min-w-0 flex-1">
+                    {/* Category Image */}
+                    <div className="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                      {category.image_versions?.medium ? (
+                        <Image
+                          src={getCategoryImageUrl(category, 'medium')}
+                          alt={category.name}
+                          fallback={`${getApiBaseUrl()}/api/v1/static/placeholders/category_placeholder.jpg`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <Eye className="w-8 h-8" />
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    {/* Category Info */}
+                    <div className="space-y-1 min-w-0">
+                      <h3 className="text-base font-semibold text-gray-900 whitespace-normal break-words">
+                        {category.name}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveItem(category.id, 'up')}
+                      disabled={isSavingOrder || !!searchTerm || idx === 0}
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveItem(category.id, 'down')}
+                      disabled={isSavingOrder || !!searchTerm || idx === filteredCategories.length - 1}
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Category Info */}
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {category.name}
-                  </h3>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t border-gray-100">
+                {/* Actions row */}
+                <div className="flex items-center gap-2 pt-2 mt-3 border-t border-gray-100">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/admin/categories/${category.id}/edit`)}
-                    className="flex-1"
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Editează
@@ -149,16 +219,21 @@ const CategoriesList: React.FC = () => {
                       variant="danger"
                       size="sm"
                       onClick={() => handleDeleteClick(category)}
-                      className="flex-1"
                     >
                       <Trash2 className="w-4 h-4 mr-1" />
                       Șterge
                     </Button>
                   )}
+                  <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 ml-auto">
+                    #{category.order_index}
+                  </span>
                 </div>
               </div>
             </Card>
           ))}
+          {searchTerm && (
+            <p className="text-xs text-gray-500 px-1">Reordonarea este dezactivată în modul de căutare.</p>
+          )}
         </div>
       ) : (
         <Card className="text-center py-12">
