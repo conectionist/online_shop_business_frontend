@@ -47,6 +47,7 @@ export const useOrders = (filters?: {
   sort_by?: 'data_plasarii' | 'nume_client' | 'liste_id' | 'delivery_type_id' | 'payment_method_id';
   sort_order?: 'asc' | 'desc';
   merge_similar?: boolean;
+  include_deleted?: boolean;
 }) => {
   return useQuery({
     queryKey: queryKeys.orders.list(filters),
@@ -164,9 +165,26 @@ export const useDeleteOrder = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: number) => orderService.deleteOrder(id),
+    mutationFn: ({ id, permanent }: { id: number; permanent?: boolean }) => 
+      orderService.deleteOrder(id, permanent || false),
     onSuccess: () => {
       // Invalidate all orders queries to refresh data, including filtered lists
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+    },
+  });
+};
+
+// Hook to restore a soft-deleted order
+export const useRestoreOrder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: number) => orderService.restoreOrder(id),
+    onSuccess: (_, id) => {
+      // Invalidate specific order and orders list
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.list() });
+      // Also invalidate all orders queries to ensure immediate refresh
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
     },
   });
