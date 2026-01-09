@@ -28,6 +28,7 @@ export const orderService = {
     sort_by?: 'data_plasarii' | 'nume_client' | 'liste_id' | 'delivery_type_id' | 'payment_method_id';
     sort_order?: 'asc' | 'desc';
     merge_similar?: boolean;
+    include_deleted?: boolean;
   }): Promise<OrderRead[]> => {
     const params = new URLSearchParams();
     
@@ -64,6 +65,9 @@ export const orderService = {
     if (filters?.merge_similar) {
       params.append('merge_similar', filters.merge_similar.toString());
     }
+    if (filters?.include_deleted) {
+      params.append('include_deleted', filters.include_deleted.toString());
+    }
 
     const response = await apiClient.get(`/orders?${params.toString()}`);
     return response.data;
@@ -83,8 +87,15 @@ export const orderService = {
   },
 
   // Delete order (PROTECTED - requires auth)
-  deleteOrder: async (id: number): Promise<void> => {
-    await apiClient.delete(`/orders/${id}`);
+  deleteOrder: async (id: number, permanent: boolean = false): Promise<void> => {
+    const url = permanent ? `/orders/${id}?permanent=true` : `/orders/${id}`;
+    await apiClient.delete(url);
+  },
+
+  // Restore soft-deleted order (PROTECTED - requires auth)
+  restoreOrder: async (id: number): Promise<OrderRead> => {
+    const response = await apiClient.post(`/orders/${id}/restore`);
+    return response.data;
   },
 
   // Order Items Management (PROTECTED - requires auth)

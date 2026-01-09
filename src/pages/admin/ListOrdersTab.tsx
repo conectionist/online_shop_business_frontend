@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit, Info } from 'lucide-react';
+import { Package, Eye, Trash2, MoreVertical, Printer, FileText, Edit, Info, Archive, RotateCcw } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
-import { useDeleteOrder, useUpdateOrder } from '@/hooks/useOrders';
+import { useDeleteOrder, useUpdateOrder, useRestoreOrder } from '@/hooks/useOrders';
 import { useListProductsOrdered, useList } from '@/hooks/useLists';
 import { useDeliveryTypes } from '@/hooks/useDeliveryTypes';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
@@ -36,6 +36,9 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState<OrderRead | null>(null);
   const [totalsMenuOpen, setTotalsMenuOpen] = useState(false);
+  const [showDeletedOrdersModal, setShowDeletedOrdersModal] = useState(false);
+  const [showPermanentDeleteModal, setShowPermanentDeleteModal] = useState(false);
+  const [orderToPermanentlyDelete, setOrderToPermanentlyDelete] = useState<OrderRead | null>(null);
 
   // Local UI state
   const [showExtraOptions, setShowExtraOptions] = useState(false);
@@ -67,7 +70,21 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
   const { data: businessDetails } = useBusinessDetailsSingle(); // For delivery tax calculation
   const deleteOrderMutation = useDeleteOrder();
   const updateOrderMutation = useUpdateOrder();
+  const restoreOrderMutation = useRestoreOrder();
   const { showToast } = useToast();
+
+  // Fetch deleted orders for this specific list
+  const { data: allOrdersIncludingDeleted, isLoading: isLoadingDeletedOrders } = useOrders(
+    showDeletedOrdersModal
+      ? { liste_id: listId, include_deleted: true, limit: 250, skip: 0 }
+      : undefined
+  );
+
+  // Filter to only show soft-deleted orders
+  const deletedOrders = React.useMemo(() => {
+    if (!allOrdersIncludingDeleted) return [];
+    return allOrdersIncludingDeleted.filter(order => order.is_deleted === true);
+  }, [allOrdersIncludingDeleted]);
 
   // Sort orders based on user preferences
   const sortedOrders = React.useMemo(() => {
@@ -155,7 +172,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     if (!orderToDelete) return;
 
     try {
-      await deleteOrderMutation.mutateAsync(orderToDelete.id);
+      await deleteOrderMutation.mutateAsync({ id: orderToDelete.id, permanent: false });
       showToast({
         type: 'success',
         title: 'Comanda a fost ștearsă cu succes'
@@ -167,6 +184,56 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       showToast({
         type: 'error',
         title: 'Eroare la ștergerea comenzii'
+      });
+    }
+  };
+
+  const handleShowDeletedOrders = () => {
+    closeDropdown();
+    setShowDeletedOrdersModal(true);
+  };
+
+  const handleRestoreOrder = async (order: OrderRead) => {
+    try {
+      await restoreOrderMutation.mutateAsync(order.id);
+      showToast({
+        type: 'success',
+        title: 'Comanda a fost restaurată cu succes'
+      });
+    } catch (error: any) {
+      console.error('Error restoring order:', error);
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Eroare necunoscută';
+      showToast({
+        type: 'error',
+        title: 'Eroare la restaurarea comenzii',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handlePermanentDelete = (order: OrderRead) => {
+    setOrderToPermanentlyDelete(order);
+    setShowPermanentDeleteModal(true);
+  };
+
+  const confirmPermanentDelete = async () => {
+    if (!orderToPermanentlyDelete) return;
+
+    try {
+      await deleteOrderMutation.mutateAsync({ id: orderToPermanentlyDelete.id, permanent: true });
+      showToast({
+        type: 'success',
+        title: 'Comanda a fost ștearsă permanent cu succes'
+      });
+      setShowPermanentDeleteModal(false);
+      setOrderToPermanentlyDelete(null);
+    } catch (error: any) {
+      console.error('Error permanently deleting order:', error);
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Eroare necunoscută';
+      showToast({
+        type: 'error',
+        title: 'Eroare la ștergerea permanentă a comenzii',
+        message: errorMessage
       });
     }
   };
@@ -972,6 +1039,15 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                 <FileText className="w-4 h-4 mr-3 text-gray-400" />
                 Salveaza ca PDF
               </button>
+
+              {/* Deleted Orders Option */}
+              <button
+                onClick={handleShowDeletedOrders}
+                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              >
+                <Archive className="w-4 h-4 mr-3 text-gray-400" />
+                Comenzi Șterse
+              </button>
             </div>
           )}
         </div>
@@ -1423,6 +1499,109 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
             isLoading={updateOrderMutation.isPending}
           />
         )}
+      </Modal>
+
+      {/* Deleted Orders Modal */}
+      <Modal
+        isOpen={showDeletedOrdersModal}
+        onClose={() => setShowDeletedOrdersModal(false)}
+        title="Comenzi Șterse"
+        size="lg"
+      >
+        <div className="space-y-4">
+          {isLoadingDeletedOrders ? (
+            <div className="flex justify-center items-center h-32">
+              <Loading text="Se încarcă comenzile șterse..." />
+            </div>
+          ) : deletedOrders.length === 0 ? (
+            <div className="text-center py-12">
+              <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Nu există comenzi șterse
+              </h3>
+              <p className="text-gray-500">
+                Nu există comenzi șterse pentru această listă.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {deletedOrders.map((order) => (
+                <Card key={order.id} className="p-6">
+                  <div className="space-y-4">
+                    {/* Order Display - Same format as main list */}
+                    <div className="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <pre className="whitespace-pre-line text-sm font-mono text-gray-800">
+                        {formatOrderText(order)}
+                      </pre>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-start space-x-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleRestoreOrder(order)}
+                        disabled={restoreOrderMutation.isPending}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-1" />
+                        Restaurează
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handlePermanentDelete(order)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Șterge permanent
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Permanent Delete Confirmation Modal */}
+      <Modal
+        isOpen={showPermanentDeleteModal}
+        onClose={() => setShowPermanentDeleteModal(false)}
+        title="Confirmă ștergerea permanentă"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <p className="text-red-800 font-medium mb-2">
+              ⚠️ Atenție: Această acțiune nu poate fi anulată!
+            </p>
+            <p className="text-red-700 text-sm">
+              Comanda va fi ștearsă permanent din baza de date și nu va mai putea fi restaurată.
+            </p>
+          </div>
+          <p className="text-gray-700">
+            Ești sigur că vrei să ștergi permanent comanda pentru clientul{' '}
+            <span className="font-medium">{orderToPermanentlyDelete?.nume_client}</span>?
+          </p>
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="secondary"
+              onClick={() => setShowPermanentDeleteModal(false)}
+            >
+              Anulează
+            </Button>
+            <Button
+              variant="primary"
+              onClick={confirmPermanentDelete}
+              disabled={deleteOrderMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteOrderMutation.isPending ? 'Se șterge...' : 'Șterge permanent'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

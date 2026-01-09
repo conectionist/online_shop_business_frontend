@@ -315,6 +315,7 @@ export interface Order {
   phone_number?: string;
   created_at: string;
   updated_at: string;
+  is_deleted?: boolean;
   items?: OrderItem[];
 }
 
