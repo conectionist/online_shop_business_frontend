@@ -125,4 +125,19 @@ export const useUploadCategoryImage = () => {
       // Here we could show a toast notification
     },
   });
+};
+
+// Bulk reorder categories
+export const useReorderCategories = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (categoryIds: number[]) => categoryService.reorder(categoryIds),
+    onSuccess: (updatedCategories) => {
+      // Update the cache with the new order
+      queryClient.setQueryData(queryKeys.categories.list({}), updatedCategories);
+      // Also invalidate to ensure consistency
+      queryClient.invalidateQueries({ queryKey: invalidateQueries.categories() });
+    },
+  });
 }; 

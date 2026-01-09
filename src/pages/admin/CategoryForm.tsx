@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
-import { useCreateCategory, useUpdateCategory, useCategory, useUploadCategoryImage } from '@/hooks/useCategories';
+import { useCreateCategory, useUpdateCategory, useCategory, useUploadCategoryImage, useCategories } from '@/hooks/useCategories';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getCategoryImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
@@ -26,14 +26,17 @@ const CategoryForm: React.FC = () => {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
+    order_index: 1,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [shouldClearImage, setShouldClearImage] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const hasAutoAssignedOrderIndex = useRef(false);
 
   // Queries and mutations
   const { data: category, isLoading: isLoadingCategory } = useCategory(Number(id));
+  const { data: allCategories } = useCategories(); // For auto-assigning order_index
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
   const uploadCategoryImageMutation = useUploadCategoryImage();
@@ -41,18 +44,60 @@ const CategoryForm: React.FC = () => {
   // Error handling
   const { handleError, errorDetails, showErrorModal, hideErrorModal } = useErrorHandler();
 
+  // Helper function to find next available order_index
+  const findAvailableOrderIndex = (): number => {
+    if (!allCategories || allCategories.length === 0) {
+      return 1;
+    }
+    
+    // Find the highest order_index and add 1
+    const maxIndex = Math.max(...allCategories.map(c => c.order_index), 0);
+    const nextIndex = maxIndex + 1;
+    
+    // Ensure it's within valid range
+    if (nextIndex > 127) {
+      // Find a gap in the sequence
+      const usedIndices = new Set(allCategories.map(c => c.order_index));
+      for (let i = 1; i <= 127; i++) {
+        if (!usedIndices.has(i)) {
+          return i;
+        }
+      }
+      // If all slots are used, return 127 (shouldn't happen in practice)
+      return 127;
+    }
+    
+    return nextIndex;
+  };
+
   // Load category data when editing
   useEffect(() => {
     if (category && isEditing) {
       setFormData({
         name: category.name,
+        order_index: category.order_index,
       });
       // Only show image preview if category has a real image (not placeholder)
       if (hasRealImage(category) && category.image_versions?.thumbnail) {
         setImagePreview(getCategoryImageUrl(category, 'thumbnail'));
       }
+      hasAutoAssignedOrderIndex.current = true; // Don't auto-assign when editing
+    } else if (!isEditing) {
+      hasAutoAssignedOrderIndex.current = false; // Reset when creating
     }
   }, [category, isEditing]);
+
+  // Auto-assign order_index when creating new category (only once when allCategories loads)
+  useEffect(() => {
+    if (!isEditing && allCategories && !hasAutoAssignedOrderIndex.current) {
+      const availableIndex = findAvailableOrderIndex();
+      setFormData(prev => ({
+        ...prev,
+        order_index: availableIndex,
+      }));
+      hasAutoAssignedOrderIndex.current = true;
+    }
+  }, [allCategories, isEditing]);
 
   // Handle file selection
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +145,10 @@ const CategoryForm: React.FC = () => {
       newErrors.name = `Numele categoriei trebuie să aibă mai puțin de ${VALIDATION.CATEGORY_NAME_MAX_LENGTH} de caractere`;
     }
 
+    if (!formData.order_index || formData.order_index < 1 || formData.order_index > 127) {
+      newErrors.order_index = 'Indexul de ordine trebuie să fie între 1 și 127';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -114,10 +163,11 @@ const CategoryForm: React.FC = () => {
 
     try {
       if (isEditing) {
-        // For updates, send name and clear_image flag if needed
+        // For updates, send name, order_index, and clear_image flag if needed
         await updateCategoryMutation.mutateAsync({
           id: Number(id),
           name: formData.name,
+          order_index: formData.order_index,
           // Only clear image if we're not uploading a new one
           ...(shouldClearImage && !imageFile && { clear_image: true }),
         });
@@ -131,9 +181,10 @@ const CategoryForm: React.FC = () => {
         }
         // If no new image file and not clearing, the existing image stays untouched
       } else {
-        // For creation, send name and image together
+        // For creation, send name, order_index, and image together
         const submitData = {
           name: formData.name,
+          order_index: formData.order_index,
           ...(imageFile && { primary_image: imageFile }),
         };
         await createCategoryMutation.mutateAsync(submitData);
@@ -157,7 +208,7 @@ const CategoryForm: React.FC = () => {
   };
 
   // Handle input changes
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -208,6 +259,33 @@ const CategoryForm: React.FC = () => {
               error={errors.name}
               required
             />
+          </div>
+
+          {/* Order Index Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Index de Ordine <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="127"
+              value={formData.order_index}
+              onChange={(e) => handleInputChange('order_index', parseInt(e.target.value) || 1)}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.order_index ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Index de ordine (1-127). Categoriile vor fi afișate în ordinea acestui index.
+            </p>
+            {errors.order_index && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                {errors.order_index}
+              </p>
+            )}
           </div>
 
           {/* Image Upload */}
