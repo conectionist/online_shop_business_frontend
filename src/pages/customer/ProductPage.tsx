@@ -184,7 +184,7 @@ const ProductPage: React.FC = () => {
   const productDescription = displayProduct.description || 
     `${displayProduct.nume} - produs proaspăt de brutărie cu maia. ${getCategoryName(displayProduct.category_id)}. Preț: ${displayProduct.pret} RON pentru ${displayProduct.cantitate} ${getUnitName(displayProduct.unitati_id)}. Comandă online cu livrare rapidă în Iasi.`;
   const productKeywords = `${displayProduct.nume}, ${getCategoryName(displayProduct.category_id)}, brutărie, maia, produse proaspete, comandă online, livrare, panificatie, românia, iasi`;
-  const productImage = productImages.length > 0 ? getProductImageUrl(displayProduct, 'original') : undefined;
+  const productImage = productImages.length > 0 ? getProductImageUrl(displayProduct, imageSize) : undefined;
   const productCanonical = `${window.location.origin}/product/${displayProduct.id}`;
 
   const addToCart = () => {
@@ -367,7 +367,7 @@ const ProductPage: React.FC = () => {
                   open={isLightboxOpen}
                   index={selectedImageIndex}
                   images={productImages.map((img: any, idx: number) => ({
-                    src: getProductImageUrlFromImage(img, 'original'),
+                    src: getProductImageUrlFromImage(img, imageSize),
                     alt: `${displayProduct.nume} - imagine ${idx + 1}`,
                   }))}
                   onClose={() => setIsLightboxOpen(false)}

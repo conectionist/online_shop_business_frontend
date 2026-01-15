@@ -5,6 +5,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { useDeliverySchedules } from '@/hooks/useDeliverySchedules';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useImageSize } from '@/hooks/useImageSize';
 import { Clock, Package, Truck, CreditCard, Plus, Minus, ShoppingCart, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
@@ -18,6 +19,7 @@ import { formatDateRomanian } from '@/utils/dateFormatters';
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
   const { data: publishedList, isLoading, error } = usePublishedList();
+  const imageSize = useImageSize();
   const { data: lastExpiredList } = useLastExpiredList();
   
   
@@ -401,7 +403,7 @@ const WelcomePage: React.FC = () => {
                               {product.images && product.images.length > 0 ? (
                                 <>
                                   <img
-                                    src={getProductImageUrl(product, 'original')}
+                                    src={getProductImageUrl(product, imageSize)}
                                     alt={product.nume}
                                     className="w-full h-full object-cover"
                                     ref={el => { imageRefs.current[product.id] = el; }}
