@@ -101,6 +101,7 @@ export const queryKeys = {
   // System
   system: {
     all: ['system'] as const,
+    config: () => [...queryKeys.system.all, 'config'] as const,
     nextDeliveryDate: (referenceDate?: string) => 
       [...queryKeys.system.all, 'next-delivery-date', referenceDate] as const,
   },

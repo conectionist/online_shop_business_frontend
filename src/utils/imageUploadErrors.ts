@@ -12,6 +12,13 @@ const IMAGE_VALIDATION_ERROR_MESSAGES: Record<string, string> = {
   image_processing_error: 'Imaginea nu a putut fi procesată. Vă rugăm să încercați alt fișier.',
 };
 
+function getImageTooLargeMessage(maxSizeMb?: number): string {
+  if (maxSizeMb != null && Number.isInteger(maxSizeMb)) {
+    return `Fișierul este prea mare. Limita maximă este ${maxSizeMb} MB.`;
+  }
+  return IMAGE_VALIDATION_ERROR_MESSAGES.image_too_large;
+}
+
 const DEFAULT_IMAGE_ERROR_MESSAGE =
   'Imaginea nu a putut fi încărcată. Vă rugăm să verificați formatul și dimensiunea.';
 
@@ -30,8 +37,9 @@ function isImageValidationError(error: any): boolean {
 /**
  * Returns a user-facing message for image validation errors (400/422 with detail[].type starting with image_).
  * Falls back to detail[0].msg if type is unknown, then to a generic Romanian message.
+ * When type is image_too_large, pass maxSizeMb to show the limit in the message.
  */
-export function getImageValidationMessage(error: any): string {
+export function getImageValidationMessage(error: any, maxSizeMb?: number): string {
   if (!isImageValidationError(error)) {
     return DEFAULT_IMAGE_ERROR_MESSAGE;
   }
@@ -39,6 +47,9 @@ export function getImageValidationMessage(error: any): string {
   const first = detail[0];
   const type = first?.type;
   const msg = first?.msg;
+  if (type === 'image_too_large') {
+    return getImageTooLargeMessage(maxSizeMb);
+  }
   if (type && IMAGE_VALIDATION_ERROR_MESSAGES[type]) {
     return IMAGE_VALIDATION_ERROR_MESSAGES[type];
   }

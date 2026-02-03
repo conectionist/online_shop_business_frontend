@@ -4,9 +4,11 @@ import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
 import { useCreateCategory, useUpdateCategory, useCategory, useUploadCategoryImage, useCategories } from '@/hooks/useCategories';
 import { useUploadImageToStaging } from '@/hooks/useProducts';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { useSystemConfig } from '@/hooks/useSystem';
 import { getCategoryImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
 import { getImageValidationMessage } from '@/utils/imageUploadErrors';
+import { validateImageFile } from '@/utils/validateImageFile';
 
 // Helper function to check if category has a real image (not placeholder)
 const hasRealImage = (category: any): boolean => {
@@ -46,6 +48,10 @@ const CategoryForm: React.FC = () => {
   
   // Error handling
   const { handleError, errorDetails, showErrorModal, hideErrorModal } = useErrorHandler();
+
+  const { data: systemConfig } = useSystemConfig();
+  const maxImageSizeMb = systemConfig?.max_image_size_mb ?? IMAGE_UPLOAD.MAX_SIZE_MB;
+  const maxImageSizeBytes = maxImageSizeMb * 1024 * 1024;
 
   // Helper function to find next available order_index
   const findAvailableOrderIndex = (): number => {
@@ -103,30 +109,40 @@ const CategoryForm: React.FC = () => {
   }, [allCategories, isEditing]);
 
   // Handle file selection
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Validate file size (max 25MB)
-      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
-        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB) }));
-        return;
-      }
+    if (!file) return;
 
-      // Validate file type
-      if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
-        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS) }));
-        return;
-      }
-
-      setImageFile(file);
-      setErrors(prev => ({ ...prev, image: '' }));
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    // Validate file size
+    if (file.size > maxImageSizeBytes) {
+      setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(maxImageSizeMb) }));
+      event.target.value = '';
+      return;
     }
+
+    // Validate file type
+    if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
+      setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS) }));
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      await validateImageFile(file);
+    } catch {
+      setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_IMAGE_CONTENT }));
+      event.target.value = '';
+      return;
+    }
+
+    setImageFile(file);
+    setErrors(prev => ({ ...prev, image: '' }));
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Remove image
@@ -171,7 +187,7 @@ const CategoryForm: React.FC = () => {
       try {
         primaryImageUploadId = await uploadImageToStagingMutation.mutateAsync(imageFile);
       } catch (error: any) {
-        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error) }));
+        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error, maxImageSizeMb) }));
         return;
       }
     }
@@ -219,7 +235,7 @@ const CategoryForm: React.FC = () => {
         const errorMessage = typeof detail === 'string' ? detail : 'Acest element există deja. Vă rugăm să folosiți un nume diferit.';
         setErrors(prev => ({ ...prev, submit: errorMessage }));
       } else if (isImageValidation400) {
-        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error) }));
+        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error, maxImageSizeMb) }));
       } else {
         handleError(error, `Salvarea categoriei: ${isEditing ? 'actualizare' : 'creare'}`);
       }
@@ -344,7 +360,7 @@ const CategoryForm: React.FC = () => {
                   {IMAGE_UPLOAD.UI_TEXT.UPLOAD_CATEGORY_IMAGE}
                 </p>
                 <p className="text-xs text-gray-500 mb-3">
-                  {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
+                  {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {maxImageSizeMb}MB)
                 </p>
                 <input
                   type="file"
