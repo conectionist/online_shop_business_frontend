@@ -543,7 +543,31 @@ curl -X GET "http://localhost:8001/api/v1/products/8?include_deleted=true" \
 
 **API**: `POST /api/v1/products/`
 
-**cURL Example** (basic product):
+There are two ways to create a product:
+
+- **(Recommended)**: Upload the primary image first via `POST /api/v1/uploads/images` to get an `upload_id`, then pass that as `primary_image_upload_id` when creating the product.
+- **(Legacy)**: Create the product without an image, then upload images with `POST /api/v1/products/{product_id}/images`. Direct `primary_image` file upload on create is deprecated in favor of the upload-first flow.
+
+**Step 1 – Upload primary image (optional but recommended)**:
+
+```bash
+curl -X POST "http://localhost:8001/api/v1/uploads/images" \
+  -H "accept: application/json" \
+  -H "Authorization: Bearer <ADMIN_JWT>" \
+  -F "file=@apples.jpg"
+```
+
+Example response:
+
+```json
+{
+  "upload_id": "f4a0f3e4c5b6478db2ac4a0e9e2d1234"
+}
+```
+
+**Step 2 – Create product (with or without primary image)**:
+
+**cURL Example** (basic product without primary image):
 ```bash
 curl -X POST "http://localhost:8001/api/v1/products/" \
   -H "accept: application/json" \
@@ -553,6 +577,21 @@ curl -X POST "http://localhost:8001/api/v1/products/" \
   -F "description=Fresh organic apples from local farm" \
   -F "category_id=1" \
   -F "unitati_id=1"
+```
+
+**cURL Example** (product with primary image via `primary_image_upload_id`):
+
+```bash
+curl -X POST "http://localhost:8001/api/v1/products/" \
+  -H "accept: application/json" \
+  -H "Authorization: Bearer <ADMIN_JWT>" \
+  -F "nume=Fresh Apples" \
+  -F "cantitate=50" \
+  -F "pret=25" \
+  -F "description=Fresh organic apples from local farm" \
+  -F "category_id=1" \
+  -F "unitati_id=1" \
+  -F "primary_image_upload_id=f4a0f3e4c5b6478db2ac4a0e9e2d1234"
 ```
 
 **Response Example**:
@@ -580,7 +619,7 @@ curl -X POST "http://localhost:8001/api/v1/products/" \
 **Required Fields**:
 - `nume` (string): Product name
 - `cantitate` (integer): Product quantity (must be >= 0)
-- `pret` (float): Product price (must be > 0)
+- `pret` (integer): Product price in cents (must be > 0)
 - `unitati_id` (integer): ID of the associated unit (must be > 0)
 
 **Optional Fields**:
@@ -628,7 +667,7 @@ curl -X PATCH "http://localhost:8001/api/v1/products/8" \
 **Optional Fields** (all fields are optional for PATCH):
 - `nume` (string): Product name
 - `cantitate` (integer): Product quantity (must be >= 0)
-- `pret` (float): Product price (must be > 0)
+- `pret` (integer): Product price in cents (must be > 0)
 - `description` (string): Product description
 - `category_id` (integer): ID of the associated category (must be > 0)
 - `unitati_id` (integer): ID of the associated unit (must be > 0)
@@ -687,7 +726,7 @@ curl -X POST "http://localhost:8001/api/v1/products/8/images" \
 ```
 
 **Parameters**:
-- `file` (file, required): Image file to upload (JPEG, PNG, or GIF, max {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
+- `file` (file, required): Image file to upload (JPEG, PNG, or GIF, max 25MB)
 - `position` (integer, optional): Image position (0=primary, if not specified will be added at the end)
 
 #### 7. Get Product Images
@@ -859,17 +898,6 @@ curl -X PUT "http://localhost:8001/api/v1/products/8/images/reorder" \
 ```
 
 **Request Body**: Array of objects with `id` and `position` fields
-
-### Admin UI: Managing Product Images
-
-In the admin product form (when editing), a dedicated images manager allows:
-
-- Încărcare multiplă de imagini (input multiple) cu validări de tip/dimensiune.
-- Reordonare prin drag-and-drop; modificările sunt trimise către API (bulk reorder).
-- Setarea unei imagini ca principală.
-- Ștergerea imaginilor cu actualizare optimistă în UI.
-
-The component is available under `ProductImagesManager` and is mounted inside `src/pages/admin/ProductForm.tsx` for existing products.
 
 #### Error Handling Examples
 
@@ -1270,6 +1298,45 @@ curl -X POST "http://localhost:8001/api/v1/liste/19/products/1" \
 
 **Request Body** (optional):
 - `stoc_produs` (integer, optional): Available stock for this product in this list (must be >= 0)
+
+**API**: `PATCH /api/v1/liste/{list_id}/products/{product_id}`
+
+**Description**: Updates only the `stoc_produs` field on the list–product relationship. Does not change ordering, category, or other product fields. Accepts `null` or any integer `>= 0`.
+
+**cURL Examples**:
+
+Make product unavailable (stoc_produs = 0):
+```bash
+curl -X PATCH "http://localhost:8000/api/v1/liste/19/products/1" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -d '{"stoc_produs": 0}'
+```
+
+Make product available again (ignore stock):
+```bash
+curl -X PATCH "http://localhost:8000/api/v1/liste/19/products/1" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -d '{"stoc_produs": null}'
+```
+
+Set a numeric stock value (future use):
+```bash
+curl -X PATCH "http://localhost:8000/api/v1/liste/19/products/1" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -d '{"stoc_produs": 25}'
+```
+
+**Responses**:
+- `200 OK`: `{ "list_id": <int>, "product_id": <int>, "stoc_produs": <int|null> }`
+- `404 Not Found`: List or product-in-list not found
+- `401/403`: Auth issues
+- `422 Unprocessable Entity`: Invalid value (must be `null` or integer `>= 0`)
 
 **API**: `DELETE /api/v1/liste/{list_id}/products/{product_id}`
 
@@ -1792,19 +1859,13 @@ curl -X POST "http://localhost:8001/api/v1/tipuri-livrare/" \
 **Response Example**:
 ```json
 {
-  "id": 15,
   "denumire": "Livrare express",
-  "description": "Express delivery within 2 hours",
-  "order_index": 1
+  "id": 15
 }
 ```
 
 **Required Fields**:
 - `denumire` (string): Delivery type name/description (e.g., "Livrare la domiciliu", "Ridicare de la sediu")
-- `order_index` (integer): Order index for custom ordering (1-127, unique)
-
-**Optional Fields**:
-- `description` (string): Additional description for delivery type (max 150 characters)
 
 #### 4. Update Delivery Type (Full Replacement)
 
@@ -1825,10 +1886,8 @@ curl -X PUT "http://localhost:8001/api/v1/tipuri-livrare/15" \
 **Response Example**:
 ```json
 {
-  "id": 15,
   "denumire": "Livrare rapida",
-  "description": "Fast delivery within 4 hours",
-  "order_index": 2
+  "id": 15
 }
 ```
 
@@ -1854,53 +1913,15 @@ curl -X PATCH "http://localhost:8001/api/v1/tipuri-livrare/15" \
 **Response Example**:
 ```json
 {
-  "id": 15,
   "denumire": "Livrare super rapida",
-  "description": "Ultra fast delivery within 1 hour",
-  "order_index": 3
+  "id": 15
 }
 ```
 
 **Optional Fields** (all fields are optional for PATCH):
 - `denumire` (string): Delivery type name/description
-- `description` (string): Additional description for delivery type (max 150 characters)
-- `order_index` (integer): Order index for custom ordering (1-127, unique)
 
-#### 6. Bulk Reorder Delivery Types
-
-**Use Case**: Admin reordering delivery types with atomic operation
-
-**API**: `PUT /api/v1/tipuri-livrare/reorder`
-
-**Description**: Atomically reorders all delivery types by providing a complete ordered list of delivery type IDs. The backend assigns new order_index values (1..N) based on the array position.
-
-**cURL Example**:
-```bash
-curl -X PUT "http://localhost:8001/api/v1/tipuri-livrare/reorder" \
-  -H "accept: application/json" \
-  -H "Content-Type: application/json" \
-  -d '[3, 1, 2]'
-```
-
-**Request Body**: Array of delivery type IDs in desired order
-```json
-[3, 1, 2]
-```
-
-**Response Example**:
-```json
-[
-  { "id": 3, "denumire": "Ridicare de la sediu", "description": "Pickup from HQ desk", "order_index": 1 },
-  { "id": 1, "denumire": "Ridicare de la punct fix", "description": null, "order_index": 2 },
-  { "id": 2, "denumire": "Livrare la domiciliu", "description": "Home delivery", "order_index": 3 }
-]
-```
-
-**Error Responses**:
-- **422 Unprocessable Entity**: Invalid permutation (missing/duplicate IDs)
-- **404 Not Found**: One or more IDs not found
-
-#### 7. Delete Delivery Type
+#### 6. Delete Delivery Type
 
 **Use Case**: Admin removing delivery types (hard delete)
 
@@ -1933,22 +1954,13 @@ curl -X POST "http://localhost:8001/api/v1/tipuri-livrare/" \
 # Response: 422 {"detail":[{"type":"missing","loc":["body","denumire"],"msg":"Field required","input":{}}]}
 ```
 
-**409 Conflict** (duplicate delivery type name or order_index):
+**400 Bad Request** (duplicate delivery type name):
 ```bash
 curl -X POST "http://localhost:8001/api/v1/tipuri-livrare/" \
   -H "accept: application/json" \
   -H "Content-Type: application/json" \
-  -d '{"denumire": "Ridicare de la sediu", "order_index": 1}'
-# Response: 409 {"detail":"Numele sau indexul este deja folosit."}
-```
-
-**422 Unprocessable Entity** (invalid order_index):
-```bash
-curl -X POST "http://localhost:8001/api/v1/tipuri-livrare/" \
-  -H "accept: application/json" \
-  -H "Content-Type: application/json" \
-  -d '{"denumire": "Test", "order_index": 200}'
-# Response: 422 {"detail":"Indexul de ordine trebuie să fie între 1 și 127"}
+  -d '{"denumire": "Ridicare de la sediu"}'
+# Response: 400 {"detail":"A delivery type with the name 'Ridicare de la sediu' already exists"}
 ```
 
 ### Modalitati Plata
@@ -2490,7 +2502,7 @@ curl -X POST "http://localhost:8001/api/v1/detalii-business/" \
 - `telefon` (string): Business phone number
 - `logo_path` (string): Path to business logo image
 - `motto` (string): Business motto or tagline
-- `list_not_available_msg` (string): Message to display when lists are not available
+ - `list_not_available_msg` (string): Message to display when lists are not available (max 1000 characters)
 - `alte_detalii` (string): Additional business details
 
 #### 4. Update Business Details (Full Replacement)
@@ -2531,7 +2543,7 @@ curl -X PUT "http://localhost:8001/api/v1/detalii-business/10" \
 - `telefon` (string): Business phone number
 - `logo_path` (string): Path to business logo image
 - `motto` (string): Business motto or tagline
-- `list_not_available_msg` (string): Message to display when lists are not available
+ - `list_not_available_msg` (string): Message to display when lists are not available (max 1000 characters)
 - `alte_detalii` (string): Additional business details
 
 #### 5. Partially Update Business Details
@@ -2568,7 +2580,7 @@ curl -X PATCH "http://localhost:8001/api/v1/detalii-business/10" \
 - `telefon` (string): Business phone number
 - `logo_path` (string): Path to business logo image
 - `motto` (string): Business motto or tagline
-- `list_not_available_msg` (string): Message to display when lists are not available
+ - `list_not_available_msg` (string): Message to display when lists are not available (max 1000 characters)
 - `alte_detalii` (string): Additional business details
 
 #### 6. Delete Business Details

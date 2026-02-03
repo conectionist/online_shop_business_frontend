@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
-import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, useDeleteProductImage, useProducts } from '@/hooks/useProducts';
+import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, useDeleteProductImage, useProducts, useUploadImageToStaging } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { ProductCreate, ProductUpdate } from '@/types/api';
@@ -132,6 +132,7 @@ const ProductForm: React.FC = () => {
   const updateProductMutation = useUpdateProduct();
   const uploadProductImageMutation = useUploadProductImage();
   const deleteProductImageMutation = useDeleteProductImage();
+  const uploadImageToStagingMutation = useUploadImageToStaging();
   const { handleError } = useErrorHandler();
   
   // Fetch categories for dropdown
@@ -319,6 +320,32 @@ const ProductForm: React.FC = () => {
       return;
     }
 
+    // For creation with images, upload the primary image to staging first
+    let primaryImageUploadId: string | undefined;
+    let galleryFiles: File[] = [];
+
+    if (!isEditing) {
+      if (createImages.length > 0) {
+        const [primaryFile, ...rest] = createImages;
+        galleryFiles = rest;
+
+        try {
+          primaryImageUploadId = await uploadImageToStagingMutation.mutateAsync(primaryFile);
+        } catch (error: any) {
+          // Surface staging-specific errors and stop before creating product
+          const backendDetail = error?.response?.data?.detail;
+          const errorMessage =
+            typeof backendDetail === 'string'
+              ? backendDetail
+              : 'Imaginea principală nu a putut fi încărcată. Vă rugăm să verificați formatul și dimensiunea.';
+          setErrors(prev => ({ ...prev, submit: errorMessage }));
+          return;
+        }
+      } else {
+        galleryFiles = createImages;
+      }
+    }
+
     try {
       if (isEditing) {
         // For updates, send only changed fields
@@ -338,12 +365,17 @@ const ProductForm: React.FC = () => {
         // Single uploader behavior removed in edit mode
       } else {
         // For creation, send all required fields
-        const createdProduct = await createProductMutation.mutateAsync(formData);
+        const createPayload: ProductCreate = {
+          ...formData,
+          ...(primaryImageUploadId ? { primary_image_upload_id: primaryImageUploadId } : {}),
+        };
+
+        const createdProduct = await createProductMutation.mutateAsync(createPayload);
 
         // Single uploader removed in create mode (use multi-upload previews instead)
         // Upload multiple images selected via multi-upload (creation)
-        if (createImages.length > 0) {
-          for (const file of createImages) {
+        if (galleryFiles.length > 0) {
+          for (const file of galleryFiles) {
             await uploadProductImageMutation.mutateAsync({
               productId: createdProduct.id,
               image: file,
@@ -356,7 +388,8 @@ const ProductForm: React.FC = () => {
       navigate('/admin/products');
     } catch (error: any) {
       // Check if this is a friendly error (409 conflict or 400 duplicate)
-      const isFriendlyError = error?.response?.status === 409 || error?.response?.status === 400;
+      const status = error?.response?.status;
+      const isFriendlyError = status === 409;
       
       if (isFriendlyError) {
         // For friendly errors, show the specific message in the form

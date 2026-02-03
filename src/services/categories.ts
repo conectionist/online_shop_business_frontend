@@ -6,7 +6,10 @@ import { Category } from '@/types/api';
 export interface CreateCategoryData {
   name: string;
   order_index: number;
+  // Optional legacy direct upload
   primary_image?: File;
+  // Recommended upload-first flow: reference to staged image
+  primary_image_upload_id?: string;
 }
 
 export interface UpdateCategoryData {

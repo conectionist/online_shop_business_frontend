@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productService, ProductFilters } from '@/services/products';
+import { uploadService } from '@/services/uploads';
 import { ProductCreate, ProductUpdate } from '@/types/api';
 import { queryKeys, invalidateQueries } from '@/lib/queryKeys';
 
@@ -116,6 +117,13 @@ export const useUploadProductImage = () => {
     onError: (error) => {
       console.error('Failed to upload product image:', error);
     },
+  });
+};
+
+// Hook to upload an image to staging (upload-first flow)
+export const useUploadImageToStaging = () => {
+  return useMutation({
+    mutationFn: (file: File) => uploadService.uploadImageToStaging(file),
   });
 };
 
