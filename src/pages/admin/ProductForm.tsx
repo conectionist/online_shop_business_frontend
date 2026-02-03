@@ -16,6 +16,7 @@ import Alert from '@/components/ui/Alert';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 // import { getProductImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
+import { getImageValidationMessage } from '@/utils/imageUploadErrors';
 import ProductImagesManager from '@/pages/admin/ProductImagesManager';
 
 // Single uploader preview helpers removed
@@ -332,13 +333,7 @@ const ProductForm: React.FC = () => {
         try {
           primaryImageUploadId = await uploadImageToStagingMutation.mutateAsync(primaryFile);
         } catch (error: any) {
-          // Surface staging-specific errors and stop before creating product
-          const backendDetail = error?.response?.data?.detail;
-          const errorMessage =
-            typeof backendDetail === 'string'
-              ? backendDetail
-              : 'Imaginea principală nu a putut fi încărcată. Vă rugăm să verificați formatul și dimensiunea.';
-          setErrors(prev => ({ ...prev, submit: errorMessage }));
+          setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error) }));
           return;
         }
       } else {
@@ -387,16 +382,18 @@ const ProductForm: React.FC = () => {
       // Navigate back to products list
       navigate('/admin/products');
     } catch (error: any) {
-      // Check if this is a friendly error (409 conflict or 400 duplicate)
       const status = error?.response?.status;
-      const isFriendlyError = status === 409;
-      
-      if (isFriendlyError) {
-        // For friendly errors, show the specific message in the form
-        const errorMessage = 'Acest produs există deja. Vă rugăm să folosiți un nume diferit.';
-        setErrors(prev => ({ ...prev, submit: errorMessage }));
+      const detail = error?.response?.data?.detail;
+      const isImageValidation400 =
+        status === 400 &&
+        Array.isArray(detail) &&
+        detail[0]?.type?.startsWith('image_');
+
+      if (status === 409) {
+        setErrors(prev => ({ ...prev, submit: 'Acest produs există deja. Vă rugăm să folosiți un nume diferit.' }));
+      } else if (isImageValidation400) {
+        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error) }));
       } else {
-        // For other errors, use the error handler
         handleError(error, `Saving product: ${isEditing ? 'update' : 'create'}`);
       }
     }

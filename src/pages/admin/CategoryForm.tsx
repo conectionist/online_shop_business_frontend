@@ -6,6 +6,7 @@ import { useUploadImageToStaging } from '@/hooks/useProducts';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getCategoryImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
+import { getImageValidationMessage } from '@/utils/imageUploadErrors';
 
 // Helper function to check if category has a real image (not placeholder)
 const hasRealImage = (category: any): boolean => {
@@ -170,12 +171,7 @@ const CategoryForm: React.FC = () => {
       try {
         primaryImageUploadId = await uploadImageToStagingMutation.mutateAsync(imageFile);
       } catch (error: any) {
-        const backendDetail = error?.response?.data?.detail;
-        const errorMessage =
-          typeof backendDetail === 'string'
-            ? backendDetail
-            : 'Imaginea categoriei nu a putut fi încărcată. Vă rugăm să verificați formatul și dimensiunea.';
-        setErrors(prev => ({ ...prev, submit: errorMessage }));
+        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error) }));
         return;
       }
     }
@@ -212,15 +208,19 @@ const CategoryForm: React.FC = () => {
       // Navigate back to categories list
       navigate('/admin/categories');
     } catch (error: any) {
-      // Check if this is a friendly error (409 conflict)
-      const isFriendlyError = error?.response?.status === 409;
-      
-      if (isFriendlyError) {
-        // For friendly errors, show the specific message in the form
-        const errorMessage = error?.response?.data?.detail || 'Acest element există deja. Vă rugăm să folosiți un nume diferit.';
+      const status = error?.response?.status;
+      const detail = error?.response?.data?.detail;
+      const isImageValidation400 =
+        status === 400 &&
+        Array.isArray(detail) &&
+        detail[0]?.type?.startsWith('image_');
+
+      if (status === 409) {
+        const errorMessage = typeof detail === 'string' ? detail : 'Acest element există deja. Vă rugăm să folosiți un nume diferit.';
         setErrors(prev => ({ ...prev, submit: errorMessage }));
+      } else if (isImageValidation400) {
+        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error) }));
       } else {
-        // For other errors, use the error handler
         handleError(error, `Salvarea categoriei: ${isEditing ? 'actualizare' : 'creare'}`);
       }
     }
