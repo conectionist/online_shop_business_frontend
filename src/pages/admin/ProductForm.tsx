@@ -18,6 +18,7 @@ import { useErrorHandler } from '@/hooks/useErrorHandler';
 // import { getProductImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
 import { getImageValidationMessage } from '@/utils/imageUploadErrors';
+import { validateImageFile } from '@/utils/validateImageFile';
 import ProductImagesManager from '@/pages/admin/ProductImagesManager';
 
 // Single uploader preview helpers removed
@@ -267,10 +268,10 @@ const ProductForm: React.FC = () => {
   // Single uploader removed — keep state for backwards compatibility (no UI)
 
   // Handle multi-file selection for product creation
-  const handleCreateImagesChange = (files: FileList | null) => {
+  const handleCreateImagesChange = async (files: FileList | null) => {
     if (!files) return;
     const errs: string[] = [];
-    const nextStaged: Array<{ file: File; previewUrl: string }>= [];
+    const toValidate: File[] = [];
     Array.from(files).forEach((file) => {
       if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
         errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS));
@@ -280,9 +281,20 @@ const ProductForm: React.FC = () => {
         errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(maxImageSizeMb));
         return;
       }
-      const previewUrl = URL.createObjectURL(file);
-      nextStaged.push({ file, previewUrl });
+      toValidate.push(file);
     });
+
+    const results = await Promise.allSettled(toValidate.map((file) => validateImageFile(file)));
+    const nextStaged: Array<{ file: File; previewUrl: string }> = [];
+    results.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        const file = toValidate[i];
+        nextStaged.push({ file, previewUrl: URL.createObjectURL(file) });
+      } else {
+        errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_IMAGE_CONTENT);
+      }
+    });
+
     setCreateStagedFiles(prev => [...prev, ...nextStaged]);
     setCreateImages(prev => [...prev, ...nextStaged.map(s => s.file)]);
     setCreateImagesErrors(errs);

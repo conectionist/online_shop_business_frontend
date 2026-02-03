@@ -8,6 +8,7 @@ import { useSystemConfig } from '@/hooks/useSystem';
 import { getCategoryImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
 import { getImageValidationMessage } from '@/utils/imageUploadErrors';
+import { validateImageFile } from '@/utils/validateImageFile';
 
 // Helper function to check if category has a real image (not placeholder)
 const hasRealImage = (category: any): boolean => {
@@ -108,30 +109,40 @@ const CategoryForm: React.FC = () => {
   }, [allCategories, isEditing]);
 
   // Handle file selection
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Validate file size
-      if (file.size > maxImageSizeBytes) {
-        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(maxImageSizeMb) }));
-        return;
-      }
+    if (!file) return;
 
-      // Validate file type
-      if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
-        setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS) }));
-        return;
-      }
-
-      setImageFile(file);
-      setErrors(prev => ({ ...prev, image: '' }));
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    // Validate file size
+    if (file.size > maxImageSizeBytes) {
+      setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(maxImageSizeMb) }));
+      event.target.value = '';
+      return;
     }
+
+    // Validate file type
+    if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
+      setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS) }));
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      await validateImageFile(file);
+    } catch {
+      setErrors(prev => ({ ...prev, image: IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_IMAGE_CONTENT }));
+      event.target.value = '';
+      return;
+    }
+
+    setImageFile(file);
+    setErrors(prev => ({ ...prev, image: '' }));
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Remove image

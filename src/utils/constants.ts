@@ -7,6 +7,7 @@ export const IMAGE_UPLOAD = {
   ERROR_MESSAGES: {
     FILE_TOO_LARGE: (maxSize: number) => `Dimensiunea imaginii trebuie să fie mai mică de ${maxSize}MB`,
     INVALID_FILE_TYPE: (extensions: readonly string[]) => `Vă rugăm să selectați un fișier imagine valid (${extensions.join(', ')})`,
+    INVALID_IMAGE_CONTENT: 'Fișierul nu este o imagine validă.',
   },
   UI_TEXT: {
     FORMATS_ACCEPTED: 'Formate acceptate',

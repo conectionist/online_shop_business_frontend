@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { useSystemConfig } from '@/hooks/useSystem';
 import { IMAGE_UPLOAD } from '@/utils/constants';
 import { getImageValidationMessage } from '@/utils/imageUploadErrors';
+import { validateImageFile } from '@/utils/validateImageFile';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -84,10 +85,10 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
   const [stagedFiles, setStagedFiles] = React.useState<Array<{ file: File; previewUrl: string }>>([]);
 
   // Stage files with preview (no immediate upload)
-  const handleFiles = (files: FileList | null) => {
+  const handleFiles = async (files: FileList | null) => {
     if (!files) return;
     const nextErrors: string[] = [];
-    const nextStaged: Array<{ file: File; previewUrl: string }> = [];
+    const toValidate: File[] = [];
     Array.from(files).forEach((file) => {
       if (!IMAGE_UPLOAD.ACCEPTED_TYPES.includes(file.type as any)) {
         nextErrors.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS));
@@ -97,10 +98,20 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
         nextErrors.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(maxImageSizeMb));
         return;
       }
-      const previewUrl = URL.createObjectURL(file);
-      nextStaged.push({ file, previewUrl });
+      toValidate.push(file);
     });
-    // Append to existing staged files
+
+    const results = await Promise.allSettled(toValidate.map((file) => validateImageFile(file)));
+    const nextStaged: Array<{ file: File; previewUrl: string }> = [];
+    results.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        const file = toValidate[i];
+        nextStaged.push({ file, previewUrl: URL.createObjectURL(file) });
+      } else {
+        nextErrors.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_IMAGE_CONTENT);
+      }
+    });
+
     setStagedFiles((prev) => [...prev, ...nextStaged]);
     setUploadErrors(nextErrors);
   };
