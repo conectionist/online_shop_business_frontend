@@ -4,6 +4,7 @@ import { getProductImageUrlFromImage } from '@/services/api';
 import { Trash2, Star, Upload } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { useSystemConfig } from '@/hooks/useSystem';
 import { IMAGE_UPLOAD } from '@/utils/constants';
 import { getImageValidationMessage } from '@/utils/imageUploadErrors';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -56,6 +57,9 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
   const deleteMutation = useDeleteProductImage();
   const reorderMutation = useReorderProductImages();
   const setPrimaryMutation = useSetPrimaryImage();
+  const { data: systemConfig } = useSystemConfig();
+  const maxImageSizeMb = systemConfig?.max_image_size_mb ?? IMAGE_UPLOAD.MAX_SIZE_MB;
+  const maxImageSizeBytes = maxImageSizeMb * 1024 * 1024;
 
   const [localImages, setLocalImages] = React.useState(images?.slice().sort((a, b) => a.position - b.position) || []);
   React.useEffect(() => {
@@ -89,8 +93,8 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
         nextErrors.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS));
         return;
       }
-      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
-        nextErrors.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB));
+      if (file.size > maxImageSizeBytes) {
+        nextErrors.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(maxImageSizeMb));
         return;
       }
       const previewUrl = URL.createObjectURL(file);
@@ -121,7 +125,7 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
       }
       setStagedFiles([]);
     } catch (error: any) {
-      setUploadErrors([getImageValidationMessage(error)]);
+      setUploadErrors([getImageValidationMessage(error, maxImageSizeMb)]);
     }
   };
 
@@ -229,7 +233,7 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
           <Upload className={`w-8 h-8 mx-auto mb-2 ${uploadErrors.length > 0 ? 'text-red-400' : 'text-gray-400'}`} />
           <p className="text-sm text-gray-600 mb-2">Adăugați imagini pentru produs (opțional)</p>
           <p className="text-xs text-gray-500 mb-3">
-            {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
+            {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {maxImageSizeMb}MB)
           </p>
           <input
             id="product-images-upload"

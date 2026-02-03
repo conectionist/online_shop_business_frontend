@@ -4,6 +4,7 @@ import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
 import { useProduct, useCreateProduct, useUpdateProduct, useUploadProductImage, useDeleteProductImage, useProducts, useUploadImageToStaging } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
+import { useSystemConfig } from '@/hooks/useSystem';
 import { ProductCreate, ProductUpdate } from '@/types/api';
 
 import { Button } from '@/components/ui/Button';
@@ -105,6 +106,9 @@ const ProductForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditing = !!id;
+  const { data: systemConfig } = useSystemConfig();
+  const maxImageSizeMb = systemConfig?.max_image_size_mb ?? IMAGE_UPLOAD.MAX_SIZE_MB;
+  const maxImageSizeBytes = maxImageSizeMb * 1024 * 1024;
 
   // Form state
   const [formData, setFormData] = useState<ProductCreate>({
@@ -272,8 +276,8 @@ const ProductForm: React.FC = () => {
         errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.INVALID_FILE_TYPE(IMAGE_UPLOAD.ACCEPTED_EXTENSIONS));
         return;
       }
-      if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
-        errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(IMAGE_UPLOAD.MAX_SIZE_MB));
+      if (file.size > maxImageSizeBytes) {
+        errs.push(IMAGE_UPLOAD.ERROR_MESSAGES.FILE_TOO_LARGE(maxImageSizeMb));
         return;
       }
       const previewUrl = URL.createObjectURL(file);
@@ -333,7 +337,7 @@ const ProductForm: React.FC = () => {
         try {
           primaryImageUploadId = await uploadImageToStagingMutation.mutateAsync(primaryFile);
         } catch (error: any) {
-          setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error) }));
+          setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error, maxImageSizeMb) }));
           return;
         }
       } else {
@@ -392,7 +396,7 @@ const ProductForm: React.FC = () => {
       if (status === 409) {
         setErrors(prev => ({ ...prev, submit: 'Acest produs există deja. Vă rugăm să folosiți un nume diferit.' }));
       } else if (isImageValidation400) {
-        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error) }));
+        setErrors(prev => ({ ...prev, submit: getImageValidationMessage(error, maxImageSizeMb) }));
       } else {
         handleError(error, `Saving product: ${isEditing ? 'update' : 'create'}`);
       }
@@ -602,7 +606,7 @@ const ProductForm: React.FC = () => {
                 <Upload className={`w-8 h-8 mx-auto mb-2 ${createImagesErrors.length > 0 ? 'text-red-400' : 'text-gray-400'}`} />
                 <p className="text-sm text-gray-600 mb-2">Adăugați imagini pentru produs (opțional)</p>
                 <p className="text-xs text-gray-500 mb-3">
-                  {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {IMAGE_UPLOAD.MAX_SIZE_MB}MB)
+                  {IMAGE_UPLOAD.UI_TEXT.FORMATS_ACCEPTED}: {IMAGE_UPLOAD.ACCEPTED_EXTENSIONS.join(', ')} ({IMAGE_UPLOAD.UI_TEXT.MAX_SIZE} {maxImageSizeMb}MB)
                 </p>
                 <input
                   id="create-product-images-upload"

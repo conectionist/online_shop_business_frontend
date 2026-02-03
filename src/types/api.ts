@@ -392,6 +392,11 @@ export interface ApiErrorResponse {
   status?: number;
 }
 
+// System config (e.g. GET /system/config)
+export interface SystemConfig {
+  max_image_size_mb: number;
+}
+
 // Delivery Date Types
 export interface NextDeliveryDateResponse {
   next_delivery_date: string;
