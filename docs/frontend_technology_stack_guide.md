@@ -524,6 +524,17 @@ export const productsApi = {
     return response.data;
   }
 };
+
+// Upload image to staging (upload-first flow)
+export const uploadImageToStaging = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await apiClient.post<{ upload_id: string }>('/uploads/images', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data.upload_id;
+};
 ```
 
 ## 🎨 **UI/UX Implementation**
@@ -689,7 +700,7 @@ export const ImageUpload = ({
     onDrop,
     accept: acceptedTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {}),
     maxFiles,
-    maxSize: IMAGE_UPLOAD.MAX_SIZE_BYTES, // 25MB
+    maxSize: 25 * 1024 * 1024, // 25MB
   });
 
   return (
@@ -711,7 +722,7 @@ export const ImageUpload = ({
             Drag & drop images here, or click to select
           </p>
           <p className="text-sm text-gray-500">
-            Supports: JPEG, PNG, GIF (max {IMAGE_UPLOAD.MAX_SIZE_MB}MB each)
+            Supports: JPEG, PNG, GIF (max 25MB each)
           </p>
         </div>
       )}
