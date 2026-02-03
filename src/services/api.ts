@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { ApiError } from '@/types/api';
+import { getImageValidationMessage } from '@/utils/imageUploadErrors';
 import { authService } from './authService';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -150,7 +151,15 @@ export const handleApiError = (error: any): ApiError => {
           detail: data?.detail || 'The requested item was not found.'
         };
       }
-      
+
+      // Handle 400 Image validation (body shape like 422: detail array with type starting with image_)
+      if (status === 400) {
+        const detail = data?.detail;
+        if (Array.isArray(detail) && detail[0]?.type?.startsWith('image_')) {
+          return { detail: getImageValidationMessage(error) };
+        }
+      }
+
       // Handle other 4xx errors
       return {
         detail: data?.detail || 'The request could not be completed.'

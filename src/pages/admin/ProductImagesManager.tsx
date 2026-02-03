@@ -5,6 +5,7 @@ import { Trash2, Star, Upload } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { IMAGE_UPLOAD } from '@/utils/constants';
+import { getImageValidationMessage } from '@/utils/imageUploadErrors';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -112,11 +113,16 @@ const ProductImagesManager: React.FC<ProductImagesManagerProps> = ({ productId, 
 
   // Commit upload of all staged files
   const commitStagedUpload = async () => {
-    for (const item of stagedFiles) {
-      await uploadMutation.mutateAsync({ productId, image: item.file });
-      URL.revokeObjectURL(item.previewUrl);
+    setUploadErrors([]);
+    try {
+      for (const item of stagedFiles) {
+        await uploadMutation.mutateAsync({ productId, image: item.file });
+        URL.revokeObjectURL(item.previewUrl);
+      }
+      setStagedFiles([]);
+    } catch (error: any) {
+      setUploadErrors([getImageValidationMessage(error)]);
     }
-    setStagedFiles([]);
   };
 
   // Cleanup object URLs on unmount
