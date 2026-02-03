@@ -51,6 +51,8 @@ export interface ProductCreate {
   description?: string;
   category_id?: number;
   unitati_id: number;
+  // Optional upload-first primary image reference
+  primary_image_upload_id?: string;
 }
 
 export interface ProductUpdate {

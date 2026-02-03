@@ -62,6 +62,9 @@ export const productService = {
       if (data.category_id) {
         formData.append('category_id', data.category_id.toString());
       }
+      if (data.primary_image_upload_id) {
+        formData.append('primary_image_upload_id', data.primary_image_upload_id);
+      }
 
       const response = await apiClient.post('/products', formData, {
         headers: {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X, AlertCircle } from 'lucide-react';
 import { useCreateCategory, useUpdateCategory, useCategory, useUploadCategoryImage, useCategories } from '@/hooks/useCategories';
+import { useUploadImageToStaging } from '@/hooks/useProducts';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getCategoryImageUrl } from '@/services/api';
 import { IMAGE_UPLOAD, VALIDATION } from '@/utils/constants';
@@ -40,6 +41,7 @@ const CategoryForm: React.FC = () => {
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
   const uploadCategoryImageMutation = useUploadCategoryImage();
+  const uploadImageToStagingMutation = useUploadImageToStaging();
   
   // Error handling
   const { handleError, errorDetails, showErrorModal, hideErrorModal } = useErrorHandler();
@@ -161,6 +163,23 @@ const CategoryForm: React.FC = () => {
       return;
     }
 
+    // When creating with an image, upload to staging first
+    let primaryImageUploadId: string | undefined;
+
+    if (!isEditing && imageFile) {
+      try {
+        primaryImageUploadId = await uploadImageToStagingMutation.mutateAsync(imageFile);
+      } catch (error: any) {
+        const backendDetail = error?.response?.data?.detail;
+        const errorMessage =
+          typeof backendDetail === 'string'
+            ? backendDetail
+            : 'Imaginea categoriei nu a putut fi încărcată. Vă rugăm să verificați formatul și dimensiunea.';
+        setErrors(prev => ({ ...prev, submit: errorMessage }));
+        return;
+      }
+    }
+
     try {
       if (isEditing) {
         // For updates, send name, order_index, and clear_image flag if needed
@@ -181,11 +200,11 @@ const CategoryForm: React.FC = () => {
         }
         // If no new image file and not clearing, the existing image stays untouched
       } else {
-        // For creation, send name, order_index, and image together
+        // For creation, send name, order_index, and optional primary_image_upload_id
         const submitData = {
           name: formData.name,
           order_index: formData.order_index,
-          ...(imageFile && { primary_image: imageFile }),
+          ...(primaryImageUploadId && { primary_image_upload_id: primaryImageUploadId }),
         };
         await createCategoryMutation.mutateAsync(submitData);
       }
