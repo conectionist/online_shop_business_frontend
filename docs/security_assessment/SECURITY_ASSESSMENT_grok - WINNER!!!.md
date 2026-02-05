@@ -19,36 +19,6 @@ This security assessment evaluates the production readiness of the Online Shop B
 
 ## Critical Security Issues (Must Fix Before Production)
 
-### 1. ❌ No HTTPS Encryption
-**Severity:** Critical  
-**Risk:** Man-in-the-middle attacks, credential theft, session hijacking
-
-**Findings:**
-- Nginx configuration only serves HTTP (port 80)
-- No SSL/TLS certificates configured
-- All traffic transmitted in plain text including login credentials and session tokens
-
-**Impact:**
-- Authentication credentials can be intercepted
-- Session tokens can be stolen
-- User data transmission is unprotected
-
-**Evidence:**
-```nginx
-# nginx.conf - Only HTTP port 80 configured
-server {
-    listen 80;
-    server_name localhost;
-    # ... no SSL configuration
-}
-```
-
-**Remediation:**
-1. Obtain SSL/TLS certificate (Let's Encrypt recommended)
-2. Configure nginx for HTTPS on port 443
-3. Implement HTTP to HTTPS redirects
-4. Update Docker configuration to expose port 443
-
 ### 2. ❌ Sensitive Data in LocalStorage
 **Severity:** Critical  
 **Risk:** Cross-Site Scripting (XSS) attacks leading to token theft
