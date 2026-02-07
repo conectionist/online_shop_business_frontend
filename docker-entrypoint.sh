@@ -43,12 +43,15 @@ API_ORIGIN=$(printf '%s\n' "$API_URL" | sed -E 's#(https?://[^/]+).*#\1#')
 
 # Build the connect-src value: API origin + analytics endpoints
 CONNECT_SRC="${API_ORIGIN} https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu"
+IMG_SRC="${API_ORIGIN} data: blob:"
 
 echo "Configuring CSP connect-src with: ${CONNECT_SRC}"
+echo "Configuring CSP img-src with: ${IMG_SRC}"
 
 # Replace placeholder in nginx security headers snippet
 if [ -f /etc/nginx/conf.d/security-headers.conf ]; then
   sed -i "s#__CONNECT_SRC__#${CONNECT_SRC}#g" /etc/nginx/conf.d/security-headers.conf
+  sed -i "s#__IMG_SRC__#${IMG_SRC}#g" /etc/nginx/conf.d/security-headers.conf
 else
   echo "WARNING: /etc/nginx/conf.d/security-headers.conf not found; CSP connect-src not configured"
 fi
