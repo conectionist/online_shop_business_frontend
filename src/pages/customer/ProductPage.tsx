@@ -88,7 +88,7 @@ const ProductPage: React.FC = () => {
         <SEO 
           title="Se încarcă produsul..."
           description="Se încarcă informațiile despre produs."
-          robots="noindex, nofollow"
+          robots="index, follow"
         />
         <div className={components.page.container}>
           <div className="max-w-4xl mx-auto px-4">
@@ -147,7 +147,7 @@ const ProductPage: React.FC = () => {
         <SEO 
           title="Produsul nu a fost găsit"
           description="Produsul pe care îl cauți nu există sau nu este disponibil."
-          robots="noindex, nofollow"
+          robots="index, follow"
         />
         <div className={components.page.containerLarge}>
           <div className="max-w-2xl mx-auto px-4">

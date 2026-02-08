@@ -1,5 +1,10 @@
 // SEO Component Types and Interfaces
 
+type Robots = 
+  | 'index, follow'
+  | 'noindex, follow'
+  | 'noindex, nofollow';
+
 export interface SEOProps {
   /** Page title - will be appended to the base title */
   title?: string;
@@ -30,7 +35,7 @@ export interface SEOProps {
   /** Twitter creator handle */
   twitterCreator?: string;
   /** Whether to index the page */
-  robots?: 'index, follow' | 'noindex, nofollow' | 'index, nofollow' | 'noindex, follow';
+  robots?: Robots;
   /** Page language */
   language?: string;
   /** Page locale */
