@@ -1,6 +1,13 @@
 #!/bin/sh
 set -e
 
+# Generate a random nonce for CSP (regenerates on each container start)
+CSP_NONCE=$(head -c 16 /dev/urandom | base64 | tr -d '=+/' | cut -c1-32)
+echo "Generated CSP nonce: ${CSP_NONCE:0:10}..."
+
+# Inject nonce into index.html (replace placeholder)
+sed -i "s/CSP_NONCE_PLACEHOLDER/${CSP_NONCE}/g" /usr/share/nginx/html/index.html
+
 # Generate fresh config.js with runtime environment variables
 cat <<EOF > /usr/share/nginx/html/config.js
 window.__RUNTIME_CONFIG__ = {
@@ -58,26 +65,27 @@ fi
 
 echo "Configuring CSP connect-src with: ${CONNECT_SRC}"
 echo "Configuring CSP img-src with: ${IMG_SRC}"
+echo "Configuring CSP with nonce-based script-src (nonce: ${CSP_NONCE:0:10}...)"
 
 # Generate environment-appropriate security headers
 if [ "${NODE_ENV}" = "development" ]; then
-  echo "Development mode: using permissive security headers"
-  # Development: permissive CSP, no upgrade-insecure-requests
+  echo "Development mode: using permissive security headers with CSP nonce"
+  # Development: permissive CSP with nonce, no upgrade-insecure-requests
   cat > /etc/nginx/conf.d/security-headers.conf <<EOF
 add_header X-Content-Type-Options "nosniff" always;
 add_header X-Frame-Options "DENY" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-add_header Content-Security-Policy "default-src 'self'; connect-src 'self' ${CONNECT_SRC} data:; img-src 'self' ${IMG_SRC}; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'self';" always;
+add_header Content-Security-Policy "default-src 'self'; connect-src 'self' ${CONNECT_SRC} data:; img-src 'self' ${IMG_SRC}; script-src 'self' 'nonce-${CSP_NONCE}' 'wasm-unsafe-eval' https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'self';" always;
 EOF
 else
-  echo "Production mode: using strict security headers"
-  # Production: strict CSP with upgrade-insecure-requests
+  echo "Production mode: using strict security headers with CSP nonce"
+  # Production: strict CSP with nonce and upgrade-insecure-requests
   cat > /etc/nginx/conf.d/security-headers.conf <<EOF
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 add_header X-Content-Type-Options "nosniff" always;
 add_header X-Frame-Options "DENY" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-add_header Content-Security-Policy "default-src 'self'; connect-src 'self' ${CONNECT_SRC} data:; img-src 'self' ${IMG_SRC}; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests;" always;
+add_header Content-Security-Policy "default-src 'self'; connect-src 'self' ${CONNECT_SRC} data:; img-src 'self' ${IMG_SRC}; script-src 'self' 'nonce-${CSP_NONCE}' 'wasm-unsafe-eval' https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests;" always;
 add_header Cross-Origin-Opener-Policy "same-origin-allow-popups" always;
 add_header Cross-Origin-Resource-Policy "cross-origin" always;
 EOF
