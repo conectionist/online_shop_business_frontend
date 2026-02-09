@@ -11,7 +11,7 @@ services:
       - VITE_LOGO_PATH=${VITE_LOGO_PATH}
       - VITE_SITE_URL=${VITE_SITE_URL}
       - VITE_RYBBIT_SITE_ID=${VITE_RYBBIT_SITE_ID}
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
     env_file:
       - .env
     volumes:
