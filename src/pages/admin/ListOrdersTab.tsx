@@ -382,7 +382,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
                   })
                   .map((order) => `
                   <div class="order">
-                    <div class="order-content">${formatOrderText(order)}</div>
+                    <div class="order-content">${formatOrderText(order).replace(/\n/g, '<br>')}</div>
                   </div>
                 `).join('')}
               </div>
@@ -436,7 +436,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
               })
               .map((order) => `
               <div class="order">
-                <div class="order-content">${formatOrderText(order)}</div>
+                <div class="order-content">${formatOrderText(order).replace(/\n/g, '<br>')}</div>
               </div>
             `).join('') : 
             '<p>Nu există comenzi pentru această listă.</p>'}
