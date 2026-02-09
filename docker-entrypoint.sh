@@ -67,7 +67,7 @@ if [ "${NODE_ENV}" = "development" ]; then
 add_header X-Content-Type-Options "nosniff" always;
 add_header X-Frame-Options "DENY" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-add_header Content-Security-Policy "default-src 'self'; connect-src 'self' ${CONNECT_SRC} data:; img-src 'self' ${IMG_SRC}; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu; object-src 'none'; base-uri 'none'; form-action 'self';" always;
+add_header Content-Security-Policy "default-src 'self'; connect-src 'self' ${CONNECT_SRC} data:; img-src 'self' ${IMG_SRC}; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'self';" always;
 EOF
 else
   echo "Production mode: using strict security headers"
@@ -77,7 +77,7 @@ add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; prelo
 add_header X-Content-Type-Options "nosniff" always;
 add_header X-Frame-Options "DENY" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-add_header Content-Security-Policy "default-src 'self'; connect-src 'self' ${CONNECT_SRC} data:; img-src 'self' ${IMG_SRC}; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests;" always;
+add_header Content-Security-Policy "default-src 'self'; connect-src 'self' ${CONNECT_SRC} data:; img-src 'self' ${IMG_SRC}; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.akdscloud.eu https://ranalytics.akdscloud.eu; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests;" always;
 add_header Cross-Origin-Opener-Policy "same-origin-allow-popups" always;
 add_header Cross-Origin-Resource-Policy "cross-origin" always;
 EOF
