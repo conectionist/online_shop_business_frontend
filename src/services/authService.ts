@@ -57,7 +57,9 @@ class AuthService {
       // No need to update anything in frontend state - cookies are managed by browser
     } catch (error) {
       console.error('Token refresh error:', error);
-      await this.logout();
+      // Don't call this.logout() here - the interceptor handles cleanup
+      // Calling logout would trigger POST /auth/logout which also fails,
+      // causing unnecessary requests
       throw error;
     }
   }
@@ -82,6 +84,27 @@ class AuthService {
     }
 
     // Clean up push notifications (keep this!)
+    await this.cleanupPushSubscriptions();
+
+    // Clear React Query cache
+    const { queryClient } = await import('@/lib/queryClient');
+    queryClient.clear();
+
+    // Update auth store
+    useAuthStore.getState().logout();
+  }
+
+  async logoutAll(): Promise<void> {
+    try {
+      // Call backend to revoke all sessions and clear cookies
+      await apiClient.post('/auth/logout-all');
+      console.log('Logged out from all devices, cookies cleared by backend');
+    } catch (error) {
+      // Even if backend call fails, clear local state
+      console.warn('Logout-all request failed, clearing local state anyway:', error);
+    }
+
+    // Clean up push notifications
     await this.cleanupPushSubscriptions();
 
     // Clear React Query cache

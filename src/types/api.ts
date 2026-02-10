@@ -402,4 +402,26 @@ export interface NextDeliveryDateResponse {
   next_delivery_date: string;
   formatted_date_ro: string;
   reference_date: string;
+}
+
+// Session Management Types
+export interface Session {
+  id: number;
+  created_at: string;
+  last_used_at: string | null;
+  expires_at: string;
+  ip_address: string;
+  user_agent: string;
+  session_name: string;
+  device_type: "desktop" | "mobile" | "tablet" | "unknown";
+  browser_name: string;
+  os_name: string;
+  location_city: string | null;
+  location_country: string | null;
+  is_current: boolean;
+}
+
+export interface SessionsResponse {
+  sessions: Session[];
+  total: number;
 } 
