@@ -1,5 +1,4 @@
 import { apiClient } from '@/services/api';
-import { authService } from '@/services/authService';
 import { Product, ProductCreate, ProductUpdate, ProductImage } from '@/types/api';
 
 // Types for product operations
@@ -44,91 +43,83 @@ export const productService = {
     return response.data;
   },
 
-  // Create a new product (PROTECTED - requires auth)
+  // Create a new product (PROTECTED - requires auth, cookies sent automatically)
   createProduct: async (data: ProductCreate): Promise<Product> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const formData = new FormData();
-      
-      // Add required fields
-      formData.append('nume', data.nume);
-      formData.append('cantitate', data.cantitate.toString());
-      formData.append('pret', data.pret.toString());
-      formData.append('unitati_id', data.unitati_id.toString());
-      
-      // Add optional fields
-      if (data.description) {
-        formData.append('description', data.description);
-      }
-      if (data.category_id) {
-        formData.append('category_id', data.category_id.toString());
-      }
-      if (data.primary_image_upload_id) {
-        formData.append('primary_image_upload_id', data.primary_image_upload_id);
-      }
+    const formData = new FormData();
 
-      const response = await apiClient.post('/products', formData, {
-        headers: {
-          'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
-        },
-      });
-      return response.data;
+    // Add required fields
+    formData.append('nume', data.nume);
+    formData.append('cantitate', data.cantitate.toString());
+    formData.append('pret', data.pret.toString());
+    formData.append('unitati_id', data.unitati_id.toString());
+
+    // Add optional fields
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+    if (data.category_id) {
+      formData.append('category_id', data.category_id.toString());
+    }
+    if (data.primary_image_upload_id) {
+      formData.append('primary_image_upload_id', data.primary_image_upload_id);
+    }
+
+    const response = await apiClient.post('/products', formData, {
+      headers: {
+        'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
+      },
     });
+    return response.data;
   },
 
-  // Update an existing product (PROTECTED - requires auth)
+  // Update an existing product (PROTECTED - requires auth, cookies sent automatically)
   updateProduct: async (id: number, data: ProductUpdate): Promise<Product> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const formData = new FormData();
-      
-      // Add fields that are present
-      if (data.nume) {
-        formData.append('nume', data.nume);
-      }
-      if (data.cantitate !== undefined) {
-        formData.append('cantitate', data.cantitate.toString());
-      }
-      if (data.pret !== undefined) {
-        formData.append('pret', data.pret.toString());
-      }
-      if (data.description !== undefined) {
-        formData.append('description', data.description);
-      }
-      if (data.category_id !== undefined) {
-        formData.append('category_id', data.category_id.toString());
-      }
-      if (data.unitati_id !== undefined) {
-        formData.append('unitati_id', data.unitati_id.toString());
-      }
+    const formData = new FormData();
 
-      const response = await apiClient.patch(`/products/${id}`, formData, {
-        headers: {
-          'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
-        },
-      });
-      return response.data;
+    // Add fields that are present
+    if (data.nume) {
+      formData.append('nume', data.nume);
+    }
+    if (data.cantitate !== undefined) {
+      formData.append('cantitate', data.cantitate.toString());
+    }
+    if (data.pret !== undefined) {
+      formData.append('pret', data.pret.toString());
+    }
+    if (data.description !== undefined) {
+      formData.append('description', data.description);
+    }
+    if (data.category_id !== undefined) {
+      formData.append('category_id', data.category_id.toString());
+    }
+    if (data.unitati_id !== undefined) {
+      formData.append('unitati_id', data.unitati_id.toString());
+    }
+
+    const response = await apiClient.patch(`/products/${id}`, formData, {
+      headers: {
+        'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
+      },
     });
+    return response.data;
   },
 
-  // Delete a product (PROTECTED - requires auth)
+  // Delete a product (PROTECTED - requires auth, cookies sent automatically)
   deleteProduct: async (id: number): Promise<void> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.delete(`/products/${id}`);
-    });
+    await apiClient.delete(`/products/${id}`);
   },
 
-  // Upload product image (PROTECTED - requires auth)
+  // Upload product image (PROTECTED - requires auth, cookies sent automatically)
   uploadProductImage: async (productId: number, image: File): Promise<ProductImage> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const formData = new FormData();
-      formData.append('file', image);
-      
-      const response = await apiClient.post(`/products/${productId}/images`, formData, {
-        headers: {
-          'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
-        },
-      });
-      return response.data;
+    const formData = new FormData();
+    formData.append('file', image);
+
+    const response = await apiClient.post(`/products/${productId}/images`, formData, {
+      headers: {
+        'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
+      },
     });
+    return response.data;
   },
 
   // Get product images (PUBLIC)
@@ -137,39 +128,31 @@ export const productService = {
     return response.data;
   },
 
-  // Delete product image (PROTECTED - requires auth)
+  // Delete product image (PROTECTED - requires auth, cookies sent automatically)
   deleteProductImage: async (productId: number, imageId: number): Promise<void> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.delete(`/products/${productId}/images/${imageId}`);
-    });
+    await apiClient.delete(`/products/${productId}/images/${imageId}`);
   },
 
-  // Set primary image (PROTECTED - requires auth)
+  // Set primary image (PROTECTED - requires auth, cookies sent automatically)
   setPrimaryImage: async (productId: number, imageId: number): Promise<void> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.put(`/products/${productId}/images/${imageId}/primary`);
-    });
+    await apiClient.put(`/products/${productId}/images/${imageId}/primary`);
   },
 
-  // Update single image position (PROTECTED - requires auth)
+  // Update single image position (PROTECTED - requires auth, cookies sent automatically)
   updateImagePosition: async (productId: number, imageId: number, position: number): Promise<ProductImage> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const formData = new FormData();
-      formData.append('position', position.toString());
-      const response = await apiClient.put(`/products/${productId}/images/${imageId}/position`, formData, {
-        headers: { 'Content-Type': undefined },
-      });
-      return response.data;
+    const formData = new FormData();
+    formData.append('position', position.toString());
+    const response = await apiClient.put(`/products/${productId}/images/${imageId}/position`, formData, {
+      headers: { 'Content-Type': undefined },
     });
+    return response.data;
   },
 
-  // Reorder product images in bulk (PROTECTED - requires auth)
+  // Reorder product images in bulk (PROTECTED - requires auth, cookies sent automatically)
   reorderProductImages: async (productId: number, mappings: Array<{ id: number; position: number }>): Promise<ProductImage[]> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put(`/products/${productId}/images/reorder`, mappings, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-      return response.data;
+    const response = await apiClient.put(`/products/${productId}/images/reorder`, mappings, {
+      headers: { 'Content-Type': 'application/json' },
     });
+    return response.data;
   },
 }; 

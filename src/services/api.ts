@@ -2,7 +2,6 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { ApiError } from '@/types/api';
 import { getImageValidationMessage } from '@/utils/imageUploadErrors';
 import { authService } from './authService';
-import { useAuthStore } from '@/stores/authStore';
 
 // Create axios instance without baseURL initially
 export const apiClient: AxiosInstance = axios.create({
@@ -33,18 +32,16 @@ export const getApiBaseUrl = (): string => {
 
 
 
-// Request interceptor for authentication and dynamic baseURL
+// Request interceptor for dynamic baseURL
 apiClient.interceptors.request.use(
   (config: any) => {
     // Set dynamic baseURL for each request
     const baseUrl = getApiBaseUrl();
     config.baseURL = `${baseUrl}/api/v1`;
-    
-    // Get token from auth store instead of localStorage for consistency
-    const token = useAuthStore.getState().getCurrentToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+
+    // No need to add Authorization header - cookies sent automatically
+    // via withCredentials: true (set in apiClient config)
+
     return config;
   },
   (error) => {
@@ -79,20 +76,14 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Try to refresh the access token
+        // Try to refresh the access token (backend updates cookies automatically)
         await authService.refreshAccessToken();
-        
-        // Update the original request with the new token
-        const newToken = authService.getAccessToken();
-        if (newToken && originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        }
-        
-        // Retry the original request with the new token
+
+        // Retry the original request (cookies updated automatically by backend)
         return apiClient(originalRequest);
       } catch (refreshError) {
         // If refresh fails, logout and redirect to login
-        authService.logout();
+        await authService.logout();
         window.location.href = '/login';
         return Promise.reject(new Error('Authentication failed - please log in again'));
       }

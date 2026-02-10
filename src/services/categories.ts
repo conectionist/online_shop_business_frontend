@@ -1,5 +1,4 @@
 import { apiClient, createFormData } from '@/services/api';
-import { authService } from '@/services/authService';
 import { Category } from '@/types/api';
 
 // Types for category operations
@@ -51,71 +50,61 @@ export const categoryService = {
     return response.data;
   },
 
-  // Create a new category (PROTECTED - requires auth)
+  // Create a new category (PROTECTED - requires auth, cookies sent automatically)
   createCategory: async (data: CreateCategoryData): Promise<Category> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const formData = createFormData(data);
-      const response = await apiClient.post('/categories', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
+    const formData = createFormData(data);
+    const response = await apiClient.post('/categories', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
+    return response.data;
   },
 
-  // Update an existing category (PROTECTED - requires auth)
+  // Update an existing category (PROTECTED - requires auth, cookies sent automatically)
   updateCategory: async (data: UpdateCategoryData): Promise<Category> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const { id, ...categoryData } = data;
-      
-      const formData = new FormData();
-      if (categoryData.name) {
-        formData.append('name', categoryData.name);
-      }
-      if (categoryData.clear_image) {
-        formData.append('clear_image', 'true');
-      }
-      if (categoryData.order_index !== undefined) {
-        formData.append('order_index', categoryData.order_index.toString());
-      }
-      
-      const response = await apiClient.patch(`/categories/${id}`, formData, {
-        headers: {
-          'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
-        },
-      });
-      return response.data;
+    const { id, ...categoryData } = data;
+
+    const formData = new FormData();
+    if (categoryData.name) {
+      formData.append('name', categoryData.name);
+    }
+    if (categoryData.clear_image) {
+      formData.append('clear_image', 'true');
+    }
+    if (categoryData.order_index !== undefined) {
+      formData.append('order_index', categoryData.order_index.toString());
+    }
+
+    const response = await apiClient.patch(`/categories/${id}`, formData, {
+      headers: {
+        'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
+      },
     });
+    return response.data;
   },
 
-  // Delete a category (PROTECTED - requires auth)
+  // Delete a category (PROTECTED - requires auth, cookies sent automatically)
   deleteCategory: async (id: number): Promise<void> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.delete(`/categories/${id}`);
-    });
+    await apiClient.delete(`/categories/${id}`);
   },
 
-  // Upload category image (PROTECTED - requires auth)
+  // Upload category image (PROTECTED - requires auth, cookies sent automatically)
   uploadCategoryImage: async (id: number, image: File): Promise<Category> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const formData = new FormData();
-      formData.append('file', image);
-      
-      const response = await apiClient.post(`/categories/${id}/image`, formData, {
-        headers: {
-          'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
-        },
-      });
-      return response.data;
+    const formData = new FormData();
+    formData.append('file', image);
+
+    const response = await apiClient.post(`/categories/${id}/image`, formData, {
+      headers: {
+        'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
+      },
     });
+    return response.data;
   },
 
-  // Bulk reorder categories (PROTECTED - requires auth)
+  // Bulk reorder categories (PROTECTED - requires auth, cookies sent automatically)
   reorder: async (categoryIds: number[]): Promise<Category[]> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put<Category[]>('/categories/reorder', categoryIds);
-      return response.data;
-    });
+    const response = await apiClient.put<Category[]>('/categories/reorder', categoryIds);
+    return response.data;
   },
 }; 

@@ -67,23 +67,18 @@ const LoginPage: React.FC = () => {
       }
 
       const data = await response.json();
-      
-      // Store tokens and update auth store manually
-      const { access_token, refresh_token, admin } = data;
-      
-      // Store refresh token in localStorage (needed for refresh calls)
-      localStorage.setItem('refresh_token', refresh_token);
-      
-      // Transform admin data to user format for our auth store
+
+      // Transform response data to user format for our auth store
+      // Cookies are set automatically by the backend via Set-Cookie headers
       const userData = {
-        id: admin.id,
-        email: admin.username, // Use username as email for now
-        name: admin.username,  // Use username as name for display
+        id: data.id,
+        email: data.username,
+        name: data.username,
         role: 'admin' as const
       };
-      
-      // Update auth store with user data (which will also store access_token)
-      useAuthStore.getState().login(access_token, userData);
+
+      // Update auth store with user data (cookies are managed by browser)
+      useAuthStore.getState().login(userData);
       
       // Show success state briefly before redirect
       setIsSuccess(true);

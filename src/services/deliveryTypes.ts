@@ -1,5 +1,4 @@
 import { apiClient } from './api';
-import { authService } from '@/services/authService';
 import { DeliveryType, DeliveryTypeCreate, DeliveryTypeUpdate } from '@/types/api';
 
 const BASE_URL = '/tipuri-livrare';
@@ -17,42 +16,32 @@ export const deliveryTypeService = {
     return response.data;
   },
 
-  // Create new delivery type (PROTECTED - requires auth)
+  // Create new delivery type (PROTECTED - requires auth, cookies sent automatically)
   async create(data: DeliveryTypeCreate): Promise<DeliveryType> {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.post<DeliveryType>(BASE_URL, data);
-      return response.data;
-    });
+    const response = await apiClient.post<DeliveryType>(BASE_URL, data);
+    return response.data;
   },
 
-  // Update delivery type (PROTECTED - requires auth)
+  // Update delivery type (PROTECTED - requires auth, cookies sent automatically)
   async update(id: number, data: DeliveryTypeUpdate): Promise<DeliveryType> {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put<DeliveryType>(`${BASE_URL}/${id}`, data);
-      return response.data;
-    });
+    const response = await apiClient.put<DeliveryType>(`${BASE_URL}/${id}`, data);
+    return response.data;
   },
 
-  // Patch delivery type (partial update) (PROTECTED - requires auth)
+  // Patch delivery type (partial update) (PROTECTED - requires auth, cookies sent automatically)
   async patch(id: number, data: DeliveryTypeUpdate): Promise<DeliveryType> {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.patch<DeliveryType>(`${BASE_URL}/${id}`, data);
-      return response.data;
-    });
+    const response = await apiClient.patch<DeliveryType>(`${BASE_URL}/${id}`, data);
+    return response.data;
   },
 
-  // Delete delivery type (PROTECTED - requires auth)
+  // Delete delivery type (PROTECTED - requires auth, cookies sent automatically)
   async delete(id: number): Promise<void> {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.delete(`${BASE_URL}/${id}`);
-    });
+    await apiClient.delete(`${BASE_URL}/${id}`);
   },
 
-  // Bulk reorder delivery types (PROTECTED - requires auth)
+  // Bulk reorder delivery types (PROTECTED - requires auth, cookies sent automatically)
   async reorder(deliveryTypeIds: number[]): Promise<DeliveryType[]> {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put<DeliveryType[]>(`${BASE_URL}/reorder`, deliveryTypeIds);
-      return response.data;
-    });
+    const response = await apiClient.put<DeliveryType[]>(`${BASE_URL}/reorder`, deliveryTypeIds);
+    return response.data;
   }
 }; 

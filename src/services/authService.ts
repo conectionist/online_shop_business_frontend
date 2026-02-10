@@ -6,19 +6,18 @@ export interface LoginCredentials {
   password: string;
 }
 
+// Response from /auth/login (cookie-only mode)
+// Tokens are in cookies, not response body
 export interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
-  user: {
-    id: number;
-    email: string;
-    name: string;
-    role: 'admin' | 'customer';
-  };
+  id: number;
+  username: string;
+  expires_in?: number;  // Cookie expiration (e.g., 1800 seconds)
 }
 
+// Response from /auth/refresh (cookie-only mode)
+// Backend updates cookies via Set-Cookie headers
 export interface RefreshResponse {
-  access_token: string;
+  success?: boolean;
 }
 
 class AuthService {
@@ -26,25 +25,21 @@ class AuthService {
     try {
       console.log('Attempting login...');
 
-      // Use relative path (interceptor adds baseURL automatically)
+      // Backend sets cookies via Set-Cookie headers
       const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
-      
-      const { access_token, refresh_token, user } = response.data;
-      
-      // Store refresh token in localStorage (needed for refresh calls)
-      localStorage.setItem('refresh_token', refresh_token);
-      
-      // Transform user data for our auth store
+
+      // Extract user info only (no tokens in response body)
       const userData = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
+        id: response.data.id,
+        email: response.data.username,  // Backend returns 'username'
+        name: response.data.username,
+        role: 'admin' as const  // Assuming admin for now
       };
-      
-      // Update auth store (which will also store access_token in localStorage)
-      useAuthStore.getState().login(access_token, userData);
-      
+
+      // Update auth store (NO token parameter)
+      useAuthStore.getState().login(userData);
+
+      console.log('Login successful, cookies set by backend');
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
@@ -52,49 +47,47 @@ class AuthService {
     }
   }
 
-  async refreshAccessToken(): Promise<RefreshResponse> {
+  async refreshAccessToken(): Promise<void> {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
+      // Backend reads refresh_token from cookie automatically
+      // Backend updates cookies via Set-Cookie headers
+      await apiClient.post('/auth/refresh');
 
-      const response = await apiClient.post<RefreshResponse>('/auth/refresh', {
-        refresh_token: refreshToken,
-      });
-
-      const { access_token } = response.data;
-      
-      // Update token in auth store (which will also update localStorage)
-      useAuthStore.getState().updateToken(access_token);
-      
-      return response.data;
+      console.log('Token refreshed successfully (cookies updated by backend)');
+      // No need to update anything in frontend state - cookies are managed by browser
     } catch (error) {
       console.error('Token refresh error:', error);
-      this.logout();
+      await this.logout();
       throw error;
     }
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    return this.makeAuthenticatedRequest(async () => {
-      // Use relative path (consistent with other endpoints)
-      await apiClient.post('/auth/change-password', {
-        current_password: currentPassword,
-        new_password: newPassword,
-      });
+    // Use relative path (consistent with other endpoints)
+    // 401 interceptor handles token refresh automatically
+    await apiClient.post('/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
     });
   }
 
-  logout(): void {
-    // Clear tokens from localStorage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    
-    // Clean up push notifications on logout (security requirement)
-    this.cleanupPushSubscriptions();
-    
+  async logout(): Promise<void> {
+    try {
+      // Call backend to clear cookies
+      await apiClient.post('/auth/logout');
+      console.log('Logged out, cookies cleared by backend');
+    } catch (error) {
+      // Even if backend call fails, clear local state
+      console.warn('Logout request failed, clearing local state anyway:', error);
+    }
+
+    // Clean up push notifications (keep this!)
+    await this.cleanupPushSubscriptions();
+
+    // Clear React Query cache
+    const { queryClient } = await import('@/lib/queryClient');
+    queryClient.clear();
+
     // Update auth store
     useAuthStore.getState().logout();
   }
@@ -103,71 +96,12 @@ class AuthService {
     return useAuthStore.getState().isAuthenticated;
   }
 
-  getAccessToken(): string | null {
-    return useAuthStore.getState().getCurrentToken();
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem('refresh_token');
-  }
-
-  // Check if token is about to expire (within 5 minutes)
-  isTokenExpiringSoon(): boolean {
-    const token = this.getAccessToken();
-    if (!token) return false;
-
-    try {
-      // Decode JWT token (without verification for expiration check)
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expirationTime = payload.exp * 1000; // Convert to milliseconds
-      const currentTime = Date.now();
-      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-      return (expirationTime - currentTime) < fiveMinutes;
-    } catch (error) {
-      console.error('Error checking token expiration:', error);
-      return false;
-    }
-  }
-
-  // Proactively refresh token if it's expiring soon
-  async refreshTokenIfNeeded(): Promise<void> {
-    if (this.isTokenExpiringSoon()) {
-      try {
-        await this.refreshAccessToken();
-        console.log('Token refreshed proactively');
-      } catch (error) {
-        console.error('Failed to refresh token proactively:', error);
-        // Don't logout here, let the next request handle it
-      }
-    }
-  }
-
-  // Helper method to make authenticated requests with automatic token refresh
-  async makeAuthenticatedRequest<T>(
-    requestFn: () => Promise<T>
-  ): Promise<T> {
-    try {
-      // Check if token needs refresh before making request
-      await this.refreshTokenIfNeeded();
-      
-      return await requestFn();
-    } catch (error: any) {
-      // If we get a 401, try to refresh the token and retry once
-      if (error.response?.status === 401) {
-        try {
-          await this.refreshAccessToken();
-          // Retry the request with new token
-          return await requestFn();
-        } catch (refreshError) {
-          // If refresh fails, logout and throw error
-          this.logout();
-          throw new Error('Authentication failed');
-        }
-      }
-      throw error;
-    }
-  }
+  // Removed obsolete methods (cookie-based auth doesn't need them):
+  // - getAccessToken() - can't access httpOnly cookies from JS
+  // - getRefreshToken() - can't access httpOnly cookies from JS
+  // - isTokenExpiringSoon() - can't decode httpOnly cookies
+  // - refreshTokenIfNeeded() - backend manages cookie expiry
+  // - makeAuthenticatedRequest() - 401 interceptor handles refresh
 
   // Clean up push notifications on logout (security requirement)
   private async cleanupPushSubscriptions(): Promise<void> {
