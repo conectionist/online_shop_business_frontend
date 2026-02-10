@@ -10,6 +10,7 @@ export const apiClient: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 10 seconds
+  withCredentials: true, // Enable cookies for cross-origin requests
 });
 
 // Function to get API base URL dynamically

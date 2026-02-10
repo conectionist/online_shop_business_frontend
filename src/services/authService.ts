@@ -1,4 +1,4 @@
-import { apiClient, getApiBaseUrl } from './api';
+import { apiClient } from './api';
 import { useAuthStore } from '@/stores/authStore';
 
 export interface LoginCredentials {
@@ -24,13 +24,10 @@ export interface RefreshResponse {
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Get the full URL directly
-      const baseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || getApiBaseUrl();
-      const fullUrl = `${baseUrl}/api/v1/auth/login`;
-      
-      console.log('Login URL:', fullUrl);
-      
-      const response = await apiClient.post<AuthResponse>(fullUrl, credentials);
+      console.log('Attempting login...');
+
+      // Use relative path (interceptor adds baseURL automatically)
+      const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
       
       const { access_token, refresh_token, user } = response.data;
       
@@ -82,10 +79,8 @@ class AuthService {
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     return this.makeAuthenticatedRequest(async () => {
-      // Use absolute URL to avoid any baseURL confusion like in login
-      const baseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || getApiBaseUrl();
-      const fullUrl = `${baseUrl}/api/v1/auth/change-password`;
-      await apiClient.post(fullUrl, {
+      // Use relative path (consistent with other endpoints)
+      await apiClient.post('/auth/change-password', {
         current_password: currentPassword,
         new_password: newPassword,
       });

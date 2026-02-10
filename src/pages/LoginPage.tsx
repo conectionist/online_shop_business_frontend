@@ -52,6 +52,7 @@ const LoginPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Enable cookies (same as Axios withCredentials)
         body: JSON.stringify(formData),
       });
 
