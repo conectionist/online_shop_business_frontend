@@ -24,10 +24,15 @@ const getDeviceIcon = (deviceType: Session['device_type']) => {
   }
 };
 
+// Parse timestamp as UTC (backend may omit the Z suffix)
+const parseUTC = (dateString: string): Date => {
+  return new Date(dateString.endsWith('Z') ? dateString : dateString + 'Z');
+};
+
 // Helper function to format timestamp as relative time
 const formatDate = (dateString: string): string => {
   const now = new Date();
-  const date = new Date(dateString);
+  const date = parseUTC(dateString);
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) {
