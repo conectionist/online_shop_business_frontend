@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Monitor, Smartphone, Tablet, HelpCircle } from 'lucide-react';
+import { Monitor, Smartphone, Tablet, HelpCircle, LayoutGrid, List, Trash2 } from 'lucide-react';
 import { useSessions, useCurrentSession, useRevokeSession, useLogoutOthers } from '@/hooks/useSessions';
 import { Session } from '@/types/api';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,8 @@ import Alert from '@/components/ui/Alert';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
 import AdminPageHeader from '@/components/layout/AdminPageHeader';
+
+type ViewMode = 'card' | 'list';
 
 // Helper function to get device icon
 const getDeviceIcon = (deviceType: Session['device_type']) => {
@@ -53,7 +55,19 @@ const formatDate = (dateString: string): string => {
   return `Acum ${diffInDays} ${diffInDays === 1 ? 'zi' : 'zile'}`;
 };
 
-// Session Card Component
+// Format as absolute date+time for the table view
+const formatAbsolute = (dateString: string): string => {
+  const date = parseUTC(dateString);
+  return date.toLocaleString('ro-RO', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+// Session Card Component (compact view)
 const SessionCard = React.memo<{
   session: Session;
   isCurrent: boolean;
@@ -127,6 +141,88 @@ const SessionCard = React.memo<{
 
 SessionCard.displayName = 'SessionCard';
 
+// Session Table Component (list view)
+const SessionTable = React.memo<{
+  sessions: Session[];
+  currentSessionId: number | undefined;
+  onRevoke: (session: Session) => void;
+}>(({ sessions, currentSessionId, onRevoke }) => {
+  return (
+    <Card className="mt-6 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-gray-50 text-left text-gray-600">
+              <th className="px-4 py-3 font-medium">Dispozitiv</th>
+              <th className="px-4 py-3 font-medium">IP</th>
+              <th className="px-4 py-3 font-medium">Locație</th>
+              <th className="px-4 py-3 font-medium">Prima conectare</th>
+              <th className="px-4 py-3 font-medium">Ultima activitate</th>
+              <th className="px-4 py-3 font-medium">Expiră</th>
+              <th className="px-4 py-3 font-medium w-10"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {sessions.map((session) => {
+              const isCurrent = session.id === currentSessionId;
+              const DeviceIcon = getDeviceIcon(session.device_type);
+              const location = [session.location_city, session.location_country].filter(Boolean).join(', ');
+
+              return (
+                <tr key={session.id} className={isCurrent ? 'bg-green-50/50' : 'hover:bg-gray-50'}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <DeviceIcon className="h-5 w-5 text-blue-600 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900 flex items-center gap-2">
+                          <span className="truncate">{session.session_name}</span>
+                          {isCurrent && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 shrink-0">
+                              Curentă
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-gray-500 truncate">
+                          {session.browser_name} pe {session.os_name}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{session.ip_address}</td>
+                  <td className="px-4 py-3 text-gray-600">{location || '—'}</td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatAbsolute(session.created_at)}</td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                    {session.last_used_at ? formatDate(session.last_used_at) : formatDate(session.created_at)}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatAbsolute(session.expires_at)}</td>
+                  <td className="px-4 py-3">
+                    {!isCurrent && (
+                      <button
+                        onClick={() => onRevoke(session)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Revocă sesiune"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+});
+
+SessionTable.displayName = 'SessionTable';
+
+// Detect if screen is mobile-width on initial render
+const getDefaultView = (): ViewMode => {
+  return window.innerWidth < 768 ? 'card' : 'list';
+};
+
 // Main component
 const SessionsList: React.FC = () => {
   const { showToast } = useToast();
@@ -135,6 +231,7 @@ const SessionsList: React.FC = () => {
   const revokeSessionMutation = useRevokeSession();
   const logoutOthersMutation = useLogoutOthers();
 
+  const [viewMode, setViewMode] = useState<ViewMode>(getDefaultView);
   const [sessionToRevoke, setSessionToRevoke] = useState<Session | null>(null);
   const [showLogoutOthersModal, setShowLogoutOthersModal] = useState(false);
 
@@ -198,10 +295,30 @@ const SessionsList: React.FC = () => {
 
   return (
     <div className="p-6">
-      <AdminPageHeader
-        title="Sesiuni Active"
-        subtitle="Gestionează dispozitivele conectate la contul tău"
-      />
+      <div className="flex items-center justify-between">
+        <AdminPageHeader
+          title="Sesiuni Active"
+          subtitle="Gestionează dispozitivele conectate la contul tău"
+        />
+        {sortedSessions.length > 0 && (
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('card')}
+              className={`p-1.5 rounded ${viewMode === 'card' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              title="Vizualizare carduri"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              title="Vizualizare listă"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Info alert */}
       <Alert
@@ -211,14 +328,14 @@ const SessionsList: React.FC = () => {
         className="mt-6"
       />
 
-      {/* Sessions grid */}
+      {/* Sessions */}
       {sortedSessions.length === 0 ? (
         <Alert
           type="info"
           message="Nu există sesiuni active."
           className="mt-6"
         />
-      ) : (
+      ) : viewMode === 'card' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {sortedSessions.map((session) => (
             <SessionCard
@@ -229,6 +346,12 @@ const SessionsList: React.FC = () => {
             />
           ))}
         </div>
+      ) : (
+        <SessionTable
+          sessions={sortedSessions}
+          currentSessionId={currentSession?.id}
+          onRevoke={setSessionToRevoke}
+        />
       )}
 
       {/* Logout others card */}
