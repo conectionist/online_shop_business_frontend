@@ -94,6 +94,11 @@ class AuthService {
     useAuthStore.getState().logout();
   }
 
+  async logoutOthers(): Promise<string> {
+    const response = await apiClient.post<{ message: string }>('/auth/logout-others');
+    return response.data.message;
+  }
+
   async logoutAll(): Promise<void> {
     try {
       // Call backend to revoke all sessions and clear cookies

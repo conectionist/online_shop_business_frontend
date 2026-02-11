@@ -31,7 +31,19 @@ export const useRevokeSession = () => {
   });
 };
 
-// Logout from all devices
+// Logout from other devices (keep current session)
+export const useLogoutOthers = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => authService.logoutOthers(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+    },
+  });
+};
+
+// Logout from all devices (including current)
 export const useLogoutAll = () => {
   const queryClient = useQueryClient();
 

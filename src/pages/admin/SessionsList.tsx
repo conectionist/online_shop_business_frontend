@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Monitor, Smartphone, Tablet, HelpCircle } from 'lucide-react';
-import { useSessions, useCurrentSession, useRevokeSession, useLogoutAll } from '@/hooks/useSessions';
+import { useSessions, useCurrentSession, useRevokeSession, useLogoutOthers } from '@/hooks/useSessions';
 import { Session } from '@/types/api';
 import { Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -125,15 +124,14 @@ SessionCard.displayName = 'SessionCard';
 
 // Main component
 const SessionsList: React.FC = () => {
-  const navigate = useNavigate();
   const { showToast } = useToast();
   const { data: sessions, isLoading, error } = useSessions();
   const { data: currentSession } = useCurrentSession();
   const revokeSessionMutation = useRevokeSession();
-  const logoutAllMutation = useLogoutAll();
+  const logoutOthersMutation = useLogoutOthers();
 
   const [sessionToRevoke, setSessionToRevoke] = useState<Session | null>(null);
-  const [showLogoutAllModal, setShowLogoutAllModal] = useState(false);
+  const [showLogoutOthersModal, setShowLogoutOthersModal] = useState(false);
 
   // Sort sessions: current first, then by last_used_at descending
   const sortedSessions = React.useMemo(() => {
@@ -162,18 +160,14 @@ const SessionsList: React.FC = () => {
     }
   };
 
-  const handleLogoutAll = async () => {
+  const handleLogoutOthers = async () => {
     try {
-      await logoutAllMutation.mutateAsync();
-      showToast({ type: 'success', title: 'Deconectat de pe toate dispozitivele' });
-
-      // Redirect to login after 1 second
-      setTimeout(() => {
-        navigate('/login');
-      }, 1000);
+      const message = await logoutOthersMutation.mutateAsync();
+      showToast({ type: 'success', title: message || 'Celelalte sesiuni au fost revocate' });
+      setShowLogoutOthersModal(false);
     } catch (error) {
-      showToast({ type: 'error', title: 'Eroare la deconectare' });
-      console.error('Error logging out from all devices:', error);
+      showToast({ type: 'error', title: 'Eroare la revocarea sesiunilor' });
+      console.error('Error logging out other devices:', error);
     }
   };
 
@@ -232,25 +226,27 @@ const SessionsList: React.FC = () => {
         </div>
       )}
 
-      {/* Logout all card */}
-      <Card className="mt-8 bg-red-50 border-red-200">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Deconectează-te de pe toate dispozitivele
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Această acțiune va revoca toate sesiunile active, inclusiv sesiunea curentă.
-            Vei fi redirecționat către pagina de autentificare.
-          </p>
-          <Button
-            variant="danger"
-            onClick={() => setShowLogoutAllModal(true)}
-            disabled={logoutAllMutation.isPending}
-          >
-            {logoutAllMutation.isPending ? 'Se deconectează...' : 'Deconectează de pe toate dispozitivele'}
-          </Button>
-        </div>
-      </Card>
+      {/* Logout others card */}
+      {sortedSessions.length > 1 && (
+        <Card className="mt-8 bg-blue-50 border-blue-200">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Deconectează celelalte dispozitive
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Revocă toate sesiunile active, cu excepția sesiunii curente.
+              Celelalte dispozitive vor fi deconectate imediat.
+            </p>
+            <Button
+              variant="primary"
+              onClick={() => setShowLogoutOthersModal(true)}
+              disabled={logoutOthersMutation.isPending}
+            >
+              {logoutOthersMutation.isPending ? 'Se deconectează...' : 'Deconectează celelalte dispozitive'}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Revoke session modal */}
       <Modal
@@ -284,40 +280,36 @@ const SessionsList: React.FC = () => {
         </div>
       </Modal>
 
-      {/* Logout all modal */}
+      {/* Logout others modal */}
       <Modal
-        isOpen={showLogoutAllModal}
-        onClose={() => setShowLogoutAllModal(false)}
-        title="Deconectează de pe toate dispozitivele"
+        isOpen={showLogoutOthersModal}
+        onClose={() => setShowLogoutOthersModal(false)}
+        title="Deconectează celelalte dispozitive"
       >
         <div className="space-y-4">
-          <Alert
-            type="warning"
-            title="Atenție!"
-            message="Această acțiune va revoca toate sesiunile active, inclusiv sesiunea curentă."
-          />
           <p>
-            Ești sigur că vrei să te deconectezi de pe toate dispozitivele?
-            Vei fi redirecționat către pagina de autentificare.
+            Ești sigur că vrei să revoci toate sesiunile, cu excepția sesiunii curente?
+            Celelalte dispozitive vor fi deconectate imediat.
           </p>
           <div className="flex gap-3 justify-end">
             <Button
               variant="outline"
-              onClick={() => setShowLogoutAllModal(false)}
-              disabled={logoutAllMutation.isPending}
+              onClick={() => setShowLogoutOthersModal(false)}
+              disabled={logoutOthersMutation.isPending}
             >
               Anulează
             </Button>
             <Button
-              variant="danger"
-              onClick={handleLogoutAll}
-              disabled={logoutAllMutation.isPending}
+              variant="primary"
+              onClick={handleLogoutOthers}
+              disabled={logoutOthersMutation.isPending}
             >
-              {logoutAllMutation.isPending ? 'Se deconectează...' : 'Deconectează de pe toate'}
+              {logoutOthersMutation.isPending ? 'Se deconectează...' : 'Deconectează celelalte'}
             </Button>
           </div>
         </div>
       </Modal>
+
     </div>
   );
 };
