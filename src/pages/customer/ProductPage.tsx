@@ -68,7 +68,8 @@ const ProductPage: React.FC = () => {
       try {
         const categoryName = getCategoryName(product.category_id);
         const unitName = getUnitName(product.unitati_id);
-        const productSchema = generateProductSchema(product, categoryName, unitName);
+        const inStock = !!productInPublishedList && productInPublishedList.stoc_produs !== 0;
+        const productSchema = generateProductSchema(product, categoryName, unitName, inStock);
         injectSchemaMarkup(productSchema, 'product');
       } catch (error) {
         console.warn('Failed to generate product schema:', error);
@@ -79,7 +80,7 @@ const ProductPage: React.FC = () => {
     return () => {
       removeSchemaMarkup('product');
     };
-  }, [product, categories, units]);
+  }, [product, categories, units, productInPublishedList]);
 
   // Show skeleton loader with layout immediately for better UX
   if (isLoadingProduct || isLoadingPublishedProducts) {

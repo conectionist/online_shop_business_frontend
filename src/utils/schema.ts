@@ -2,18 +2,23 @@ import { Product } from '@/types/api';
 import { getProductImageUrl } from '@/services/api';
 
 // Product Schema Markup Generator
-export const generateProductSchema = (product: Product, categoryName: string, unitName: string) => {
+export const generateProductSchema = (product: Product, categoryName: string, unitName: string, isAvailable: boolean = true) => {
   const baseUrl = window.location.origin;
-  
+
   // Use the existing getProductImageUrl function to get the correct image URL
   const imageUrl = getProductImageUrl(product, 'original');
-  
+  const priceString = Number(product.pret).toFixed(2);
+  const availability = isAvailable
+    ? "https://schema.org/InStock"
+    : "https://schema.org/OutOfStock";
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": product.nume,
     "description": product.description || `${product.nume} - produs proaspăt de brutărie cu maia`,
     "image": imageUrl,
+    "sku": `PCMA-${product.id}`,
     "category": categoryName,
     "brand": {
       "@type": "Brand",
@@ -21,10 +26,20 @@ export const generateProductSchema = (product: Product, categoryName: string, un
     },
     "offers": {
       "@type": "Offer",
-      "price": product.pret,
+      "price": priceString,
       "priceCurrency": "RON",
-      "availability": "https://schema.org/InStock",
+      "availability": availability,
       "url": `${baseUrl}/product/${product.id}`,
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": priceString,
+        "priceCurrency": "RON",
+        "referenceQuantity": {
+          "@type": "QuantitativeValue",
+          "value": product.cantitate,
+          "unitText": unitName
+        }
+      },
       "seller": {
         "@type": "Organization",
         "name": "Paine cu Maia de la Andreea"
@@ -37,7 +52,7 @@ export const generateProductSchema = (product: Product, categoryName: string, un
         "value": unitName
       },
       {
-        "@type": "PropertyValue", 
+        "@type": "PropertyValue",
         "name": "quantity",
         "value": product.cantitate
       }
