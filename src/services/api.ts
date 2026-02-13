@@ -51,6 +51,12 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Refresh mutex: ensures only one refresh request runs at a time.
+// When multiple requests get 401 simultaneously, the first triggers the refresh
+// and all others wait for the same promise. This prevents token rotation conflicts
+// where concurrent refreshes invalidate each other's tokens.
+let refreshPromise: Promise<void> | null = null;
+
 // Response interceptor for error handling and token refresh
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -78,6 +84,7 @@ apiClient.interceptors.response.use(
     // If /auth/refresh or /auth/logout fails with 401 → session dead, redirect to login
     if (error.response?.status === 401 && isAuthEndpoint) {
       // Clear local state without calling backend (session already revoked)
+      refreshPromise = null;
       useAuthStore.getState().logout();
       const { queryClient } = await import('@/lib/queryClient');
       queryClient.clear();
@@ -90,8 +97,13 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Try to refresh the access token (backend updates cookies automatically)
-        await authService.refreshAccessToken();
+        // If a refresh is already in flight, wait for it instead of starting another
+        if (!refreshPromise) {
+          refreshPromise = authService.refreshAccessToken().finally(() => {
+            refreshPromise = null;
+          });
+        }
+        await refreshPromise;
 
         // Retry the original request (cookies updated automatically by backend)
         return apiClient(originalRequest);
