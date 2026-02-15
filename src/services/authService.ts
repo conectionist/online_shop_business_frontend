@@ -65,8 +65,6 @@ class AuthService {
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    // Use relative path (consistent with other endpoints)
-    // 401 interceptor handles token refresh automatically
     await apiClient.post('/auth/change-password', {
       current_password: currentPassword,
       new_password: newPassword,
@@ -123,13 +121,6 @@ class AuthService {
   isAuthenticated(): boolean {
     return useAuthStore.getState().isAuthenticated;
   }
-
-  // Removed obsolete methods (cookie-based auth doesn't need them):
-  // - getAccessToken() - can't access httpOnly cookies from JS
-  // - getRefreshToken() - can't access httpOnly cookies from JS
-  // - isTokenExpiringSoon() - can't decode httpOnly cookies
-  // - refreshTokenIfNeeded() - backend manages cookie expiry
-  // - makeAuthenticatedRequest() - 401 interceptor handles refresh
 
   // Clean up push notifications on logout (security requirement)
   private async cleanupPushSubscriptions(): Promise<void> {

@@ -9,17 +9,12 @@ Cookie-urile sunt fișiere text mici stocate pe dispozitivul dumneavoastră pent
 
 Acest site utilizează cookie-uri strict necesare pentru autentificarea administratorilor site-ului. Aceste cookie-uri sunt esențiale pentru funcționarea panoului de administrare și **nu colectează date de la vizitatorii obișnuiți**.
 
-| Nume cookie | Scop | Durată | Tip |
-|-------------|------|--------|-----|
-| `access_token` | Autentificare administratori | 30 minute | HttpOnly, Secure, SameSite=Lax |
-| `refresh_token` | Reînnoirea sesiunii | 7 zile | HttpOnly, Secure, SameSite=Lax |
+| Nume cookie | Scop | Durată |
+|-------------|------|--------|
+| `access_token` | Autentificare administratori | 30 minute |
+| `refresh_token` | Reînnoirea sesiunii | 7 zile |
 
 **Important**: Aceste cookie-uri sunt utilizate exclusiv pentru autentificarea administratorilor site-ului și nu urmăresc sau colectează informații despre vizitatorii obișnuiți ai magazinului online.
-
-### Caracteristici de securitate
-- **HttpOnly**: Cookie-urile nu pot fi accesate de JavaScript, prevenind atacurile XSS
-- **Secure**: Transmise doar prin conexiuni HTTPS (în producție)
-- **SameSite=Lax**: Protecție împotriva atacurilor CSRF
 
 ### Temei legal
 Conform art. 5(3) din Directiva ePrivacy și GDPR, cookie-urile strict necesare pentru furnizarea unui serviciu solicitat explicit de utilizator (autentificare) sunt exceptate de la cerința de obținere a consimțământului.
