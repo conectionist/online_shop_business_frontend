@@ -1,4 +1,4 @@
-import { apiClient, getApiBaseUrl } from './api';
+import { apiClient } from './api';
 import { useAuthStore } from '@/stores/authStore';
 
 export interface LoginCredentials {
@@ -7,47 +7,27 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
-  user: {
-    id: number;
-    email: string;
-    name: string;
-    role: 'admin' | 'customer';
-  };
-}
-
-export interface RefreshResponse {
-  access_token: string;
+  id: number;
+  username: string;
+  expires_in?: number;
 }
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Get the full URL directly
-      const baseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || getApiBaseUrl();
-      const fullUrl = `${baseUrl}/api/v1/auth/login`;
-      
-      console.log('Login URL:', fullUrl);
-      
-      const response = await apiClient.post<AuthResponse>(fullUrl, credentials);
-      
-      const { access_token, refresh_token, user } = response.data;
-      
-      // Store refresh token in localStorage (needed for refresh calls)
-      localStorage.setItem('refresh_token', refresh_token);
-      
-      // Transform user data for our auth store
+      const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+
       const userData = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
+        id: response.data.id,
+        email: response.data.username,  // Backend returns 'username'
+        name: response.data.username,
+        // TODO(SECURITY): Role is hardcoded to 'admin'. When user accounts are added,
+        // this MUST be read from the backend response. Failing to update this is a privilege escalation bug.
+        role: 'admin' as const,
       };
-      
-      // Update auth store (which will also store access_token in localStorage)
-      useAuthStore.getState().login(access_token, userData);
-      
+
+      useAuthStore.getState().login(userData);
+
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
@@ -55,52 +35,57 @@ class AuthService {
     }
   }
 
-  async refreshAccessToken(): Promise<RefreshResponse> {
+  async refreshAccessToken(): Promise<void> {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await apiClient.post<RefreshResponse>('/auth/refresh', {
-        refresh_token: refreshToken,
-      });
-
-      const { access_token } = response.data;
-      
-      // Update token in auth store (which will also update localStorage)
-      useAuthStore.getState().updateToken(access_token);
-      
-      return response.data;
+      await apiClient.post('/auth/refresh');
     } catch (error) {
       console.error('Token refresh error:', error);
-      this.logout();
+      // Don't call this.logout() here - the interceptor handles cleanup.
+      // Calling logout would trigger POST /auth/logout which also fails,
+      // causing unnecessary requests.
       throw error;
     }
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    return this.makeAuthenticatedRequest(async () => {
-      // Use absolute URL to avoid any baseURL confusion like in login
-      const baseUrl = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || getApiBaseUrl();
-      const fullUrl = `${baseUrl}/api/v1/auth/change-password`;
-      await apiClient.post(fullUrl, {
-        current_password: currentPassword,
-        new_password: newPassword,
-      });
+    await apiClient.post('/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
     });
   }
 
-  logout(): void {
-    // Clear tokens from localStorage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    
-    // Clean up push notifications on logout (security requirement)
-    this.cleanupPushSubscriptions();
-    
-    // Update auth store
+  async logout(): Promise<void> {
+    try {
+      await apiClient.post('/auth/logout');
+    } catch (error) {
+      console.warn('Logout request failed, clearing local state anyway:', error);
+    }
+
+    await this.cleanupPushSubscriptions();
+
+    const { queryClient } = await import('@/lib/queryClient');
+    queryClient.clear();
+
+    useAuthStore.getState().logout();
+  }
+
+  async logoutOthers(): Promise<string> {
+    const response = await apiClient.post<{ message: string }>('/auth/logout-others');
+    return response.data.message;
+  }
+
+  async logoutAll(): Promise<void> {
+    try {
+      await apiClient.post('/auth/logout-all');
+    } catch (error) {
+      console.warn('Logout-all request failed, clearing local state anyway:', error);
+    }
+
+    await this.cleanupPushSubscriptions();
+
+    const { queryClient } = await import('@/lib/queryClient');
+    queryClient.clear();
+
     useAuthStore.getState().logout();
   }
 
@@ -108,93 +93,20 @@ class AuthService {
     return useAuthStore.getState().isAuthenticated;
   }
 
-  getAccessToken(): string | null {
-    return useAuthStore.getState().getCurrentToken();
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem('refresh_token');
-  }
-
-  // Check if token is about to expire (within 5 minutes)
-  isTokenExpiringSoon(): boolean {
-    const token = this.getAccessToken();
-    if (!token) return false;
-
-    try {
-      // Decode JWT token (without verification for expiration check)
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expirationTime = payload.exp * 1000; // Convert to milliseconds
-      const currentTime = Date.now();
-      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-      return (expirationTime - currentTime) < fiveMinutes;
-    } catch (error) {
-      console.error('Error checking token expiration:', error);
-      return false;
-    }
-  }
-
-  // Proactively refresh token if it's expiring soon
-  async refreshTokenIfNeeded(): Promise<void> {
-    if (this.isTokenExpiringSoon()) {
-      try {
-        await this.refreshAccessToken();
-        console.log('Token refreshed proactively');
-      } catch (error) {
-        console.error('Failed to refresh token proactively:', error);
-        // Don't logout here, let the next request handle it
-      }
-    }
-  }
-
-  // Helper method to make authenticated requests with automatic token refresh
-  async makeAuthenticatedRequest<T>(
-    requestFn: () => Promise<T>
-  ): Promise<T> {
-    try {
-      // Check if token needs refresh before making request
-      await this.refreshTokenIfNeeded();
-      
-      return await requestFn();
-    } catch (error: any) {
-      // If we get a 401, try to refresh the token and retry once
-      if (error.response?.status === 401) {
-        try {
-          await this.refreshAccessToken();
-          // Retry the request with new token
-          return await requestFn();
-        } catch (refreshError) {
-          // If refresh fails, logout and throw error
-          this.logout();
-          throw new Error('Authentication failed');
-        }
-      }
-      throw error;
-    }
-  }
-
-  // Clean up push notifications on logout (security requirement)
   private async cleanupPushSubscriptions(): Promise<void> {
     try {
-      // Check if service worker and push manager are available
       if ('serviceWorker' in navigator && 'PushManager' in window) {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        
+
         if (subscription) {
-          // Unsubscribe from browser
           await subscription.unsubscribe();
-          
-          // Also tell the server to remove this browser's subscription
+
           const { pushNotificationService } = await import('./pushNotifications');
           await pushNotificationService.unsubscribe(subscription.endpoint);
-          
-          console.log('Push notifications unsubscribed on logout');
         }
       }
     } catch (error) {
-      // Silently fail - don't block logout if push cleanup fails
       console.warn('Failed to cleanup push subscriptions on logout:', error);
     }
   }
@@ -202,4 +114,4 @@ class AuthService {
 }
 
 // Export singleton instance
-export const authService = new AuthService(); 
+export const authService = new AuthService();

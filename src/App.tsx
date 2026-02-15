@@ -13,6 +13,7 @@ import AdminDashboard from './pages/admin/Dashboard'
 import AdvancedOperations from '@/pages/admin/AdvancedOperations'
 import NotificationsHome from '@/pages/admin/notifications/NotificationsHome'
 import MySubscriptions from '@/pages/admin/notifications/MySubscriptions'
+import SessionsList from './pages/admin/SessionsList'
 import CategoriesList from './pages/admin/CategoriesList'
 import CategoryForm from './pages/admin/CategoryForm'
 import ProductsList from './pages/admin/ProductsList'
@@ -130,6 +131,7 @@ function App() {
             <Route path="advanced" element={<AdvancedOperations />} />
             <Route path="advanced/notifications" element={<NotificationsHome />} />
             <Route path="advanced/notifications/my-subscriptions" element={<MySubscriptions />} />
+            <Route path="sessions" element={<SessionsList />} />
             {/* Future admin routes will go here */}
           </Route>
 

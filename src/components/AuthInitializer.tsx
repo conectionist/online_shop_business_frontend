@@ -1,38 +1,46 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { apiClient } from '@/services/api';
 
 interface AuthInitializerProps {
   children: React.ReactNode;
 }
 
 /**
- * Component that validates authentication tokens on app startup
- * This prevents users from being logged out mid-work due to expired tokens
+ * Component that validates authentication session on app startup
+ * This verifies the httpOnly cookies are still valid
  */
 const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
   const [isInitializing, setIsInitializing] = useState(true);
-  const { isAuthenticated, validateTokenOnInit } = useAuthStore();
+  const { isAuthenticated, login, logout } = useAuthStore();
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // If user appears to be authenticated, validate the token
         if (isAuthenticated) {
-          console.log('Validating authentication on app startup...');
-          await validateTokenOnInit();
+          const response = await apiClient.get('/auth/me');
+
+          const userData = {
+            id: response.data.id,
+            email: response.data.username,
+            name: response.data.username,
+            // TODO(SECURITY): Role is hardcoded to 'admin'. When user accounts are added,
+            // this MUST be read from the backend response. Failing to update this is a privilege escalation bug.
+            role: 'admin' as const,
+          };
+          login(userData);
         }
       } catch (error) {
         console.error('Auth initialization failed:', error);
-        // Token validation failed, user will be logged out automatically
+        logout();
       } finally {
         setIsInitializing(false);
       }
     };
 
     initializeAuth();
-  }, [isAuthenticated, validateTokenOnInit]);
+  }, [isAuthenticated, login, logout]);
 
-  // Show loading while initializing auth
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

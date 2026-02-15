@@ -4,12 +4,12 @@ import { getImageValidationMessage } from '@/utils/imageUploadErrors';
 import { authService } from './authService';
 import { useAuthStore } from '@/stores/authStore';
 
-// Create axios instance without baseURL initially
 export const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 10 seconds
+  withCredentials: true, // Enable cookies for cross-origin requests
 });
 
 // Function to get API base URL dynamically
@@ -32,18 +32,10 @@ export const getApiBaseUrl = (): string => {
 
 
 
-// Request interceptor for authentication and dynamic baseURL
 apiClient.interceptors.request.use(
   (config: any) => {
-    // Set dynamic baseURL for each request
     const baseUrl = getApiBaseUrl();
     config.baseURL = `${baseUrl}/api/v1`;
-    
-    // Get token from auth store instead of localStorage for consistency
-    const token = useAuthStore.getState().getCurrentToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -52,7 +44,12 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling and token refresh
+// Refresh mutex: ensures only one refresh request runs at a time.
+// When multiple requests get 401 simultaneously, the first triggers the refresh
+// and all others wait for the same promise. This prevents token rotation conflicts
+// where concurrent refreshes invalidate each other's tokens.
+let refreshPromise: Promise<void> | null = null;
+
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Check if response is HTML instead of JSON (indicates wrong endpoint)
@@ -72,32 +69,46 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle 401 Unauthorized errors with automatic token refresh
-    // IMPORTANT: Don't retry refresh token requests to avoid infinite loops
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
+    // CRITICAL: Never retry /auth/refresh or /auth/logout to prevent infinite loops
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/refresh') ||
+                          originalRequest.url?.includes('/auth/logout');
+
+    // If /auth/refresh or /auth/logout fails with 401 → session dead, redirect to login
+    if (error.response?.status === 401 && isAuthEndpoint) {
+      // Clear local state without calling backend (session already revoked)
+      refreshPromise = null;
+      useAuthStore.getState().logout();
+      const { queryClient } = await import('@/lib/queryClient');
+      queryClient.clear();
+      window.location.href = '/login';
+      return Promise.reject(new Error('Session revoked'));
+    }
+
+    // Handle 401 on regular endpoints with automatic token refresh (max 1 retry)
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
-        // Try to refresh the access token
-        await authService.refreshAccessToken();
-        
-        // Update the original request with the new token
-        const newToken = authService.getAccessToken();
-        if (newToken && originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        // If a refresh is already in flight, wait for it instead of starting another
+        if (!refreshPromise) {
+          refreshPromise = authService.refreshAccessToken().finally(() => {
+            refreshPromise = null;
+          });
         }
-        
-        // Retry the original request with the new token
+        await refreshPromise;
+
+        // Retry the original request (cookies updated automatically by backend)
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, logout and redirect to login
-        authService.logout();
+        // If refresh fails, clear state and redirect (don't call logout backend)
+        useAuthStore.getState().logout();
+        const { queryClient } = await import('@/lib/queryClient');
+        queryClient.clear();
         window.location.href = '/login';
         return Promise.reject(new Error('Authentication failed - please log in again'));
       }
     }
 
-    // For other errors, just reject normally
     return Promise.reject(error);
   }
 );

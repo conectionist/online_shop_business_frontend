@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api';
-import { authService } from '@/services/authService';
+
 import { List, ListCreate, ListUpdate } from '@/types/api';
 
 // Types for list operations
@@ -112,41 +112,31 @@ export const listService = {
 
   // Create a new list (PROTECTED - requires auth)
   createList: async (data: ListCreate): Promise<List> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.post('/liste', data);
-      return response.data;
-    });
+        const response = await apiClient.post('/liste', data);
+    return response.data;
   },
 
   // Update an existing list (PATCH for partial updates) (PROTECTED - requires auth)
   updateList: async (id: number, data: ListUpdate): Promise<List> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.patch(`/liste/${id}`, data);
-      return response.data;
-    });
+        const response = await apiClient.patch(`/liste/${id}`, data);
+    return response.data;
   },
 
   // Update an existing list (PUT for full replacement) (PROTECTED - requires auth)
   replaceList: async (id: number, data: ListCreate): Promise<List> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put(`/liste/${id}`, data);
-      return response.data;
-    });
+        const response = await apiClient.put(`/liste/${id}`, data);
+    return response.data;
   },
 
   // Clone an existing list (PROTECTED - requires auth)
   cloneList: async (id: number): Promise<List> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.post(`/liste/${id}/clone`, {});
-      return response.data;
-    });
+        const response = await apiClient.post(`/liste/${id}/clone`, {});
+    return response.data;
   },
 
   // Delete a list (PROTECTED - requires auth)
   deleteList: async (id: number): Promise<void> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.delete(`/liste/${id}`);
-    });
+        await apiClient.delete(`/liste/${id}`);
   },
 
   // Get products for a specific list (PUBLIC - no auth required)
@@ -163,11 +153,9 @@ export const listService = {
 
   // Add a product to a list (PROTECTED - requires auth)
   addProductToList: async (listId: number, productId: number, stock?: number): Promise<any> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const data = stock !== undefined ? { stoc_produs: stock } : {};
-      const response = await apiClient.post(`/liste/${listId}/products/${productId}`, data);
-      return response.data;
-    });
+        const data = stock !== undefined ? { stoc_produs: stock } : {};
+    const response = await apiClient.post(`/liste/${listId}/products/${productId}`, data);
+    return response.data;
   },
 
   // Update stock (availability) for a product already in a list (PROTECTED)
@@ -176,33 +164,25 @@ export const listService = {
     productId: number,
     stock: number | null
   ): Promise<{ list_id: number; product_id: number; stoc_produs: number | null }> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.patch(`/liste/${listId}/products/${productId}`, { stoc_produs: stock });
-      return response.data;
-    });
+        const response = await apiClient.patch(`/liste/${listId}/products/${productId}`, { stoc_produs: stock });
+    return response.data;
   },
 
   // Add multiple products to a list in batch (PROTECTED - requires auth)
   addProductsToList: async (listId: number, productIds: number[]): Promise<any[]> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.patch(`/liste/${listId}/products`, productIds);
-      return response.data;
-    });
+        const response = await apiClient.patch(`/liste/${listId}/products`, productIds);
+    return response.data;
   },
 
   // Remove a product from a list (PROTECTED - requires auth)
   removeProductFromList: async (listId: number, productId: number): Promise<void> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.delete(`/liste/${listId}/products/${productId}`);
-    });
+        await apiClient.delete(`/liste/${listId}/products/${productId}`);
   },
 
   // Replace all products in a list (PROTECTED - requires auth)
   replaceListProducts: async (listId: number, productIds: number[]): Promise<any[]> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put(`/liste/${listId}/products`, productIds);
-      return response.data;
-    });
+        const response = await apiClient.put(`/liste/${listId}/products`, productIds);
+    return response.data;
   },
 
   // Get delivery types for a specific list (PUBLIC - no auth required)
@@ -213,32 +193,24 @@ export const listService = {
 
   // Add a delivery type to a list (PROTECTED - requires auth)
   addDeliveryTypeToList: async (listId: number, deliveryTypeId: number): Promise<any> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.post(`/liste/${listId}/delivery-types/${deliveryTypeId}`);
-      return response.data;
-    });
+        const response = await apiClient.post(`/liste/${listId}/delivery-types/${deliveryTypeId}`);
+    return response.data;
   },
 
   // Remove a delivery type from a list (PROTECTED - requires auth)
   removeDeliveryTypeFromList: async (listId: number, deliveryTypeId: number): Promise<void> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.delete(`/liste/${listId}/delivery-types/${deliveryTypeId}`);
-    });
+        await apiClient.delete(`/liste/${listId}/delivery-types/${deliveryTypeId}`);
   },
 
   // Replace all delivery types in a list (PROTECTED - requires auth)
   replaceListDeliveryTypes: async (listId: number, deliveryTypeIds: number[]): Promise<any[]> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put(`/liste/${listId}/delivery-types`, deliveryTypeIds);
-      return response.data;
-    });
+        const response = await apiClient.put(`/liste/${listId}/delivery-types`, deliveryTypeIds);
+    return response.data;
   },
 
   // Bulk update positions for categories and products in a list (PROTECTED - requires auth)
   bulkUpdatePositions: async (listId: number, positions: Array<{ category_id: number; products: number[] }>): Promise<any> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put(`/liste/${listId}/positions`, { positions });
-      return response.data;
-    });
+        const response = await apiClient.put(`/liste/${listId}/positions`, { positions });
+    return response.data;
   },
 }; 

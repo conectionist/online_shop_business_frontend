@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { authService } from '@/services/authService';
-import { ChevronDown, LogOut } from 'lucide-react';
+import { ChevronDown, LogOut, Monitor } from 'lucide-react';
 
 export interface HeaderProps {
   // No props needed - header is now minimal
@@ -83,6 +83,16 @@ export const Header: React.FC<HeaderProps> = () => {
             {/* Dropdown Menu */}
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                <button
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    navigate('/admin/sessions');
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <Monitor className="w-4 h-4 mr-3 text-gray-400" />
+                  Sesiuni Active
+                </button>
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}

@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { useAuthValidation } from '@/hooks/useAuthValidation';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,21 +9,9 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
   const location = useLocation();
-  const [isValidating, setIsValidating] = useState(false);
-  const { validateAndRefreshToken } = useAuthValidation();
 
-  // Validate token on mount if authenticated
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      setIsValidating(true);
-      validateAndRefreshToken().finally(() => {
-        setIsValidating(false);
-      });
-    }
-  }, [isAuthenticated, isLoading, validateAndRefreshToken]);
-
-  // Show loading state while checking authentication or validating token
-  if (isLoading || isValidating) {
+  // Show loading state while checking authentication
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

@@ -1,5 +1,4 @@
 import { apiClient } from './api';
-import { authService } from '@/services/authService';
 import { Unit, UnitCreate, UnitUpdate } from '@/types/api';
 
 export interface UnitFilters {
@@ -13,7 +12,7 @@ export const unitService = {
   // Get all units with optional filters (PUBLIC - no auth required)
   getUnits: async (filters?: UnitFilters): Promise<Unit[]> => {
     const params = new URLSearchParams();
-    
+
     if (filters?.search) {
       params.append('search', filters.search);
     }
@@ -34,46 +33,38 @@ export const unitService = {
     return response.data;
   },
 
-  // Create a new unit (PROTECTED - requires auth)
+  // Create a new unit (PROTECTED - requires auth, cookies sent automatically)
   createUnit: async (data: UnitCreate): Promise<Unit> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.post('/unitati', data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data;
+    const response = await apiClient.post('/unitati', data, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+    return response.data;
   },
 
-  // Update an existing unit (full replacement) (PROTECTED - requires auth)
+  // Update an existing unit (full replacement) (PROTECTED - requires auth, cookies sent automatically)
   updateUnit: async (id: number, data: UnitCreate): Promise<Unit> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.put(`/unitati/${id}`, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data;
+    const response = await apiClient.put(`/unitati/${id}`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+    return response.data;
   },
 
-  // Partially update an existing unit (PROTECTED - requires auth)
+  // Partially update an existing unit (PROTECTED - requires auth, cookies sent automatically)
   patchUnit: async (id: number, data: UnitUpdate): Promise<Unit> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      const response = await apiClient.patch(`/unitati/${id}`, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data;
+    const response = await apiClient.patch(`/unitati/${id}`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+    return response.data;
   },
 
-  // Delete a unit (PROTECTED - requires auth)
+  // Delete a unit (PROTECTED - requires auth, cookies sent automatically)
   deleteUnit: async (id: number): Promise<void> => {
-    return authService.makeAuthenticatedRequest(async () => {
-      await apiClient.delete(`/unitati/${id}`);
-    });
+    await apiClient.delete(`/unitati/${id}`);
   },
 }; 
