@@ -17,27 +17,21 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // If user appears to be authenticated, validate the session
         if (isAuthenticated) {
-          console.log('Validating authentication on app startup...');
-
-          // Call /auth/me to verify session is valid (cookies are sent automatically)
           const response = await apiClient.get('/auth/me');
 
-          // Update user data from response
           const userData = {
             id: response.data.id,
             email: response.data.username,
             name: response.data.username,
+            // TODO(SECURITY): Role is hardcoded to 'admin'. When user accounts are added,
+            // this MUST be read from the backend response. Failing to update this is a privilege escalation bug.
             role: 'admin' as const,
           };
           login(userData);
-
-          console.log('Session validated successfully');
         }
       } catch (error) {
         console.error('Auth initialization failed:', error);
-        // Session validation failed, logout
         logout();
       } finally {
         setIsInitializing(false);
@@ -47,7 +41,6 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
     initializeAuth();
   }, [isAuthenticated, login, logout]);
 
-  // Show loading while initializing auth
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

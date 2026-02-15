@@ -6,40 +6,28 @@ export interface LoginCredentials {
   password: string;
 }
 
-// Response from /auth/login (cookie-only mode)
-// Tokens are in cookies, not response body
 export interface AuthResponse {
   id: number;
   username: string;
-  expires_in?: number;  // Cookie expiration (e.g., 1800 seconds)
-}
-
-// Response from /auth/refresh (cookie-only mode)
-// Backend updates cookies via Set-Cookie headers
-export interface RefreshResponse {
-  success?: boolean;
+  expires_in?: number;
 }
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      console.log('Attempting login...');
-
-      // Backend sets cookies via Set-Cookie headers
       const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
 
-      // Extract user info only (no tokens in response body)
       const userData = {
         id: response.data.id,
         email: response.data.username,  // Backend returns 'username'
         name: response.data.username,
-        role: 'admin' as const  // Assuming admin for now
+        // TODO(SECURITY): Role is hardcoded to 'admin'. When user accounts are added,
+        // this MUST be read from the backend response. Failing to update this is a privilege escalation bug.
+        role: 'admin' as const,
       };
 
-      // Update auth store (NO token parameter)
       useAuthStore.getState().login(userData);
 
-      console.log('Login successful, cookies set by backend');
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
@@ -49,17 +37,12 @@ class AuthService {
 
   async refreshAccessToken(): Promise<void> {
     try {
-      // Backend reads refresh_token from cookie automatically
-      // Backend updates cookies via Set-Cookie headers
       await apiClient.post('/auth/refresh');
-
-      console.log('Token refreshed successfully (cookies updated by backend)');
-      // No need to update anything in frontend state - cookies are managed by browser
     } catch (error) {
       console.error('Token refresh error:', error);
-      // Don't call this.logout() here - the interceptor handles cleanup
+      // Don't call this.logout() here - the interceptor handles cleanup.
       // Calling logout would trigger POST /auth/logout which also fails,
-      // causing unnecessary requests
+      // causing unnecessary requests.
       throw error;
     }
   }
@@ -73,22 +56,16 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
-      // Call backend to clear cookies
       await apiClient.post('/auth/logout');
-      console.log('Logged out, cookies cleared by backend');
     } catch (error) {
-      // Even if backend call fails, clear local state
       console.warn('Logout request failed, clearing local state anyway:', error);
     }
 
-    // Clean up push notifications (keep this!)
     await this.cleanupPushSubscriptions();
 
-    // Clear React Query cache
     const { queryClient } = await import('@/lib/queryClient');
     queryClient.clear();
 
-    // Update auth store
     useAuthStore.getState().logout();
   }
 
@@ -99,22 +76,16 @@ class AuthService {
 
   async logoutAll(): Promise<void> {
     try {
-      // Call backend to revoke all sessions and clear cookies
       await apiClient.post('/auth/logout-all');
-      console.log('Logged out from all devices, cookies cleared by backend');
     } catch (error) {
-      // Even if backend call fails, clear local state
       console.warn('Logout-all request failed, clearing local state anyway:', error);
     }
 
-    // Clean up push notifications
     await this.cleanupPushSubscriptions();
 
-    // Clear React Query cache
     const { queryClient } = await import('@/lib/queryClient');
     queryClient.clear();
 
-    // Update auth store
     useAuthStore.getState().logout();
   }
 
@@ -122,27 +93,20 @@ class AuthService {
     return useAuthStore.getState().isAuthenticated;
   }
 
-  // Clean up push notifications on logout (security requirement)
   private async cleanupPushSubscriptions(): Promise<void> {
     try {
-      // Check if service worker and push manager are available
       if ('serviceWorker' in navigator && 'PushManager' in window) {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        
+
         if (subscription) {
-          // Unsubscribe from browser
           await subscription.unsubscribe();
-          
-          // Also tell the server to remove this browser's subscription
+
           const { pushNotificationService } = await import('./pushNotifications');
           await pushNotificationService.unsubscribe(subscription.endpoint);
-          
-          console.log('Push notifications unsubscribed on logout');
         }
       }
     } catch (error) {
-      // Silently fail - don't block logout if push cleanup fails
       console.warn('Failed to cleanup push subscriptions on logout:', error);
     }
   }
@@ -150,4 +114,4 @@ class AuthService {
 }
 
 // Export singleton instance
-export const authService = new AuthService(); 
+export const authService = new AuthService();

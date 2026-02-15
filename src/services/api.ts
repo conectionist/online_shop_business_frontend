@@ -4,7 +4,6 @@ import { getImageValidationMessage } from '@/utils/imageUploadErrors';
 import { authService } from './authService';
 import { useAuthStore } from '@/stores/authStore';
 
-// Create axios instance without baseURL initially
 export const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
@@ -33,16 +32,10 @@ export const getApiBaseUrl = (): string => {
 
 
 
-// Request interceptor for dynamic baseURL
 apiClient.interceptors.request.use(
   (config: any) => {
-    // Set dynamic baseURL for each request
     const baseUrl = getApiBaseUrl();
     config.baseURL = `${baseUrl}/api/v1`;
-
-    // No need to add Authorization header - cookies sent automatically
-    // via withCredentials: true (set in apiClient config)
-
     return config;
   },
   (error) => {
@@ -57,7 +50,6 @@ apiClient.interceptors.request.use(
 // where concurrent refreshes invalidate each other's tokens.
 let refreshPromise: Promise<void> | null = null;
 
-// Response interceptor for error handling and token refresh
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Check if response is HTML instead of JSON (indicates wrong endpoint)
@@ -117,7 +109,6 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // For other errors, just reject normally
     return Promise.reject(error);
   }
 );
