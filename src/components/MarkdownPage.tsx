@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { components as themeComponents } from '@/utils/theme';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import {
@@ -79,6 +80,7 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({ title, icon, src }) 
             <p className="text-red-500 text-sm">{error}</p>
           ) : (
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
                 h1: (props: any) => (
                   <h1 className="text-2xl font-bold text-gray-900 mb-4" {...props} />
@@ -105,6 +107,18 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({ title, icon, src }) 
                 strong: (props: any) => <strong className="font-semibold" {...props} />,
                 em: (props: any) => <em className="italic" {...props} />,
                 hr: (props: any) => <hr className="my-6 border-amber-200" {...props} />,
+                table: (props: any) => (
+                  <div className="overflow-x-auto mb-4">
+                    <table className="min-w-full border border-gray-200 rounded-lg text-sm" {...props} />
+                  </div>
+                ),
+                thead: (props: any) => <thead className="bg-gray-50" {...props} />,
+                th: (props: any) => (
+                  <th className="px-4 py-2 text-left font-semibold text-gray-900 border-b border-gray-200" {...props} />
+                ),
+                td: (props: any) => (
+                  <td className="px-4 py-2 text-gray-700 border-b border-gray-100" {...props} />
+                ),
               }}
             >
               {content}

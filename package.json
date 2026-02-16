@@ -1,6 +1,6 @@
 {
   "name": "online-shop-business-frontend",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Frontend for online shop business management system",
   "private": true,
   "type": "module",
@@ -27,6 +27,7 @@
     "axios": "^1.13.4",
     "@react-pdf/renderer": "^4.3.2",
     "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "xlsx": "^0.18.5",
     "xlsx-js-style": "^1.2.0",
     "yet-another-react-lightbox": "^3.28.0",
