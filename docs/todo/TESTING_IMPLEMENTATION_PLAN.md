@@ -1,16 +1,17 @@
 # Testing Implementation Plan
 
 **Date:** 2026-02-14
-**Updated:** 2026-02-16
+**Updated:** 2026-02-17
 **Supersedes:** `docs/UI_TESTING_ROADMAP.md` (high-level wishlist; this plan is actionable)
 
 ## Current State
 
 | Metric | Value |
 |--------|-------|
-| Test files | 4 |
+| Test files | 12 |
+| Total tests | 320 |
 | Testable source files | ~110 |
-| Estimated coverage | ~1-2% |
+| Estimated coverage | ~8% |
 | Infrastructure | Vitest + Testing Library + MSW (ready to go) |
 
 ### Existing Tests
@@ -21,6 +22,14 @@
 | `src/pages/__tests__/WelcomePage.test.tsx` | Comprehensive (485 lines) |
 | `src/pages/customer/__tests__/ProductPage.test.tsx` | Comprehensive (530 lines) |
 | `src/pages/customer/__tests__/ShoppingFlow.test.tsx` | Smoke test only (25 lines) |
+| `src/lib/__tests__/queryKeys.test.ts` | Query key structure & invalidation (Phase 1) |
+| `src/utils/__tests__/dateFormatters.test.ts` | Romanian date formatting (Phase 1) |
+| `src/utils/__tests__/validation.test.ts` | Zod schemas & validation helpers (Phase 1) |
+| `src/utils/__tests__/businessInfo.test.ts` | Business info getters & fallbacks (Phase 1) |
+| `src/stores/__tests__/cartStore.test.ts` | Cart actions & computed values (Phase 1) |
+| `src/stores/__tests__/authStore.test.ts` | Auth state & migration logic (Phase 1) |
+| `src/services/__tests__/api.helpers.test.ts` | API error handling, URL builders, form helpers (Phase 1) |
+| `src/utils/__tests__/orderFormatter.test.ts` | Order text formatting — both data paths (Phase 1) |
 
 ### Infrastructure (already configured)
 
@@ -41,8 +50,9 @@ This plan references two similarly named files — they serve different purposes
 
 ---
 
-## Phase 1: Pure Functions & Stores (no rendering, fast)
+## Phase 1: Pure Functions & Stores (no rendering, fast) — COMPLETE
 
+**Status:** Done (2026-02-17) — 8 test files, 289 new tests, all passing.
 **Goal:** Cover all logic that has zero React dependencies — validation schemas, formatters, utilities, and Zustand stores.
 **Why first:** These are the fastest to write, run instantly, and catch the most subtle bugs (date edge cases, validation boundaries, cart math).
 
