@@ -8,10 +8,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Test files | 12 |
-| Total tests | 320 |
+| Test files | 19 |
+| Total tests | 386 |
 | Testable source files | ~110 |
-| Estimated coverage | ~8% |
+| Estimated coverage | ~15% |
 | Infrastructure | Vitest + Testing Library + MSW (ready to go) |
 
 ### Existing Tests
@@ -30,6 +30,13 @@
 | `src/stores/__tests__/authStore.test.ts` | Auth state & migration logic (Phase 1) |
 | `src/services/__tests__/api.helpers.test.ts` | API error handling, URL builders, form helpers (Phase 1) |
 | `src/utils/__tests__/orderFormatter.test.ts` | Order text formatting — both data paths (Phase 1) |
+| `src/components/ui/__tests__/Button.test.tsx` | Variants, sizes, loading, disabled, icon, click (Phase 2) |
+| `src/components/ui/__tests__/Input.test.tsx` | Label linkage, error/helper text, icons (Phase 2) |
+| `src/components/ui/__tests__/Modal.test.tsx` | Open/close, Escape key, backdrop, scroll lock (Phase 2) |
+| `src/components/ui/__tests__/Select.test.tsx` | Keyboard nav, portal, disabled options, ARIA (Phase 2) |
+| `src/components/ui/__tests__/Toast.test.tsx` | Auto-dismiss, provider, close button, types (Phase 2) |
+| `src/components/ui/__tests__/ToggleSwitch.test.tsx` | Toggle, disabled, aria-checked, sizes (Phase 2) |
+| `src/components/ui/__tests__/TabNavigation.test.tsx` | Tab labels, onTabChange callbacks (Phase 2) |
 
 ### Infrastructure (already configured)
 
@@ -360,8 +367,9 @@ queryKeys structure
 
 ---
 
-## Phase 2: Reusable UI Components
+## Phase 2: Reusable UI Components — COMPLETE
 
+**Status:** Done (2026-02-17) — 7 test files, 66 new tests, all passing.
 **Goal:** Cover the shared component library — ensures they work correctly in isolation.
 **Why early:** Zero dependencies on other phases, easy wins that build testing momentum and catch accessibility issues.
 
