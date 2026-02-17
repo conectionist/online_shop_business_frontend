@@ -8,8 +8,8 @@
 
 | Metric | Value |
 |--------|-------|
-| Test files | 30 |
-| Total tests | 502 |
+| Test files | 31 |
+| Total tests | 517 |
 | Testable source files | ~110 |
 | Estimated coverage | ~15% |
 | Infrastructure | Vitest + Testing Library + MSW (ready to go) |
@@ -48,6 +48,7 @@
 | `src/services/__tests__/paymentMethods.test.ts` | CRUD (Phase 3) |
 | `src/services/__tests__/businessDetails.test.ts` | Get, create, update, delete (Phase 3) |
 | `src/services/__tests__/sessionService.test.ts` | Sessions list, current, revoke (Phase 3) |
+| `src/services/__tests__/api.interceptors.test.ts` | Request/response interceptors, 401 refresh, mutex, HTML detection (Phase 4) |
 
 ### Infrastructure (already configured)
 
@@ -588,8 +589,9 @@ Create one test file per service, covering the happy path for each function:
 
 ---
 
-## Phase 4: API Interceptors
+## Phase 4: API Interceptors — COMPLETE
 
+**Status:** Done (2026-02-17) — 1 test file, 15 new tests, all passing.
 **Goal:** Test the axios interceptor logic — the most critical runtime code in the app.
 **Approach:** Use MSW `server.use()` to simulate 401 responses, then verify refresh/retry/redirect behavior.
 
