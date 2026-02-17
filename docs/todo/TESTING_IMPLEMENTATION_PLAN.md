@@ -8,8 +8,8 @@
 
 | Metric | Value |
 |--------|-------|
-| Test files | 31 |
-| Total tests | 517 |
+| Test files | 34 |
+| Total tests | 535 |
 | Testable source files | ~110 |
 | Estimated coverage | ~15% |
 | Infrastructure | Vitest + Testing Library + MSW (ready to go) |
@@ -49,6 +49,9 @@
 | `src/services/__tests__/businessDetails.test.ts` | Get, create, update, delete (Phase 3) |
 | `src/services/__tests__/sessionService.test.ts` | Sessions list, current, revoke (Phase 3) |
 | `src/services/__tests__/api.interceptors.test.ts` | Request/response interceptors, 401 refresh, mutex, HTML detection (Phase 4) |
+| `src/components/__tests__/AuthInitializer.test.tsx` | Session validation, /auth/me call, loading state, 401 handling (Phase 5) |
+| `src/components/__tests__/ProtectedRoute.test.tsx` | Route guard, redirect to /login, loading spinner, location state (Phase 5) |
+| `src/pages/__tests__/LoginPage.test.tsx` | Login form, validation, auth errors, redirect on success, store update (Phase 5) |
 
 ### Infrastructure (already configured)
 
@@ -629,10 +632,11 @@ Response interceptor — non-401 errors
 
 ---
 
-## Phase 5: Auth Components
+## Phase 5: Auth Components — COMPLETE
 
+**Status:** Done (2026-02-17) — 3 test files, 18 new tests, all passing.
 **Goal:** Test the authentication UI — login page, session initialization, and route protection.
-**Approach:** Component tests with `renderWithProviders` + MSW.
+**Approach:** Component tests with `@testing-library/react` + MSW. Uses `MemoryRouter` + `Routes` (not `createMemoryRouter`) to avoid AbortSignal conflicts with MSW interceptors.
 
 ### 5.1 AuthInitializer
 
