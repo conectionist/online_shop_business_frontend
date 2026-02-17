@@ -24,7 +24,7 @@ docker compose -f docker-compose.test.yml --env-file .env.test down -v --remove-
 
 # Build the test container
 echo "🏗️ Building test container..."
-docker compose -f docker-compose.test.yml --env-file .env.test build
+docker compose -f docker-compose.test.yml --env-file .env.test build --no-cache
 
 # Run the tests
 echo "🧪 Running frontend tests..."
