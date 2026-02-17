@@ -8,8 +8,8 @@
 
 | Metric | Value |
 |--------|-------|
-| Test files | 34 |
-| Total tests | 535 |
+| Test files | 39 |
+| Total tests | 565 |
 | Testable source files | ~110 |
 | Estimated coverage | ~15% |
 | Infrastructure | Vitest + Testing Library + MSW (ready to go) |
@@ -691,8 +691,9 @@ When user is not authenticated
 
 ---
 
-## Phase 6: Customer-Facing Pages
+## Phase 6: Customer-Facing Pages — COMPLETE
 
+**Status:** Done (2026-02-17) — 5 test files, 30 new tests, all passing.
 **Goal:** Test the remaining customer pages — the revenue-critical checkout flow.
 
 ### 6.1 CartPage
