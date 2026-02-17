@@ -8,8 +8,8 @@
 
 | Metric | Value |
 |--------|-------|
-| Test files | 19 |
-| Total tests | 386 |
+| Test files | 30 |
+| Total tests | 502 |
 | Testable source files | ~110 |
 | Estimated coverage | ~15% |
 | Infrastructure | Vitest + Testing Library + MSW (ready to go) |
@@ -37,6 +37,17 @@
 | `src/components/ui/__tests__/Toast.test.tsx` | Auto-dismiss, provider, close button, types (Phase 2) |
 | `src/components/ui/__tests__/ToggleSwitch.test.tsx` | Toggle, disabled, aria-checked, sizes (Phase 2) |
 | `src/components/ui/__tests__/TabNavigation.test.tsx` | Tab labels, onTabChange callbacks (Phase 2) |
+| `src/services/__tests__/authService.test.ts` | Login, refresh, logout, logoutAll, isAuthenticated (Phase 3) |
+| `src/services/__tests__/orders.test.ts` | CRUD, filters, pagination, sorting, order items (Phase 3) |
+| `src/services/__tests__/products.test.ts` | CRUD, FormData, images, reorder (Phase 3) |
+| `src/services/__tests__/lists.test.ts` | CRUD, published/expired logic, products, delivery types, positions (Phase 3) |
+| `src/services/__tests__/categories.test.ts` | CRUD, image upload, reorder (Phase 3) |
+| `src/services/__tests__/units.test.ts` | CRUD with params (Phase 3) |
+| `src/services/__tests__/deliveryTypes.test.ts` | CRUD, reorder (Phase 3) |
+| `src/services/__tests__/deliverySchedules.test.ts` | CRUD (Phase 3) |
+| `src/services/__tests__/paymentMethods.test.ts` | CRUD (Phase 3) |
+| `src/services/__tests__/businessDetails.test.ts` | Get, create, update, delete (Phase 3) |
+| `src/services/__tests__/sessionService.test.ts` | Sessions list, current, revoke (Phase 3) |
 
 ### Infrastructure (already configured)
 
@@ -387,8 +398,9 @@ queryKeys structure
 
 ---
 
-## Phase 3: Service Layer
+## Phase 3: Service Layer — COMPLETE
 
+**Status:** Done (2026-02-17) — 11 test files, 116 new tests, all passing.
 **Goal:** Test every service function's API call correctness — right HTTP method, right URL, right payload, right return value.
 **Approach:** Use MSW to intercept requests and verify behavior. This tests real HTTP interactions rather than mocking `apiClient` internals, producing tests that are more resilient to refactors. The MSW infrastructure is already set up — extend `src/test/mocks/handlers.ts` incrementally as each service is tested.
 
