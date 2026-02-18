@@ -1,17 +1,17 @@
 # Testing Implementation Plan
 
 **Date:** 2026-02-14
-**Updated:** 2026-02-17
+**Updated:** 2026-02-18
 **Supersedes:** `docs/UI_TESTING_ROADMAP.md` (high-level wishlist; this plan is actionable)
 
 ## Current State
 
 | Metric | Value |
 |--------|-------|
-| Test files | 39 |
-| Total tests | 565 |
+| Test files | 49 |
+| Total tests | 710 |
 | Testable source files | ~110 |
-| Estimated coverage | ~15% |
+| Estimated coverage | ~57% |
 | Infrastructure | Vitest + Testing Library + MSW (ready to go) |
 
 ### Existing Tests
@@ -52,6 +52,21 @@
 | `src/components/__tests__/AuthInitializer.test.tsx` | Session validation, /auth/me call, loading state, 401 handling (Phase 5) |
 | `src/components/__tests__/ProtectedRoute.test.tsx` | Route guard, redirect to /login, loading spinner, location state (Phase 5) |
 | `src/pages/__tests__/LoginPage.test.tsx` | Login form, validation, auth errors, redirect on success, store update (Phase 5) |
+| `src/pages/customer/__tests__/CartPage.test.tsx` | Cart items, quantities, totals, empty state (Phase 6) |
+| `src/pages/customer/__tests__/OrderForm.test.tsx` | Validation, delivery address, phone format, submission (Phase 6) |
+| `src/pages/customer/__tests__/OrderConfirmation.test.tsx` | Order details, clipboard, WhatsApp link (Phase 6) |
+| `src/pages/customer/__tests__/CatalogPage.test.tsx` | Categories, products, add-to-cart, loading/error (Phase 6) |
+| `src/pages/customer/__tests__/ShoppingFlow.test.tsx` | Full customer journey, edge cases (Phase 6, expanded) |
+| `src/hooks/__tests__/useProducts.test.ts` | Query keys, cache transforms, image operations, invalidation (Phase 7) |
+| `src/hooks/__tests__/useOrders.test.ts` | Polling config, mutations, three-level invalidation (Phase 7) |
+| `src/hooks/__tests__/useLists.test.ts` | Composite keys, clone prepend, sub-entity invalidation (Phase 7) |
+| `src/hooks/__tests__/useCategories.test.ts` | Cache transforms, reorder, image upload (Phase 7) |
+| `src/hooks/__tests__/useDeliveryTypes.test.ts` | PUT vs PATCH, reorder cache set (Phase 7) |
+| `src/hooks/__tests__/useUnits.test.ts` | Detail/list cache patching, removeQueries (Phase 7) |
+| `src/hooks/__tests__/usePaymentMethods.test.ts` | Simple CRUD invalidation (Phase 7) |
+| `src/hooks/__tests__/useSessions.test.ts` | Sessions + business details, authService mock (Phase 7) |
+| `src/hooks/__tests__/useErrorHandler.test.tsx` | Error classification, 409 friendly, modal state (Phase 7) |
+| `src/utils/__tests__/schema.test.ts` | Schema.org generators, DOM inject/remove (Phase 8) |
 
 ### Infrastructure (already configured)
 
@@ -787,10 +802,11 @@ Edge cases
 
 ---
 
-## Phase 7: Hooks (React Query wrappers)
+## Phase 7: Hooks (React Query wrappers) — COMPLETE
 
+**Status:** Done (2026-02-18) — 9 test files, 125 new tests, all passing.
 **Goal:** Verify hooks wire up React Query correctly — cache keys, data transforms, error handling.
-**Approach:** Use `renderHook` with QueryClient + MSW.
+**Approach:** Use `renderHook` with QueryClient + MSW. Added `createTestQueryClient()` and `renderHookWithQuery()` helpers to `src/test/testUtils.tsx`.
 
 ### 7.1 High-Priority Hooks
 
@@ -814,9 +830,10 @@ Edge cases
 
 ---
 
-## Phase 8: Schema & SEO Utilities
+## Phase 8: Schema & SEO Utilities — COMPLETE
 
-**File to create:** `src/utils/__tests__/schema.test.ts`
+**Status:** Done (2026-02-18) — 1 test file, 20 new tests, all passing.
+**File created:** `src/utils/__tests__/schema.test.ts`
 **Source:** `src/utils/schema.ts` (150 lines) — Schema.org structured data generators (NOT Zod validation — see Phase 1.1)
 
 **Test cases:**

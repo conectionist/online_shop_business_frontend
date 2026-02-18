@@ -25,6 +25,12 @@ docker compose -f docker-compose.test.yml --env-file .env.test down -v --remove-
 # Build the test container
 echo "🏗️ Building test container..."
 docker compose -f docker-compose.test.yml --env-file .env.test build --no-cache
+BUILD_EXIT_CODE=$?
+
+if [ $BUILD_EXIT_CODE -ne 0 ]; then
+  echo "❌ Build failed (exit code: $BUILD_EXIT_CODE)"
+  exit $BUILD_EXIT_CODE
+fi
 
 # Run the tests
 echo "🧪 Running frontend tests..."
