@@ -1,15 +1,17 @@
 # Testing Implementation Plan
 
 **Date:** 2026-02-14
+**Updated:** 2026-02-18
 **Supersedes:** `docs/UI_TESTING_ROADMAP.md` (high-level wishlist; this plan is actionable)
 
 ## Current State
 
 | Metric | Value |
 |--------|-------|
-| Test files | 4 |
+| Test files | 49 |
+| Total tests | 710 |
 | Testable source files | ~110 |
-| Estimated coverage | ~1-2% |
+| Estimated coverage | ~57% |
 | Infrastructure | Vitest + Testing Library + MSW (ready to go) |
 
 ### Existing Tests
@@ -20,6 +22,51 @@
 | `src/pages/__tests__/WelcomePage.test.tsx` | Comprehensive (485 lines) |
 | `src/pages/customer/__tests__/ProductPage.test.tsx` | Comprehensive (530 lines) |
 | `src/pages/customer/__tests__/ShoppingFlow.test.tsx` | Smoke test only (25 lines) |
+| `src/lib/__tests__/queryKeys.test.ts` | Query key structure & invalidation (Phase 1) |
+| `src/utils/__tests__/dateFormatters.test.ts` | Romanian date formatting (Phase 1) |
+| `src/utils/__tests__/validation.test.ts` | Zod schemas & validation helpers (Phase 1) |
+| `src/utils/__tests__/businessInfo.test.ts` | Business info getters & fallbacks (Phase 1) |
+| `src/stores/__tests__/cartStore.test.ts` | Cart actions & computed values (Phase 1) |
+| `src/stores/__tests__/authStore.test.ts` | Auth state & migration logic (Phase 1) |
+| `src/services/__tests__/api.helpers.test.ts` | API error handling, URL builders, form helpers (Phase 1) |
+| `src/utils/__tests__/orderFormatter.test.ts` | Order text formatting — both data paths (Phase 1) |
+| `src/components/ui/__tests__/Button.test.tsx` | Variants, sizes, loading, disabled, icon, click (Phase 2) |
+| `src/components/ui/__tests__/Input.test.tsx` | Label linkage, error/helper text, icons (Phase 2) |
+| `src/components/ui/__tests__/Modal.test.tsx` | Open/close, Escape key, backdrop, scroll lock (Phase 2) |
+| `src/components/ui/__tests__/Select.test.tsx` | Keyboard nav, portal, disabled options, ARIA (Phase 2) |
+| `src/components/ui/__tests__/Toast.test.tsx` | Auto-dismiss, provider, close button, types (Phase 2) |
+| `src/components/ui/__tests__/ToggleSwitch.test.tsx` | Toggle, disabled, aria-checked, sizes (Phase 2) |
+| `src/components/ui/__tests__/TabNavigation.test.tsx` | Tab labels, onTabChange callbacks (Phase 2) |
+| `src/services/__tests__/authService.test.ts` | Login, refresh, logout, logoutAll, isAuthenticated (Phase 3) |
+| `src/services/__tests__/orders.test.ts` | CRUD, filters, pagination, sorting, order items (Phase 3) |
+| `src/services/__tests__/products.test.ts` | CRUD, FormData, images, reorder (Phase 3) |
+| `src/services/__tests__/lists.test.ts` | CRUD, published/expired logic, products, delivery types, positions (Phase 3) |
+| `src/services/__tests__/categories.test.ts` | CRUD, image upload, reorder (Phase 3) |
+| `src/services/__tests__/units.test.ts` | CRUD with params (Phase 3) |
+| `src/services/__tests__/deliveryTypes.test.ts` | CRUD, reorder (Phase 3) |
+| `src/services/__tests__/deliverySchedules.test.ts` | CRUD (Phase 3) |
+| `src/services/__tests__/paymentMethods.test.ts` | CRUD (Phase 3) |
+| `src/services/__tests__/businessDetails.test.ts` | Get, create, update, delete (Phase 3) |
+| `src/services/__tests__/sessionService.test.ts` | Sessions list, current, revoke (Phase 3) |
+| `src/services/__tests__/api.interceptors.test.ts` | Request/response interceptors, 401 refresh, mutex, HTML detection (Phase 4) |
+| `src/components/__tests__/AuthInitializer.test.tsx` | Session validation, /auth/me call, loading state, 401 handling (Phase 5) |
+| `src/components/__tests__/ProtectedRoute.test.tsx` | Route guard, redirect to /login, loading spinner, location state (Phase 5) |
+| `src/pages/__tests__/LoginPage.test.tsx` | Login form, validation, auth errors, redirect on success, store update (Phase 5) |
+| `src/pages/customer/__tests__/CartPage.test.tsx` | Cart items, quantities, totals, empty state (Phase 6) |
+| `src/pages/customer/__tests__/OrderForm.test.tsx` | Validation, delivery address, phone format, submission (Phase 6) |
+| `src/pages/customer/__tests__/OrderConfirmation.test.tsx` | Order details, clipboard, WhatsApp link (Phase 6) |
+| `src/pages/customer/__tests__/CatalogPage.test.tsx` | Categories, products, add-to-cart, loading/error (Phase 6) |
+| `src/pages/customer/__tests__/ShoppingFlow.test.tsx` | Full customer journey, edge cases (Phase 6, expanded) |
+| `src/hooks/__tests__/useProducts.test.ts` | Query keys, cache transforms, image operations, invalidation (Phase 7) |
+| `src/hooks/__tests__/useOrders.test.ts` | Polling config, mutations, three-level invalidation (Phase 7) |
+| `src/hooks/__tests__/useLists.test.ts` | Composite keys, clone prepend, sub-entity invalidation (Phase 7) |
+| `src/hooks/__tests__/useCategories.test.ts` | Cache transforms, reorder, image upload (Phase 7) |
+| `src/hooks/__tests__/useDeliveryTypes.test.ts` | PUT vs PATCH, reorder cache set (Phase 7) |
+| `src/hooks/__tests__/useUnits.test.ts` | Detail/list cache patching, removeQueries (Phase 7) |
+| `src/hooks/__tests__/usePaymentMethods.test.ts` | Simple CRUD invalidation (Phase 7) |
+| `src/hooks/__tests__/useSessions.test.ts` | Sessions + business details, authService mock (Phase 7) |
+| `src/hooks/__tests__/useErrorHandler.test.tsx` | Error classification, 409 friendly, modal state (Phase 7) |
+| `src/utils/__tests__/schema.test.ts` | Schema.org generators, DOM inject/remove (Phase 8) |
 
 ### Infrastructure (already configured)
 
@@ -29,17 +76,27 @@
 - **Setup:** localStorage mock, matchMedia polyfill (`src/test/setup.ts`)
 - **Libraries:** `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`
 
+### File Clarification
+
+This plan references two similarly named files — they serve different purposes:
+
+| File | Contents | Tested In |
+|------|----------|-----------|
+| `src/utils/validation.ts` (95 lines) | Zod form schemas (phone, email, product, order, list, etc.) + `formatValidationErrors`, `validateFormData` | Phase 1.1 |
+| `src/utils/schema.ts` (150 lines) | Schema.org structured data generators (`generateProductSchema`, `generateOrganizationSchema`, `injectSchemaMarkup`) | Phase 8 |
+
 ---
 
-## Phase 1: Pure Functions & Stores (no rendering, fast)
+## Phase 1: Pure Functions & Stores (no rendering, fast) — COMPLETE
 
+**Status:** Done (2026-02-17) — 8 test files, 289 new tests, all passing.
 **Goal:** Cover all logic that has zero React dependencies — validation schemas, formatters, utilities, and Zustand stores.
 **Why first:** These are the fastest to write, run instantly, and catch the most subtle bugs (date edge cases, validation boundaries, cart math).
 
 ### 1.1 Validation Schemas
 
 **File to create:** `src/utils/__tests__/validation.test.ts`
-**Source:** `src/utils/validation.ts` (96 lines)
+**Source:** `src/utils/validation.ts` (95 lines)
 
 **Test cases:**
 
@@ -102,7 +159,7 @@ validateFormData
 ### 1.2 Date Formatters
 
 **File to create:** `src/utils/__tests__/dateFormatters.test.ts`
-**Source:** `src/utils/dateFormatters.ts` (70 lines)
+**Source:** `src/utils/dateFormatters.ts` (69 lines)
 
 **Test cases:**
 
@@ -208,7 +265,7 @@ getLogoUrl
 ### 1.5 Cart Store
 
 **File to create:** `src/stores/__tests__/cartStore.test.ts`
-**Source:** `src/stores/cartStore.ts` (93 lines)
+**Source:** `src/stores/cartStore.ts` (92 lines)
 
 **Approach:** Test directly via `useCartStore.getState()` and `useCartStore.setState()` — no rendering needed.
 
@@ -250,7 +307,7 @@ getTotalPrice
 ### 1.6 Auth Store
 
 **File to create:** `src/stores/__tests__/authStore.test.ts`
-**Source:** `src/stores/authStore.ts` (117 lines)
+**Source:** `src/stores/authStore.ts` (98 lines)
 
 **Test cases:**
 
@@ -278,17 +335,98 @@ migrateAuthStorage
   ✓ handles corrupt JSON gracefully
 ```
 
+### 1.7 Business Info Helpers
+
+**File to create:** `src/utils/__tests__/businessInfo.test.ts`
+**Source:** `src/utils/businessInfo.ts` (164 lines)
+
+**Test cases:**
+
+```
+getBusinessName
+  ✓ returns business_name from API data
+  ✓ falls back to app name from config
+  ✓ handles undefined input
+
+getBusinessAddress
+  ✓ returns adresa from API data
+  ✓ returns fallback for missing data
+
+getBusinessPhone
+  ✓ returns telefon from API data
+  ✓ returns fallback for missing data
+
+getBusinessEmail
+  ✓ returns email from API data
+  ✓ returns fallback for missing data
+
+getBusinessCUI
+  ✓ returns CUI from API data
+  ✓ returns fallback for missing data
+
+getBusinessRegistrationNumber
+  ✓ returns numar_inregistrare from API data
+  ✓ returns fallback for missing data
+
+getBusinessRepresentative
+  ✓ returns reprezentant from API data
+  ✓ returns fallback for missing data
+```
+
+### 1.8 Query Keys
+
+**File to create:** `src/lib/__tests__/queryKeys.test.ts`
+**Source:** `src/lib/queryKeys.ts` (137 lines)
+
+**Approach:** Pure functions — verify key structure ensures correct cache invalidation.
+
+**Test cases:**
+
+```
+queryKeys structure
+  ✓ categories.all returns ['categories']
+  ✓ categories.list(filters) includes filters in key
+  ✓ categories.detail(id) includes id in key
+  ✓ products keys follow same pattern
+  ✓ orders keys follow same pattern
+  ✓ lists keys follow same pattern
+  ✓ child keys are prefixed by parent (invalidation correctness)
+  ✓ different filters produce different keys
+  ✓ same filters produce identical keys
+```
+
 ---
 
-## Phase 2: Service Layer
+## Phase 2: Reusable UI Components — COMPLETE
 
+**Status:** Done (2026-02-17) — 7 test files, 66 new tests, all passing.
+**Goal:** Cover the shared component library — ensures they work correctly in isolation.
+**Why early:** Zero dependencies on other phases, easy wins that build testing momentum and catch accessibility issues.
+
+### 2.1 Components to Test
+
+| File to Create | Source | Key Test Cases |
+|---------------|--------|----------------|
+| `src/components/ui/__tests__/Button.test.tsx` | `ui/Button.tsx` | Variants, sizes, loading, disabled, click handler, icon placement |
+| `src/components/ui/__tests__/Input.test.tsx` | `ui/Input.tsx` | Label, error state, helper text, icons, aria attributes |
+| `src/components/ui/__tests__/Modal.test.tsx` | `ui/Modal.tsx` | Open/close, escape key, backdrop click, body scroll lock |
+| `src/components/ui/__tests__/Select.test.tsx` | `ui/Select.tsx` | Options, selection, placeholder, disabled, error |
+| `src/components/ui/__tests__/Toast.test.tsx` | `ui/Toast.tsx` + `ToastContainer.tsx` | Show/dismiss, types (success/error/warning), auto-dismiss timer |
+| `src/components/ui/__tests__/ToggleSwitch.test.tsx` | `ui/ToggleSwitch.tsx` | Toggle on/off, disabled, label |
+| `src/components/ui/__tests__/TabNavigation.test.tsx` | `ui/TabNavigation.tsx` | Tab switching, active state |
+
+---
+
+## Phase 3: Service Layer — COMPLETE
+
+**Status:** Done (2026-02-17) — 11 test files, 116 new tests, all passing.
 **Goal:** Test every service function's API call correctness — right HTTP method, right URL, right payload, right return value.
-**Approach:** Mock `apiClient` (vi.mock) and verify calls. No MSW needed at this layer.
+**Approach:** Use MSW to intercept requests and verify behavior. This tests real HTTP interactions rather than mocking `apiClient` internals, producing tests that are more resilient to refactors. The MSW infrastructure is already set up — extend `src/test/mocks/handlers.ts` incrementally as each service is tested.
 
-### 2.1 Auth Service
+### 3.1 Auth Service
 
 **File to create:** `src/services/__tests__/authService.test.ts`
-**Source:** `src/services/authService.ts` (162 lines)
+**Source:** `src/services/authService.ts` (117 lines)
 
 **Test cases:**
 
@@ -326,10 +464,10 @@ isAuthenticated
   ✓ returns auth store's isAuthenticated value
 ```
 
-### 2.2 Order Service
+### 3.2 Order Service
 
 **File to create:** `src/services/__tests__/orders.test.ts`
-**Source:** `src/services/orders.ts` (130 lines)
+**Source:** `src/services/orders.ts` (129 lines)
 
 **Test cases:**
 
@@ -368,10 +506,10 @@ removeOrderItem
   ✓ calls DELETE /orders/:orderId/products/:productId
 ```
 
-### 2.3 Product Service
+### 3.3 Product Service
 
 **File to create:** `src/services/__tests__/products.test.ts`
-**Source:** `src/services/products.ts` (158 lines)
+**Source:** `src/services/products.ts` (157 lines)
 
 **Test cases:**
 
@@ -410,10 +548,10 @@ reorderProductImages
   ✓ calls PUT /products/:productId/images/reorder with mappings
 ```
 
-### 2.4 List Service
+### 3.4 List Service
 
 **File to create:** `src/services/__tests__/lists.test.ts`
-**Source:** `src/services/lists.ts` (216 lines)
+**Source:** `src/services/lists.ts` (215 lines)
 
 **Test cases:**
 
@@ -453,7 +591,7 @@ bulkUpdatePositions
   ✓ calls PUT with positions payload
 ```
 
-### 2.5 Remaining Services (lighter coverage)
+### 3.5 Remaining Services (lighter coverage)
 
 Create one test file per service, covering the happy path for each function:
 
@@ -469,12 +607,13 @@ Create one test file per service, covering the happy path for each function:
 
 ---
 
-## Phase 3: API Interceptors
+## Phase 4: API Interceptors — COMPLETE
 
+**Status:** Done (2026-02-17) — 1 test file, 15 new tests, all passing.
 **Goal:** Test the axios interceptor logic — the most critical runtime code in the app.
 **Approach:** Use MSW `server.use()` to simulate 401 responses, then verify refresh/retry/redirect behavior.
 
-### 3.1 Request Interceptor
+### 4.1 Request Interceptor
 
 **File to create:** `src/services/__tests__/api.interceptors.test.ts`
 
@@ -508,15 +647,16 @@ Response interceptor — non-401 errors
 
 ---
 
-## Phase 4: Auth Components
+## Phase 5: Auth Components — COMPLETE
 
+**Status:** Done (2026-02-17) — 3 test files, 18 new tests, all passing.
 **Goal:** Test the authentication UI — login page, session initialization, and route protection.
-**Approach:** Component tests with `renderWithProviders` + MSW.
+**Approach:** Component tests with `@testing-library/react` + MSW. Uses `MemoryRouter` + `Routes` (not `createMemoryRouter`) to avoid AbortSignal conflicts with MSW interceptors.
 
-### 4.1 AuthInitializer
+### 5.1 AuthInitializer
 
 **File to create:** `src/components/__tests__/AuthInitializer.test.tsx`
-**Source:** `src/components/AuthInitializer.tsx` (76 lines)
+**Source:** `src/components/AuthInitializer.tsx` (68 lines)
 
 **Test cases:**
 
@@ -533,10 +673,10 @@ When user is not authenticated
   ✓ renders children immediately (after init)
 ```
 
-### 4.2 ProtectedRoute
+### 5.2 ProtectedRoute
 
 **File to create:** `src/components/__tests__/ProtectedRoute.test.tsx`
-**Source:** `src/components/ProtectedRoute.tsx` (44 lines)
+**Source:** `src/components/ProtectedRoute.tsx` (43 lines)
 
 **Test cases:**
 
@@ -547,7 +687,7 @@ When user is not authenticated
   ✓ shows loading spinner when isLoading=true
 ```
 
-### 4.3 LoginPage
+### 5.3 LoginPage
 
 **File to create:** `src/pages/__tests__/LoginPage.test.tsx`
 **Source:** `src/pages/LoginPage.tsx`
@@ -566,11 +706,12 @@ When user is not authenticated
 
 ---
 
-## Phase 5: Customer-Facing Pages
+## Phase 6: Customer-Facing Pages — COMPLETE
 
+**Status:** Done (2026-02-17) — 5 test files, 30 new tests, all passing.
 **Goal:** Test the remaining customer pages — the revenue-critical checkout flow.
 
-### 5.1 CartPage
+### 6.1 CartPage
 
 **File to create:** `src/pages/customer/__tests__/CartPage.test.tsx`
 **Source:** `src/pages/customer/CartPage.tsx`
@@ -586,7 +727,7 @@ When user is not authenticated
   ✓ navigates to order form on checkout
 ```
 
-### 5.2 OrderForm
+### 6.2 OrderForm
 
 **File to create:** `src/pages/customer/__tests__/OrderForm.test.tsx`
 **Source:** `src/pages/customer/OrderForm.tsx`
@@ -605,7 +746,7 @@ When user is not authenticated
   ✓ redirects to home when cart is empty
 ```
 
-### 5.3 OrderConfirmation
+### 6.3 OrderConfirmation
 
 **File to create:** `src/pages/customer/__tests__/OrderConfirmation.test.tsx`
 **Source:** `src/pages/customer/OrderConfirmation.tsx`
@@ -620,7 +761,7 @@ When user is not authenticated
   ✓ redirects home when no order data
 ```
 
-### 5.4 CatalogPage & CategoryCatalogPage
+### 6.4 CatalogPage & CategoryCatalogPage
 
 **File to create:** `src/pages/customer/__tests__/CatalogPage.test.tsx`
 
@@ -636,30 +777,36 @@ When user is not authenticated
   ✓ shows error state
 ```
 
+### 6.5 Shopping Flow (end-to-end integration)
+
+**File to expand:** `src/pages/customer/__tests__/ShoppingFlow.test.tsx` (currently 24 lines — smoke test only)
+
+**Goal:** Test the full customer journey across pages, distinct from the individual page tests above.
+
+**Test cases:**
+
+```
+Complete shopping flow
+  ✓ browse catalog → add items to cart → cart shows correct items
+  ✓ cart → checkout form → fills required fields → submits order
+  ✓ order submission → confirmation page shows order details
+  ✓ confirmation → WhatsApp link contains correct order text
+  ✓ confirmation → back to products returns to catalog
+
+Edge cases
+  ✓ adding same product twice increments quantity
+  ✓ removing all items from cart redirects to empty cart state
+  ✓ checkout with empty cart redirects to home
+  ✓ order form preserves data on validation error
+```
+
 ---
 
-## Phase 6: Reusable UI Components
+## Phase 7: Hooks (React Query wrappers) — COMPLETE
 
-**Goal:** Cover the shared component library — ensures they work correctly in isolation.
-
-### 6.1 Components to Test
-
-| File to Create | Source | Key Test Cases |
-|---------------|--------|----------------|
-| `src/components/ui/__tests__/Button.test.tsx` | `ui/Button.tsx` | Variants, sizes, loading, disabled, click handler, icon placement |
-| `src/components/ui/__tests__/Input.test.tsx` | `ui/Input.tsx` | Label, error state, helper text, icons, aria attributes |
-| `src/components/ui/__tests__/Modal.test.tsx` | `ui/Modal.tsx` | Open/close, escape key, backdrop click, body scroll lock |
-| `src/components/ui/__tests__/Select.test.tsx` | `ui/Select.tsx` | Options, selection, placeholder, disabled, error |
-| `src/components/ui/__tests__/Toast.test.tsx` | `ui/Toast.tsx` + `ToastContainer.tsx` | Show/dismiss, types (success/error/warning), auto-dismiss timer |
-| `src/components/ui/__tests__/ToggleSwitch.test.tsx` | `ui/ToggleSwitch.tsx` | Toggle on/off, disabled, label |
-| `src/components/ui/__tests__/TabNavigation.test.tsx` | `ui/TabNavigation.tsx` | Tab switching, active state |
-
----
-
-## Phase 7: Hooks (React Query wrappers)
-
+**Status:** Done (2026-02-18) — 9 test files, 125 new tests, all passing.
 **Goal:** Verify hooks wire up React Query correctly — cache keys, data transforms, error handling.
-**Approach:** Use `renderHook` with QueryClient + MSW.
+**Approach:** Use `renderHook` with QueryClient + MSW. Added `createTestQueryClient()` and `renderHookWithQuery()` helpers to `src/test/testUtils.tsx`.
 
 ### 7.1 High-Priority Hooks
 
@@ -683,10 +830,11 @@ When user is not authenticated
 
 ---
 
-## Phase 8: Schema & SEO Utilities
+## Phase 8: Schema & SEO Utilities — COMPLETE
 
-**File to create:** `src/utils/__tests__/schema.test.ts`
-**Source:** `src/utils/schema.ts` (151 lines)
+**Status:** Done (2026-02-18) — 1 test file, 20 new tests, all passing.
+**File created:** `src/utils/__tests__/schema.test.ts`
+**Source:** `src/utils/schema.ts` (150 lines) — Schema.org structured data generators (NOT Zod validation — see Phase 1.1)
 
 **Test cases:**
 
@@ -715,7 +863,7 @@ removeSchemaMarkup
 
 ## MSW Handler Extensions
 
-The existing `src/test/mocks/handlers.ts` covers public endpoints. The following handlers need to be added for Phases 2-5:
+The existing `src/test/mocks/handlers.ts` covers public endpoints. The following handlers need to be added for Phases 3-6:
 
 ```typescript
 // Auth endpoints
@@ -732,7 +880,7 @@ http.get(`${API}/orders/:id`, ...)
 http.patch(`${API}/orders/:id`, ...)
 http.delete(`${API}/orders/:id`, ...)
 
-// Admin CRUD (for service tests that use MSW instead of mocks)
+// Admin CRUD (for service tests)
 http.post(`${API}/products`, ...)
 http.patch(`${API}/products/:id`, ...)
 http.delete(`${API}/products/:id`, ...)
@@ -778,51 +926,51 @@ export const setAuthenticated = (user?: Partial<User>) => {
 
 | Phase | New Test Files | Depends On | Effort |
 |-------|---------------|------------|--------|
-| **1. Pure functions & stores** | 6 | Nothing | Low — no rendering, no mocking complexity |
-| **2. Service layer** | 11 | Phase 1 (store tests inform mocking) | Low-Medium — mock apiClient, verify calls |
-| **3. API interceptors** | 1 | Phase 2 (auth service) | Medium — MSW-based, async flows |
-| **4. Auth components** | 3 | Phase 3 (interceptors) | Medium — component rendering + MSW |
-| **5. Customer pages** | 4 | Phase 4 (auth) + existing MSW handlers | Medium-High — full page rendering |
-| **6. UI components** | 7 | Nothing (independent) | Low — isolated components |
-| **7. Hooks** | 10 | Phase 2 (services) | Medium — renderHook + MSW |
+| **1. Pure functions & stores** | 8 | Nothing | Low — no rendering, no mocking complexity |
+| **2. UI components** | 7 | Nothing (independent) | Low — isolated components |
+| **3. Service layer** | 11 | Phase 1 (store tests inform mocking) | Low-Medium — MSW-based, verify HTTP calls |
+| **4. API interceptors** | 1 | Phase 3 (auth service) | Medium — MSW-based, async flows |
+| **5. Auth components** | 3 | Phase 4 (interceptors) | Medium — component rendering + MSW |
+| **6. Customer pages** | 4 (+1 expanded) | Phase 5 (auth) + existing MSW handlers | Medium-High — full page rendering |
+| **7. Hooks** | 10 | Phase 3 (services) | Medium — renderHook + MSW |
 | **8. Schema/SEO** | 1 | Nothing | Low — pure functions + DOM |
 
-**Total new test files:** ~43
-**Combined with existing:** 47 test files
+**Total new test files:** ~46
+**Combined with existing:** 50 test files
 
 ### Dependency Diagram
 
 ```mermaid
 graph LR
-    P1["Phase 1<br>Pure Functions & Stores<br>6 files · Low effort"]
-    P2["Phase 2<br>Service Layer<br>11 files · Low-Med effort"]
-    P3["Phase 3<br>API Interceptors<br>1 file · Medium effort"]
-    P4["Phase 4<br>Auth Components<br>3 files · Medium effort"]
-    P5["Phase 5<br>Customer Pages<br>4 files · Med-High effort"]
-    P6["Phase 6<br>UI Components<br>7 files · Low effort"]
+    P1["Phase 1<br>Pure Functions & Stores<br>8 files · Low effort"]
+    P2["Phase 2<br>UI Components<br>7 files · Low effort"]
+    P3["Phase 3<br>Service Layer<br>11 files · Low-Med effort"]
+    P4["Phase 4<br>API Interceptors<br>1 file · Medium effort"]
+    P5["Phase 5<br>Auth Components<br>3 files · Medium effort"]
+    P6["Phase 6<br>Customer Pages<br>5 files · Med-High effort"]
     P7["Phase 7<br>Hooks<br>10 files · Medium effort"]
     P8["Phase 8<br>Schema & SEO<br>1 file · Low effort"]
 
-    P1 --> P2
-    P2 --> P3
+    P1 --> P3
     P3 --> P4
     P4 --> P5
-    P2 --> P7
+    P5 --> P6
+    P3 --> P7
     P1 --> P8
 
     style P1 fill:#d4edda,stroke:#28a745
-    style P6 fill:#d4edda,stroke:#28a745
+    style P2 fill:#d4edda,stroke:#28a745
     style P8 fill:#d4edda,stroke:#28a745
-    style P2 fill:#fff3cd,stroke:#ffc107
+    style P3 fill:#fff3cd,stroke:#ffc107
     style P7 fill:#fff3cd,stroke:#ffc107
-    style P3 fill:#fde8e8,stroke:#dc3545
     style P4 fill:#fde8e8,stroke:#dc3545
     style P5 fill:#fde8e8,stroke:#dc3545
+    style P6 fill:#fde8e8,stroke:#dc3545
 ```
 
-**Legend:** Green = no dependencies (can start immediately), Yellow = depends on Phase 1 or 2, Red = depends on the critical path.
+**Legend:** Green = no dependencies (can start immediately), Yellow = depends on Phase 1 or 3, Red = depends on the critical path.
 
-Phases 1, 6, and 8 have no dependencies and can be done in parallel. After Phase 1, Phases 2 and 8 can run in parallel. Phase 3 depends on 2, Phase 4 on 3, Phase 5 on 4. Phase 7 can start after Phase 2.
+Phases 1, 2, and 8 have no dependencies and can be done in parallel. After Phase 1, Phases 3 and 8 can run in parallel. Phase 4 depends on 3, Phase 5 on 4, Phase 6 on 5. Phase 7 can start after Phase 3.
 
 ---
 
@@ -830,14 +978,16 @@ Phases 1, 6, and 8 have no dependencies and can be done in parallel. After Phase
 
 | After Phase | Estimated Coverage | Test Files |
 |-------------|-------------------|------------|
-| Phase 1 | ~15% | 10 |
-| Phase 2 | ~35% | 21 |
-| Phase 3 | ~40% | 22 |
-| Phase 4 | ~50% | 25 |
-| Phase 5 | ~60% | 29 |
-| Phase 6 | ~70% | 36 |
-| Phase 7 | ~80% | 46 |
-| Phase 8 | ~82% | 47 |
+| Phase 1 | ~8% | 12 |
+| Phase 2 | ~15% | 19 |
+| Phase 3 | ~25% | 30 |
+| Phase 4 | ~28% | 31 |
+| Phase 5 | ~33% | 34 |
+| Phase 6 | ~45% | 39 |
+| Phase 7 | ~55% | 49 |
+| Phase 8 | ~57% | 50 |
+
+**Note:** These are conservative estimates based on ~25k total source lines with admin pages (~10k lines) excluded from the denominator. Actual coverage depends on branch complexity and how thoroughly each test exercises code paths.
 
 ---
 
@@ -853,7 +1003,7 @@ Phases 1, 6, and 8 have no dependencies and can be done in parallel. After Phase
 
 ## CI Integration (post-implementation)
 
-Once test coverage reaches Phase 3+, add to the CI pipeline:
+Once test coverage reaches Phase 4+, add to the CI pipeline:
 
 ```yaml
 # In CI workflow
@@ -873,11 +1023,22 @@ test: {
     provider: 'v8',
     reporter: ['text', 'lcov'],
     thresholds: {
-      statements: 60,
-      branches: 50,
-      functions: 60,
-      lines: 60,
+      statements: 40,
+      branches: 30,
+      functions: 40,
+      lines: 40,
     },
   },
 }
+```
+
+**Note:** Start with lower thresholds (above) and ratchet up as coverage improves. Target thresholds after all phases:
+
+```typescript
+thresholds: {
+  statements: 55,
+  branches: 45,
+  functions: 55,
+  lines: 55,
+},
 ```

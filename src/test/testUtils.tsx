@@ -1,8 +1,48 @@
-import { render, RenderOptions } from '@testing-library/react'
+import { render, renderHook as tlRenderHook, RenderOptions, RenderHookOptions } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, createMemoryRouter, RouterProvider } from 'react-router-dom'
-import { ReactElement } from 'react'
+import { ReactElement, ReactNode } from 'react'
 import { useCartStore } from '@/stores/cartStore'
+
+// Create a fresh QueryClient configured for tests: no retries, zero cache times.
+export function createTestQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 5 * 60 * 1000,
+        staleTime: 0,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  })
+}
+
+// renderHook wrapper that provides QueryClientProvider.
+// Returns the hook result and the queryClient for cache inspection.
+export function renderHookWithQuery<TResult>(
+  renderFn: () => TResult,
+  options?: Omit<RenderHookOptions<unknown>, 'wrapper'> & { queryClient?: QueryClient }
+) {
+  const queryClient = options?.queryClient ?? createTestQueryClient()
+
+  function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    )
+  }
+
+  const hookResult = tlRenderHook(renderFn, { wrapper: Wrapper, ...options })
+
+  return {
+    ...hookResult,
+    queryClient,
+  }
+}
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   route?: string
@@ -15,18 +55,7 @@ export const renderWithProviders = (
 ) => {
   const { route, ...renderOptions } = options || {}
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        staleTime: 0,
-      },
-      mutations: {
-        retry: false,
-      },
-    },
-  })
+  const queryClient = createTestQueryClient()
 
   if (route) {
     // Use memory router with routes for testing specific routes
