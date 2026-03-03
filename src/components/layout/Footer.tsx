@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, Mail, Phone, MapPin, Building, Shield, FileText, Cookie, RotateCcw, Clock } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import {
   getBusinessName,
@@ -205,7 +206,10 @@ const Footer: React.FC = () => {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 pt-8">
-          <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Theme toggle — left side */}
+            <ThemeToggle />
+
             <div className="text-sm text-gray-400 text-center">
               <p>&copy; {currentYear} {businessName}</p>
               {!isStandalone && isInstallAvailable && (
@@ -236,6 +240,9 @@ const Footer: React.FC = () => {
                 </Link>
               </div>
             </div>
+
+            {/* Spacer to balance the toggle on the left */}
+            <div className="hidden md:block w-24" />
           </div>
         </div>
       </div>

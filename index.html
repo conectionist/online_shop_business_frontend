@@ -2,6 +2,19 @@
 <html lang="ro">
   <head>
     <meta charset="UTF-8" />
+    <!-- Theme initialization: apply dark class before first paint to prevent FOUC -->
+    <script nonce="CSP_NONCE_PLACEHOLDER">
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme-storage');
+          var preference = stored ? JSON.parse(stored).state?.theme : 'system';
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (preference === 'dark' || (preference !== 'light' && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- <link rel="icon" href="/favicon.ico" /> -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

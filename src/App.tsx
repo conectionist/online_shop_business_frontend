@@ -48,6 +48,7 @@ import ContactPage from './pages/ContactPage'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 import AuthInitializer from './components/AuthInitializer'
+import { ThemeProvider } from './components/ThemeProvider'
 import { usePublishedList } from './hooks/useLists'
 import { useCartStore } from './stores/cartStore'
 
@@ -65,6 +66,7 @@ function CartListSync() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <CartListSync />
       <ToastProvider>
       <AuthInitializer>
@@ -146,6 +148,7 @@ function App() {
       {/* React Query Devtools - only in development */}
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
       </ToastProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   )
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { authService } from '@/services/authService';
 import { ChevronDown, LogOut, Monitor } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export interface HeaderProps {
   // No props needed - header is now minimal
@@ -51,14 +52,17 @@ export const Header: React.FC<HeaderProps> = () => {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-end items-center h-16">
+        <div className="flex justify-end items-center h-16 gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* User Dropdown Menu */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               {/* User Avatar */}
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -68,7 +72,7 @@ export const Header: React.FC<HeaderProps> = () => {
               </div>
               
               {/* User Name */}
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 Bună, {user.name}
               </span>
               
@@ -82,23 +86,23 @@ export const Header: React.FC<HeaderProps> = () => {
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
                     navigate('/admin/sessions');
                   }}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                 >
-                  <Monitor className="w-4 h-4 mr-3 text-gray-400" />
+                  <Monitor className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500" />
                   Sesiuni Active
                 </button>
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
-                  <LogOut className="w-4 h-4 mr-3 text-gray-400" />
+                  <LogOut className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500" />
                   {isLoggingOut ? 'Se deconectează...' : 'Deconectare'}
                 </button>
               </div>
