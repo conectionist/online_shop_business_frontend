@@ -19,6 +19,7 @@ export const uploadService = {
         // Let Axios compute the correct multipart boundary header
         'Content-Type': undefined as unknown as string,
       },
+      timeout: 120000, // 2 minutes for file uploads (global default is 10s)
     });
 
     return response.data.upload_id;

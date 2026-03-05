@@ -118,6 +118,7 @@ export const productService = {
       headers: {
         'Content-Type': undefined, // Let Axios set the correct Content-Type for FormData
       },
+      timeout: 120000, // 2 minutes for file uploads (global default is 10s)
     });
     return response.data;
   },
