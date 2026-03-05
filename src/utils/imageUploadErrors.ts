@@ -22,6 +22,13 @@ function getImageTooLargeMessage(maxSizeMb?: number): string {
 const DEFAULT_IMAGE_ERROR_MESSAGE =
   'Imaginea nu a putut fi încărcată. Vă rugăm să verificați formatul și dimensiunea.';
 
+const TIMEOUT_ERROR_MESSAGE =
+  'Încărcarea imaginii a durat prea mult. Vă rugăm să verificați conexiunea la internet și să încercați din nou.';
+
+function isTimeoutError(error: any): boolean {
+  return error?.code === 'ECONNABORTED' || error?.code === 'ERR_CANCELED';
+}
+
 function isImageValidationError(error: any): boolean {
   const status = error?.response?.status;
   const detail = error?.response?.data?.detail;
@@ -40,6 +47,9 @@ function isImageValidationError(error: any): boolean {
  * When type is image_too_large, pass maxSizeMb to show the limit in the message.
  */
 export function getImageValidationMessage(error: any, maxSizeMb?: number): string {
+  if (isTimeoutError(error)) {
+    return TIMEOUT_ERROR_MESSAGE;
+  }
   if (!isImageValidationError(error)) {
     return DEFAULT_IMAGE_ERROR_MESSAGE;
   }
