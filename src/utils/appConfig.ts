@@ -9,6 +9,9 @@ declare global {
       VITE_LOGO_PATH?: string;
       VITE_SITE_URL?: string;
       VITE_RYBBIT_SITE_ID?: string;
+      VITE_PLAUSIBLE_DOMAIN?: string;
+      VITE_PLAUSIBLE_SCRIPT_URL?: string;
+      VITE_RYBBIT_SCRIPT_URL?: string;
       NODE_ENV?: string;
     };
   }

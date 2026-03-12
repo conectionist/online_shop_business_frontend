@@ -53,9 +53,14 @@
     }
   }
 
-  function getSiteHostname() {
+  function getPlausibleDomain() {
     try {
       var cfg = getRuntimeConfig();
+      // Use new VITE_PLAUSIBLE_DOMAIN if available, otherwise fallback to VITE_SITE_URL
+      if (cfg && cfg.VITE_PLAUSIBLE_DOMAIN && cfg.VITE_PLAUSIBLE_DOMAIN.trim && cfg.VITE_PLAUSIBLE_DOMAIN.trim().length > 0) {
+        return cfg.VITE_PLAUSIBLE_DOMAIN.trim();
+      }
+      // Fallback to old behavior: derive from VITE_SITE_URL
       var configured = (cfg && cfg.VITE_SITE_URL) || null;
       if (configured) {
         var url = new URL(configured);
@@ -63,24 +68,26 @@
       }
     } catch (e) {
       if (isDevelopment()) {
-        console.error('Error getting site hostname from config:', e);
+        console.error('Error getting Plausible domain from config:', e);
       }
     }
-
     return window.location.hostname || 'localhost';
   }
 
   function injectPlausible() {
     try {
-      var domain = getSiteHostname();
+      var domain = getPlausibleDomain();
+      var cfg = getRuntimeConfig();
+      var scriptUrl = (cfg && cfg.VITE_PLAUSIBLE_SCRIPT_URL) || 'https://analytics.akdscloud.eu/js/script.js';
+      
       var s = document.createElement('script');
       s.setAttribute('defer', '');
       s.setAttribute('data-domain', domain);
-      s.src = 'https://analytics.akdscloud.eu/js/script.js';
+      s.src = scriptUrl;
       document.head.appendChild(s);
       
       if (isDevelopment()) {
-        console.log('Plausible Analytics injected for domain:', domain);
+        console.log('Plausible Analytics injected for domain:', domain, 'script URL:', scriptUrl);
       }
     } catch (e) {
       if (isDevelopment()) {
@@ -107,15 +114,18 @@
   function injectRybbit() {
     try {
       var siteId = getRybbitSiteId();
+      var cfg = getRuntimeConfig();
+      var scriptUrl = (cfg && cfg.VITE_RYBBIT_SCRIPT_URL) || 'https://ranalytics.akdscloud.eu/api/script.js';
+      
       if (siteId) {
         var s = document.createElement('script');
         s.setAttribute('defer', '');
         s.setAttribute('data-site-id', siteId);
-        s.src = 'https://ranalytics.akdscloud.eu/api/script.js';
+        s.src = scriptUrl;
         document.head.appendChild(s);
         
         if (isDevelopment()) {
-          console.log('Rybbit Analytics injected for site ID:', siteId);
+          console.log('Rybbit Analytics injected for site ID:', siteId, 'script URL:', scriptUrl);
         }
       } else {
         if (isDevelopment()) {
