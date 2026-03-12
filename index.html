@@ -27,62 +27,7 @@
     
     <title>Paine cu Maia de la Andreea</title>
     <script src="/config.js"></script>
-    <script nonce="CSP_NONCE_PLACEHOLDER">
-      // Set the page title dynamically from runtime config
-      // Wait for the config to be loaded
-      document.addEventListener('DOMContentLoaded', function() {
-        if (window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VITE_APP_NAME) {
-          document.title = window.__RUNTIME_CONFIG__.VITE_APP_NAME;
-        }
-      });
-    </script>
-    <!-- Plausible Analytics injected via runtime config -->
-    <script nonce="CSP_NONCE_PLACEHOLDER">
-      (function() {
-        function getSiteHostname() {
-          try {
-            var configured = (window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VITE_SITE_URL) || (typeof importMeta !== 'undefined' && importMeta.env && importMeta.env.VITE_SITE_URL) || null;
-            if (configured) {
-              var url = new URL(configured);
-              return url.hostname;
-            }
-          } catch (e) {}
-          return window.location.hostname || 'localhost';
-        }
-
-        var domain = getSiteHostname();
-        var s = document.createElement('script');
-        s.setAttribute('defer', '');
-        s.setAttribute('data-domain', domain);
-        s.src = 'https://analytics.akdscloud.eu/js/script.js';
-        document.head.appendChild(s);
-      })();
-    </script>
-    <!-- Rybbit Analytics injected via runtime config -->
-    <script nonce="CSP_NONCE_PLACEHOLDER">
-      (function() {
-        function getRybbitSiteId() {
-          try {
-            var configured = (window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VITE_RYBBIT_SITE_ID) || null;
-            if (configured && configured.trim && configured.trim().length > 0) {
-              return configured.trim();
-            }
-          } catch (e) {}
-          return null;
-        }
-
-        var siteId = getRybbitSiteId();
-        if (siteId) {
-          var s = document.createElement('script');
-          s.setAttribute('defer', '');
-          s.setAttribute('data-site-id', siteId);
-          s.src = 'https://ranalytics.akdscloud.eu/api/script.js';
-          document.head.appendChild(s);
-        } else {
-          console.log('Rybbit Analytics: VITE_RYBBIT_SITE_ID not configured, skipping analytics');
-        }
-      })();
-    </script>
+    <script defer src="/bootstrap.js"></script>
   </head>
   <body>
     <div id="root"></div>

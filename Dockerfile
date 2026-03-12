@@ -52,9 +52,8 @@ COPY site.webmanifest /usr/share/nginx/html/site.webmanifest
 # Copy Google verification file for Search Console
 COPY google*.html /usr/share/nginx/html/
 
-# Copy nginx configuration and security headers snippet
+# Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx-security-headers.conf /etc/nginx/conf.d/security-headers.conf
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh

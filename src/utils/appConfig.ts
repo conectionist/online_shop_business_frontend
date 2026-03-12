@@ -7,6 +7,8 @@ declare global {
       VITE_API_BASE_URL?: string;
       VITE_APP_NAME?: string;
       VITE_LOGO_PATH?: string;
+      VITE_SITE_URL?: string;
+      VITE_RYBBIT_SITE_ID?: string;
       NODE_ENV?: string;
     };
   }
