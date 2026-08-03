@@ -21,7 +21,7 @@ const ListsList: React.FC = () => {
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
   // Fetch all lists
-  const { data: lists, isLoading, error } = useLists();
+  const { data: lists, isLoading, error } = useLists({ limit: 1000 });
 
   // Filter lists based on search term
   const filteredLists = useMemo(() => {
