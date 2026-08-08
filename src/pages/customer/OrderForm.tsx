@@ -261,6 +261,10 @@ const OrderForm: React.FC = () => {
     const orderData = buildOrderDataForSession(data);
     setIsSubmittingOrder(true);
 
+    // Open blank window synchronously to preserve user gesture for iOS Safari
+    // This must happen before any async operations to work around Safari's transient activation restrictions
+    const newWindow = window.open('', '_blank');
+
     // Submit the order to the server first (before opening WhatsApp)
     const result = await submitOrderToServer(orderData, 'whatsapp_button');
 
@@ -281,20 +285,16 @@ const OrderForm: React.FC = () => {
       // Clear cart
       clearCart();
 
-      // Open WhatsApp using setTimeout(0) to preserve gesture context on iOS
-      // This queues the open in the next event loop tick, which helps on iOS Safari
-      setTimeout(() => {
-        // Try to open in new window first
-        const whatsappWindow = window.open(whatsappUrl, '_blank');
-        if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
-          // Fallback: redirect directly (works on all platforms including iOS)
-          window.location.href = whatsappUrl;
-          return; // Don't navigate to confirmation if redirecting
-        }
-
-        // Navigate to confirmation page (only if window.open succeeded)
+      // Check if popup was blocked
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        // Fallback: redirect directly (works on all platforms including iOS)
+        window.location.href = whatsappUrl;
+      } else {
+        // Success: redirect the already-opened window to WhatsApp
+        newWindow.location.href = whatsappUrl;
+        // Navigate to confirmation page
         navigate('/order-confirmation');
-      }, 0);
+      }
     } else if ((result.status === 400 || result.status === 409) && result.outOfStockProductIds && result.outOfStockProductIds.length > 0) {
       // Insufficient stock: show modal and remove products from cart
       const removedProducts = items
