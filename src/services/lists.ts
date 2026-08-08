@@ -36,7 +36,9 @@ export const listService = {
   // Get the published list (for customers) (PUBLIC - no auth required)
   getPublishedList: async (): Promise<List | null> => {
     try {
-      const response = await apiClient.get('/liste');
+      const params = new URLSearchParams();
+      params.append('limit', '1000');
+      const response = await apiClient.get(`/liste?${params.toString()}`);
       const lists = response.data;
       const publishedList = lists.find((list: List) => list.is_published && !list.is_deleted);
 
@@ -63,7 +65,9 @@ export const listService = {
   // Get the last expired published list (for customers to view archived products) (PUBLIC - no auth required)
   getLastExpiredPublishedList: async (): Promise<List | null> => {
     try {
-      const response = await apiClient.get('/liste');
+      const params = new URLSearchParams();
+      params.append('limit', '1000');
+      const response = await apiClient.get(`/liste?${params.toString()}`);
       const lists = response.data;
       const now = new Date();
 
