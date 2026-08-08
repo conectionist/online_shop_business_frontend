@@ -7,7 +7,7 @@ import { queryKeys, invalidateQueries } from '@/lib/queryKeys';
 // Hook to fetch all products
 export const useProducts = (filters?: ProductFilters) => {
   const effectiveFilters: ProductFilters = {
-    limit: 500,
+    limit: 1000,
     skip: 0,
     ...(filters || {}),
   };
