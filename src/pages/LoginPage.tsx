@@ -114,7 +114,7 @@ const LoginPage: React.FC = () => {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Sau{' '}
-            <Link to="/" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link to="/" className="font-medium text-amber-600 hover:text-amber-500">
               reveniți la pagina principală
             </Link>
           </p>
@@ -164,7 +164,7 @@ const LoginPage: React.FC = () => {
                   value={formData.username}
                   onChange={handleInputChange}
                   disabled={isLoading || isSuccess}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                   placeholder="Introduceți numele de utilizator"
                 />
               </div>
@@ -183,7 +183,7 @@ const LoginPage: React.FC = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   disabled={isLoading || isSuccess}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                   placeholder="Introduceți parola"
                 />
               </div>
@@ -193,7 +193,7 @@ const LoginPage: React.FC = () => {
                               <button
                   type="submit"
                   disabled={isLoading || isSuccess}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-200"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:bg-amber-400 disabled:cursor-not-allowed transition-all duration-200"
                 >
                 {isLoading ? (
                   <>
