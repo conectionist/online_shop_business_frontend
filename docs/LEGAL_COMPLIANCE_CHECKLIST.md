@@ -45,9 +45,7 @@
 
 - [x] **ANPC** - Autoritatea Națională pentru Protecția Consumatorilor 🔴 CRITICĂ
   - [x] Link către https://anpc.ro 🔴 CRITICĂ
-- [x] **SOL** - Platforma de soluționare online a litigiilor 🔴 CRITICĂ
-  - [x] Link către https://ec.europa.eu/consumers/odr/ 🔴 CRITICĂ
-  - [x] Pictograme SOL pe prima pagină (conform Ordinului ANPC 449/2022) 🔴 CRITICĂ
+- [x] **SOL** - Platforma ODR/SOL a UE a fost retrasă; banner-ul și link-ul au fost eliminate
 - [x] **SAL** - Soluționarea Alternativă a Litigiilor 🔴 CRITICĂ
   - [x] Link către secțiunea SAL de pe site-ul ANPC 🔴 CRITICĂ
   - [x] Pictograme SAL pe prima pagină (conform Ordinului ANPC 449/2022) 🔴 CRITICĂ
@@ -66,7 +64,7 @@
   - [x] Responsabilitatea costurilor de transport 🟡 ÎNALTĂ
   - [x] Modalitatea și termenul de rambursare (maxim 14 zile) 🟡 ÎNALTĂ
 - [x] **Limitări de răspundere** - clare și conforme cu legea 🟡 ÎNALTĂ
-- [x] **Modalități de soluționare a litigiilor** - ANPC, SOL, instanță 🟡 ÎNALTĂ
+- [x] **Modalități de soluționare a litigiilor** - ANPC, SAL, instanță 🟡 ÎNALTĂ
 - [x] **Legea aplicabilă** - legislația românească 🟡 ÎNALTĂ
 
 ### Politica de confidențialitate (GDPR)
@@ -218,7 +216,7 @@
 ## ✅ **Verificare finală**
 
 - [x] **Testarea pe toate dispozitivele** - desktop, tablet, mobile 🟡 ÎNALTĂ
-- [x] **Verificarea link-urilor externe** - ANPC, SOL funcționează 🔴 CRITICĂ
+- [x] **Verificarea link-urilor externe** - ANPC, SAL funcționează 🔴 CRITICĂ
 - [x] **Validarea HTML/CSS** - fără erori de cod 🟡 ÎNALTĂ
 - [ ] **Testarea accesibilității** - cu screen reader, tastatură 🟢 MEDIE
 - [x] **Testarea formularelor** - contact, retur funcționează 🟡 ÎNALTĂ

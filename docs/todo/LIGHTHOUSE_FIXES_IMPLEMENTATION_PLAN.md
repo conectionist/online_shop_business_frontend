@@ -314,9 +314,9 @@ If the issue is specific to the dev/preview server (which doesn't run `docker-en
 
 ### 4.2 Fix ANPC image aspect ratios
 
-**Problem:** `anpc-sol.png` and `anpc-sal.png` have natural aspect ratios that don't match their forced `250px × 50px` display size.
+**Problem:** `anpc-sal.png` has a natural aspect ratio that doesn't match its forced `250px × 50px` display size.
 
-**File:** `src/components/layout/Footer.tsx` (lines 177-184, 192-199)
+**File:** `src/components/layout/Footer.tsx`
 
 **Options (pick one):**
 

@@ -105,12 +105,8 @@ export const getANPCLink = (): string => {
   return 'https://anpc.ro';
 };
 
-export const getSOLLink = (): string => {
-  return 'https://ec.europa.eu/consumers/odr/';
-};
-
 export const getSALLink = (): string => {
-  return 'https://anpc.ro/ce-este-sal/';
+  return 'https://reclamatiisal.anpc.ro/';
 };
 
 // Legal Page Routes

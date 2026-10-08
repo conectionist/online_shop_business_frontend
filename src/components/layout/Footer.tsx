@@ -12,7 +12,6 @@ import {
   getBusinessRepresentative,
   getBusinessHours,
   getANPCLink,
-  getSOLLink,
   getSALLink,
   getLegalPageRoutes
 } from '@/utils/businessInfo';
@@ -37,7 +36,6 @@ const Footer: React.FC = () => {
   const businessRepresentative = getBusinessRepresentative(businessDetails || undefined);
   const businessHours = getBusinessHours(businessDetails || undefined);
   const anpcLink = getANPCLink();
-  const solLink = getSOLLink();
   const salLink = getSALLink();
   const legalRoutes = getLegalPageRoutes();
 
@@ -180,21 +178,6 @@ const Footer: React.FC = () => {
                   src="/anpc-sal.png"
                   alt="Soluționarea Alternativă a Litigiilor"
                   title="Soluționarea Alternativă a Litigiilor"
-                  className="rounded shadow-sm"
-                />
-              </a>
-              <a 
-                href={solLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center hover:opacity-90 transition"
-              >
-                <img
-                  decoding="async"
-                  style={{ width: '250px', height: '50px' }}
-                  src="/anpc-sol.png"
-                  alt="Soluționarea Online a Litigiilor"
-                  title="Soluționarea Online a Litigiilor"
                   className="rounded shadow-sm"
                 />
               </a>

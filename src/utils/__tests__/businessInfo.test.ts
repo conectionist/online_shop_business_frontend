@@ -18,7 +18,6 @@ import {
   getLegalReturnPolicy,
   getLegalReturnDays,
   getANPCLink,
-  getSOLLink,
   getSALLink,
   getLegalPageRoutes,
   getBusinessSocialMedia,
@@ -110,10 +109,6 @@ describe('hardcoded legal values', () => {
 
   test('getANPCLink returns valid URL', () => {
     expect(getANPCLink()).toMatch(/^https:\/\//)
-  })
-
-  test('getSOLLink returns valid URL', () => {
-    expect(getSOLLink()).toMatch(/^https:\/\//)
   })
 
   test('getSALLink returns valid URL', () => {
