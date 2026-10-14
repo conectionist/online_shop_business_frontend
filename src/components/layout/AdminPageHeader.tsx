@@ -23,7 +23,7 @@ const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Back Button Row */}
-      <div>
+      <div className="print:hidden">
         <Button
           variant="outline"
           size="sm"

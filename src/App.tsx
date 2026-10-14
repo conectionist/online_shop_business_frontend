@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -14,6 +14,7 @@ import AdvancedOperations from '@/pages/admin/AdvancedOperations'
 import NotificationsHome from '@/pages/admin/notifications/NotificationsHome'
 import MySubscriptions from '@/pages/admin/notifications/MySubscriptions'
 import SessionsList from './pages/admin/SessionsList'
+import Loading from './components/ui/Loading'
 import CategoriesList from './pages/admin/CategoriesList'
 import CategoryForm from './pages/admin/CategoryForm'
 import ProductsList from './pages/admin/ProductsList'
@@ -50,6 +51,9 @@ import { ToastProvider } from './components/ui/ToastContainer'
 import AuthInitializer from './components/AuthInitializer'
 import { usePublishedList } from './hooks/useLists'
 import { useCartStore } from './stores/cartStore'
+
+// Admin-only, so it loads on demand and stays out of the shop's main bundle
+const Statistics = lazy(() => import('./pages/admin/Statistics'))
 
 function CartListSync() {
   const { data: publishedList } = usePublishedList()
@@ -132,6 +136,14 @@ function App() {
             <Route path="advanced/notifications" element={<NotificationsHome />} />
             <Route path="advanced/notifications/my-subscriptions" element={<MySubscriptions />} />
             <Route path="sessions" element={<SessionsList />} />
+            <Route
+              path="statistics"
+              element={
+                <Suspense fallback={<Loading text="Se încarcă statisticile..." />}>
+                  <Statistics />
+                </Suspense>
+              }
+            />
             {/* Future admin routes will go here */}
           </Route>
 
