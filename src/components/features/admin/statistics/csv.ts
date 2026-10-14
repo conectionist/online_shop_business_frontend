@@ -105,6 +105,10 @@ export const productRows = (
   ['Încasări pe categorii'],
   ['Categorie', 'Cantitate (buc)', 'Încasări (RON)'],
   ...products.categories.map((c) => [c.name, c.quantity, c.revenue]),
+  [],
+  ['Produse epuizate'],
+  ['Produs', 'Categorie', 'Liste în care s-a epuizat', 'Liste în care a fost oferit'],
+  ...products.sell_outs.map((p) => [p.name, p.category_name ?? '', p.sold_out, p.offered]),
 ];
 
 export const customerRows = (

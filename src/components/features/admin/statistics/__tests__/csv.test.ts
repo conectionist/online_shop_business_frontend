@@ -33,10 +33,11 @@ describe('row builders', () => {
     expect(rows).toContainEqual(['Joi, 15 oct', 88, 5880, 66.8, 85, 4, 81])
   })
 
-  test('productRows ranks by revenue and adds the categories', () => {
+  test('productRows ranks by revenue and adds the categories and sell-outs', () => {
     const rows = productRows(createTestProductStats(), '2 liste', generatedAt)
     expect(rows).toContainEqual([1, 'Cozonac cu nucă', 'Cozonaci', 40, 2400, 35])
     expect(rows).toContainEqual(['Pâine', 120, 1440])
+    expect(rows).toContainEqual(['Cozonac cu nucă', 'Cozonaci', 3, 4])
   })
 
   test('customerRows lists the top customers with readable phones', () => {

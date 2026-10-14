@@ -94,7 +94,7 @@ const Panel: React.FC<PanelProps> = ({
 
 export default Panel;
 
-// "Vezi toți (N)" toggle under a list cut to its first rows
+// "Vezi toate (N)" toggle under a list of products cut to its first rows
 export const ShowAllButton: React.FC<{ expanded: boolean; total: number; onToggle: () => void }> = ({
   expanded,
   total,
@@ -106,7 +106,7 @@ export const ShowAllButton: React.FC<{ expanded: boolean; total: number; onToggl
     aria-expanded={expanded}
     className="mt-2 text-sm font-medium text-[#8d3e0f] hover:text-[#6b3210] print:hidden"
   >
-    {expanded ? 'Arată mai puțin' : `Vezi toți (${total})`}
+    {expanded ? 'Arată mai puțin' : `Vezi toate (${total})`}
   </button>
 );
 

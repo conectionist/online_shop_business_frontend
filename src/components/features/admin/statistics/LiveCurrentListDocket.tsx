@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, ArrowRight, CheckCircle2, ChevronDown, Clock, Radio, XCircle } from 'lucide-react';
-import { CurrentListStats, StockItem } from '@/types/statistics';
+import { ArrowRight, CheckCircle2, ChevronDown, Clock, Radio, XCircle } from 'lucide-react';
+import { CurrentListStats } from '@/types/statistics';
 import {
   formatCountdown,
   formatLongWeekdayDay,
@@ -13,9 +13,7 @@ import {
 import { THEME } from './theme';
 import { useNow } from './useNow';
 
-// Same threshold as the API's low_stock_count: 80% sold, under 20% left
-const LOW_STOCK = 0.8;
-const STOCK_PREVIEW = 4;
+const SOLD_OUT_PREVIEW = 4;
 const CLOSING_SOON_MS = 6 * 60 * 60 * 1000;
 
 interface LiveCurrentListDocketProps {
@@ -32,37 +30,10 @@ const Metric: React.FC<{ label: string; children: React.ReactNode }> = ({ label,
   </div>
 );
 
-const StockRow: React.FC<{ item: StockItem; className?: string }> = ({ item, className = '' }) => {
-  const soldOut = item.sell_through >= 1;
-  const low = !soldOut && item.sell_through >= LOW_STOCK;
-  const fill = soldOut ? 'bg-rose-600' : low ? 'bg-amber-500' : 'bg-gray-400';
-  const status = soldOut ? 'Epuizat' : item.remaining === 1 ? '1 rămas' : `${formatNumber(item.remaining)} rămase`;
-  return (
-    <li className={`py-2 ${className}`}>
-      <div className="flex items-baseline justify-between gap-3 text-sm">
-        <span className="flex min-w-0 items-center gap-1.5 font-medium text-gray-900">
-          {soldOut && <XCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" aria-label="Epuizat" />}
-          {low && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" aria-label="Stoc critic" />}
-          <span className="truncate">{item.name}</span>
-        </span>
-        <span className="shrink-0 tabular-nums text-gray-700">
-          {formatNumber(item.ordered)} / {formatNumber(item.stock)}{' '}
-          <span className={`text-xs ${soldOut ? 'font-semibold text-rose-700' : low ? 'text-amber-800' : 'text-gray-500'}`}>
-            ({formatPercent(item.sell_through)} · {status})
-          </span>
-        </span>
-      </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100">
-        <div className={`h-full rounded-full ${fill}`} style={{ width: `${Math.min(item.sell_through, 1) * 100}%` }} />
-      </div>
-    </li>
-  );
-};
-
 // The list taking orders right now, drawn as a bakery order docket. It does not follow
 // the period filter: it is always the live list.
 const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isLoading, isError = false }) => {
-  const [showAllStock, setShowAllStock] = useState(false);
+  const [showAllSoldOut, setShowAllSoldOut] = useState(false);
   // Keeps the countdown moving between refetches
   const now = useNow(30 * 1000);
 
@@ -192,63 +163,68 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
         </Metric>
       </dl>
 
-      {data.stock.length > 0 && (
-        <div className="mt-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-gray-900">Stoc</h3>
-            <div className="flex flex-wrap gap-1.5 text-xs">
-              {data.sold_out_count > 0 && (
-                <Link
-                  to={stockLink}
-                  className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100"
-                >
-                  <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                  {pluralRo(data.sold_out_count, 'epuizat', 'epuizate')}
-                </Link>
-              )}
-              {data.low_stock_count > 0 && (
-                <Link
-                  to={stockLink}
-                  className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-900 ring-1 ring-amber-200 hover:bg-amber-100"
-                >
-                  <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-                  {data.low_stock_count} stoc critic
-                </Link>
-              )}
-              {data.sold_out_count === 0 && data.low_stock_count === 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800">
-                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  Stoc suficient
-                </span>
-              )}
-            </div>
-          </div>
-          {/* Rows past the preview stay in the printout, so the kitchen sees every product */}
-          <ul className="mt-2 divide-y divide-amber-100">
-            {data.stock.map((item, index) => (
-              <StockRow
-                key={item.product_id}
-                item={item}
-                className={!showAllStock && index >= STOCK_PREVIEW ? 'hidden print:block' : ''}
-              />
-            ))}
-          </ul>
-          {data.stock.length > STOCK_PREVIEW && (
-            <button
-              type="button"
-              onClick={() => setShowAllStock((v) => !v)}
-              aria-expanded={showAllStock}
-              className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-[#8d3e0f] hover:text-[#6b3210] print:hidden"
-            >
-              {showAllStock ? 'Arată mai puțin' : `Vezi tot stocul (${pluralRo(data.stock.length, 'produs', 'produse')})`}
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${showAllStock ? 'rotate-180' : ''}`}
-                aria-hidden="true"
-              />
-            </button>
-          )}
+      <div className="mt-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+            Produse epuizate
+            {data.sold_out.length > 0 && (
+              <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-rose-700 ring-1 ring-rose-200">
+                {data.sold_out.length}
+              </span>
+            )}
+          </h3>
+          <Link
+            to={stockLink}
+            className="inline-flex items-center gap-1 text-sm font-medium text-[#8d3e0f] hover:text-[#6b3210] print:hidden"
+          >
+            Gestionează produsele
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
-      )}
+        {data.sold_out.length === 0 ? (
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-emerald-800">
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+            Niciun produs epuizat până acum
+          </p>
+        ) : (
+          <>
+            {/* Rows past the preview stay in the printout, so the kitchen sees every product */}
+            <ul className="mt-2 divide-y divide-amber-100" aria-label="Produse epuizate">
+              {data.sold_out.map((item, index) => (
+                <li
+                  key={item.product_id}
+                  className={`items-baseline justify-between gap-3 py-2 text-sm ${
+                    !showAllSoldOut && index >= SOLD_OUT_PREVIEW ? 'hidden print:flex' : 'flex'
+                  }`}
+                >
+                  <span className="flex min-w-0 items-center gap-1.5 font-medium text-gray-900">
+                    <XCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" aria-hidden="true" />
+                    <span className="truncate">{item.name}</span>
+                  </span>
+                  <span className="shrink-0 tabular-nums text-gray-600">
+                    {formatNumber(item.ordered)}
+                    {item.unit ? ` ${item.unit}` : ''} comandate
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {data.sold_out.length > SOLD_OUT_PREVIEW && (
+              <button
+                type="button"
+                onClick={() => setShowAllSoldOut((v) => !v)}
+                aria-expanded={showAllSoldOut}
+                className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-[#8d3e0f] hover:text-[#6b3210] print:hidden"
+              >
+                {showAllSoldOut ? 'Arată mai puțin' : `Vezi toate (${data.sold_out.length})`}
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${showAllSoldOut ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </>
   );
 };

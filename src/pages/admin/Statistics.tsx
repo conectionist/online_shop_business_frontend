@@ -20,6 +20,7 @@ import TopProductsCard from '@/components/features/admin/statistics/TopProductsC
 import CategoryRevenueCard from '@/components/features/admin/statistics/CategoryRevenueCard';
 import TopCustomersCard from '@/components/features/admin/statistics/TopCustomersCard';
 import UnsoldProductsCard from '@/components/features/admin/statistics/UnsoldProductsCard';
+import SellOutProductsCard from '@/components/features/admin/statistics/SellOutProductsCard';
 import OrdersHeatmap from '@/components/features/admin/statistics/OrdersHeatmap';
 import BreakdownCard from '@/components/features/admin/statistics/BreakdownCard';
 
@@ -138,21 +139,29 @@ const Statistics: React.FC = () => {
         />
       </div>
 
+      {/* What to make more of, and what nobody wanted */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start">
+        <SellOutProductsCard
+          data={products.data}
+          isLoading={products.isLoading}
+          isRefreshing={productsRefreshing}
+          isError={productsFailed}
+        />
+        <UnsoldProductsCard
+          data={products.data}
+          isLoading={products.isLoading}
+          isRefreshing={productsRefreshing}
+          isError={productsFailed}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-6">
-          <TopCustomersCard
-            data={customers.data}
-            isLoading={customers.isLoading}
-            isRefreshing={customers.isFetching && customers.isPlaceholderData}
-            isError={customersFailed}
-          />
-          <UnsoldProductsCard
-            data={products.data}
-            isLoading={products.isLoading}
-            isRefreshing={productsRefreshing}
-            isError={productsFailed}
-          />
-        </div>
+        <TopCustomersCard
+          data={customers.data}
+          isLoading={customers.isLoading}
+          isRefreshing={customers.isFetching && customers.isPlaceholderData}
+          isError={customersFailed}
+        />
         <div className="space-y-6">
           <OrdersHeatmap
             cells={overview.data?.heatmap ?? []}

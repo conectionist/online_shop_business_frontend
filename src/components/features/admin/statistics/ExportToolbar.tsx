@@ -14,7 +14,7 @@ type ExportKind = 'summary' | 'products' | 'customers';
 
 const EXPORTS: { kind: ExportKind; label: string; description: string; file: string }[] = [
   { kind: 'summary', label: 'Sumar indicatori', description: 'Încasări, comenzi, clienți, evoluție pe liste', file: 'statistici_sumar' },
-  { kind: 'products', label: 'Top produse', description: 'Cantități și încasări pe produs și categorie', file: 'top_produse' },
+  { kind: 'products', label: 'Top produse', description: 'Cantități, încasări, categorii și produse epuizate', file: 'top_produse' },
   { kind: 'customers', label: 'Activitate clienți', description: 'Top clienți: comenzi și valoare', file: 'activitate_clienti' },
 ];
 

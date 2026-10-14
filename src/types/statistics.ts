@@ -87,12 +87,23 @@ export interface UnsoldProduct {
   times_offered: number;
 }
 
+// How often a product sold out: the admin marks a product unavailable (stoc_produs 0)
+// once it sells out, so "sold out" means marked unavailable after it had orders
+export interface ProductSellOut {
+  product_id: number;
+  name: string;
+  category_name: string | null;
+  sold_out: number; // lists where it sold out
+  offered: number; // lists where it could be ordered, sold out or not
+}
+
 export interface ProductStatsResponse {
   period: StatsPeriod;
   top_by_quantity: ProductStat[];
   top_by_revenue: ProductStat[];
   categories: CategoryStat[];
   unsold_products: UnsoldProduct[];
+  sell_outs: ProductSellOut[]; // most often first
 }
 
 export interface CustomerStat {
@@ -110,14 +121,11 @@ export interface CustomerStatsResponse {
   top_customers_by_orders: CustomerStat[];
 }
 
-export interface StockItem {
+export interface SoldOutProduct {
   product_id: number;
   name: string;
   unit: string | null;
-  stock: number;
   ordered: number;
-  remaining: number;
-  sell_through: number; // 0-1, may exceed 1
 }
 
 export interface CurrentListStats {
@@ -137,7 +145,5 @@ export interface CurrentListStats {
     orders: number;
     revenue: number;
   } | null;
-  stock: StockItem[];
-  sold_out_count: number;
-  low_stock_count: number;
+  sold_out: SoldOutProduct[]; // most ordered first
 }

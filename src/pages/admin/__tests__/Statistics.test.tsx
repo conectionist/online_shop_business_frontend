@@ -4,7 +4,12 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/mocks/server'
 import { renderWithProviders } from '@/test/testUtils'
-import { createTestCurrentListStats, createTestCustomerStats, createTestStatsOverview } from '@/test/mocks/handlers'
+import {
+  createTestCurrentListStats,
+  createTestCustomerStats,
+  createTestProductStats,
+  createTestStatsOverview,
+} from '@/test/mocks/handlers'
 import { toISODate } from '@/components/features/admin/statistics/format'
 import Statistics from '../Statistics'
 
@@ -23,7 +28,8 @@ describe('Statistics page', () => {
 
     // Current list and stock warnings
     expect(await screen.findByText('Livrare: Joi, 15 octombrie')).toBeInTheDocument()
-    expect(screen.getByText('1 epuizat')).toBeInTheDocument()
+    const docket = screen.getByRole('region', { name: 'Lista curentă' })
+    expect(within(docket).getByText('20 buc comandate')).toBeInTheDocument()
 
     // Products, customers, breakdowns
     expect((await screen.findAllByText('Cozonac cu nucă')).length).toBeGreaterThan(0)
@@ -130,8 +136,8 @@ describe('Statistics page', () => {
 
     expect(await screen.findByText('Nu s-a putut încărca lista curentă.')).toBeInTheDocument()
     expect(screen.queryByText('Nu există nicio listă curentă.')).not.toBeInTheDocument()
-    // Top products, categories and unsold products
-    await waitFor(() => expect(screen.getAllByText('Nu s-au putut încărca datele.')).toHaveLength(3))
+    // Top products, categories, sold-out and unsold products
+    await waitFor(() => expect(screen.getAllByText('Nu s-au putut încărca datele.')).toHaveLength(4))
     expect(screen.queryByText('Toate produsele oferite s-au vândut cel puțin o dată.')).not.toBeInTheDocument()
     // Sections fed by the requests that succeeded still render
     expect(await screen.findByText('Elena Florea')).toBeInTheDocument()
@@ -156,15 +162,55 @@ describe('Statistics page', () => {
     expect(screen.queryByText(legend)).not.toBeInTheDocument()
   })
 
-  test('the live docket links to the list orders and its stock', async () => {
+  test('the live docket lists the products that sold out and links to the list', async () => {
     renderWithProviders(<Statistics />)
 
     expect(await screen.findByRole('link', { name: /Vezi cele 88 de comenzi/ })).toHaveAttribute(
       'href',
       '/admin/lists/216/manage?tab=orders'
     )
-    expect(screen.getByRole('link', { name: '1 epuizat' })).toHaveAttribute('href', '/admin/lists/216/manage?tab=products2')
-    expect(screen.getByRole('link', { name: '1 stoc critic' })).toBeInTheDocument()
+    const docket = screen.getByRole('region', { name: 'Lista curentă' })
+    expect(within(docket).getByRole('link', { name: /Gestionează produsele/ })).toHaveAttribute(
+      'href',
+      '/admin/lists/216/manage?tab=products2'
+    )
+    const soldOut = within(docket).getByRole('list', { name: 'Produse epuizate' })
+    expect(within(soldOut).getByText('Cozonac cu nucă')).toBeInTheDocument()
+    expect(within(soldOut).getByText('20 buc comandate')).toBeInTheDocument()
+  })
+
+  test('the docket says when nothing has sold out yet', async () => {
+    server.use(
+      http.get(`${API}/statistics/current-list`, () =>
+        HttpResponse.json({ ...createTestCurrentListStats(), sold_out: [] })
+      )
+    )
+    renderWithProviders(<Statistics />)
+
+    expect(await screen.findByText('Niciun produs epuizat până acum')).toBeInTheDocument()
+  })
+
+  test('shows how often products sold out in the period', async () => {
+    renderWithProviders(<Statistics />)
+
+    expect(await screen.findByText('Epuizat în 3 din 4 liste')).toBeInTheDocument()
+  })
+
+  test('long product lists open with "Vezi toate"', async () => {
+    const sellOuts = Array.from({ length: 9 }, (_, i) => ({
+      product_id: 100 + i, name: `Produs ${i + 1}`, category_name: null, sold_out: 1, offered: 2,
+    }))
+    server.use(
+      http.get(`${API}/statistics/products`, () =>
+        HttpResponse.json({ ...createTestProductStats(), sell_outs: sellOuts })
+      )
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<Statistics />)
+
+    await user.click(await screen.findByRole('button', { name: 'Vezi toate (9)' }))
+    expect(screen.getByText('Produs 9')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Arată mai puțin' })).toBeInTheDocument()
   })
 
   test('top customers can be ranked by orders or by value', async () => {

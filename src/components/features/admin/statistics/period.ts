@@ -68,8 +68,7 @@ const presetStart = (preset: PeriodPreset, today: Date): string | undefined => {
 
 // Turn the selected preset into API parameters. Dates select lists by delivery date.
 // Presets end today, so they cover lists already delivered: the list still taking
-// orders has unfinished numbers and is shown only in the live docket. Ending today
-// also gives the API's comparison period the same length.
+// orders has unfinished numbers and is shown only in the live docket.
 export const resolveRange = (
   preset: PeriodPreset,
   custom: CustomRange,

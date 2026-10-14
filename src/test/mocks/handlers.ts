@@ -282,6 +282,7 @@ export const createTestProductStats = () => ({
     { category_id: 1, name: 'Pâine', quantity: 120, revenue: 1440 },
   ],
   unsold_products: [{ product_id: 21, name: 'Biscuiți cu ovăz', category_name: 'Produse de patiserie', times_offered: 2 }],
+  sell_outs: [{ product_id: 17, name: 'Cozonac cu nucă', category_name: 'Cozonaci', sold_out: 3, offered: 4 }],
 })
 
 export const createTestCustomerStats = () => ({
@@ -301,12 +302,7 @@ export const createTestCurrentListStats = () => ({
   customers: 85,
   items_sold: 260,
   previous: { id: 215, data: '2026-10-08', orders: 98, revenue: 6600 },
-  stock: [
-    { product_id: 17, name: 'Cozonac cu nucă', unit: 'buc', stock: 20, ordered: 20, remaining: 0, sell_through: 1 },
-    { product_id: 13, name: 'Pâine de casă', unit: 'buc', stock: 50, ordered: 42, remaining: 8, sell_through: 0.84 },
-  ],
-  sold_out_count: 1,
-  low_stock_count: 1,
+  sold_out: [{ product_id: 17, name: 'Cozonac cu nucă', unit: 'buc', ordered: 20 }],
 })
 
 export const handlers = [

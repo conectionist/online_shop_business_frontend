@@ -70,7 +70,7 @@ describe('useStatistics hooks', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.list?.id).toBe(216)
-    expect(result.current.data?.sold_out_count).toBe(1)
+    expect(result.current.data?.sold_out).toHaveLength(1)
   })
 
   test('surfaces API errors', async () => {
