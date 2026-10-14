@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import AdminLayout from './components/layout/AdminLayout'
 import ProtectedRoute from './components/ProtectedRoute'
+import RouteErrorBoundary from './components/RouteErrorBoundary'
 import SEO from './components/SEO'
 import ScrollToTop from './components/ScrollToTop'
 import WelcomePage from './pages/WelcomePage'
@@ -139,9 +140,11 @@ function App() {
             <Route
               path="statistics"
               element={
-                <Suspense fallback={<Loading text="Se încarcă statisticile..." />}>
-                  <Statistics />
-                </Suspense>
+                <RouteErrorBoundary>
+                  <Suspense fallback={<Loading text="Se încarcă statisticile..." />}>
+                    <Statistics />
+                  </Suspense>
+                </RouteErrorBoundary>
               }
             />
             {/* Future admin routes will go here */}

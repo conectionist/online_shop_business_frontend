@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Clock } from 'lucide-react';
 import { HeatmapCell } from '@/types/statistics';
-import { WEEKDAYS_LONG, WEEKDAYS_SHORT, formatNumber, formatPercent } from './format';
+import { WEEKDAYS_LONG, WEEKDAYS_SHORT, formatPercent, pluralRo } from './format';
 import Panel from './Panel';
 import { HEATMAP_SCALE } from './theme';
 
@@ -9,16 +9,17 @@ interface OrdersHeatmapProps {
   cells: HeatmapCell[];
   isLoading: boolean;
   isRefreshing: boolean;
+  isError?: boolean;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const PEAK_WINDOW_HOURS = 3;
 const hour = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
 const hourRange = (h: number) => `${hour(h)}–${hour(h + 1)}`;
-const ordersLabel = (n: number) => (n === 1 ? '1 comandă' : `${formatNumber(n)} comenzi`);
+const ordersLabel = (n: number) => pluralRo(n, 'comandă', 'comenzi');
 
 // Desktop: a 7 × 24 matrix. Phones get a summary instead, since 168 cells are too small to tap.
-const OrdersHeatmap: React.FC<OrdersHeatmapProps> = ({ cells, isLoading, isRefreshing }) => {
+const OrdersHeatmap: React.FC<OrdersHeatmapProps> = ({ cells, isLoading, isRefreshing, isError }) => {
   const [hovered, setHovered] = useState<HeatmapCell | null>(null);
 
   const { grid, max, total, busiestDay, busiestDayShare, peakWindow, topCells } = useMemo(() => {
@@ -77,6 +78,7 @@ const OrdersHeatmap: React.FC<OrdersHeatmapProps> = ({ cells, isLoading, isRefre
       icon={Clock}
       isLoading={isLoading}
       isRefreshing={isRefreshing}
+      isError={isError}
       isEmpty={max === 0}
       placeholderHeight={220}
     >
@@ -117,7 +119,7 @@ const OrdersHeatmap: React.FC<OrdersHeatmapProps> = ({ cells, isLoading, isRefre
             ))}
           </ol>
         </div>
-        <p className="text-xs text-gray-500">{formatNumber(total)} comenzi în total</p>
+        <p className="text-xs text-gray-500">{ordersLabel(total)} în total</p>
       </div>
 
       {/* Wider screens: the full matrix */}

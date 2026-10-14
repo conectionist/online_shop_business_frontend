@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ArrowRight, CheckCircle2, ChevronDown, Clock, Radio, XCircle } from 'lucide-react';
 import { CurrentListStats, StockItem } from '@/types/statistics';
@@ -11,6 +11,7 @@ import {
   pluralRo,
 } from './format';
 import { THEME } from './theme';
+import { useNow } from './useNow';
 
 // Same threshold as the API's low_stock_count: 80% sold, under 20% left
 const LOW_STOCK = 0.8;
@@ -20,17 +21,9 @@ const CLOSING_SOON_MS = 6 * 60 * 60 * 1000;
 interface LiveCurrentListDocketProps {
   data?: CurrentListStats;
   isLoading: boolean;
+  // The request failed and there is nothing to show
+  isError?: boolean;
 }
-
-// Re-render on a timer so the countdown keeps moving between refetches
-const useNow = (intervalMs: number): Date => {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(id);
-  }, [intervalMs]);
-  return now;
-};
 
 const Metric: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="rounded-lg border border-amber-100 bg-white/80 p-4">
@@ -68,8 +61,9 @@ const StockRow: React.FC<{ item: StockItem; className?: string }> = ({ item, cla
 
 // The list taking orders right now, drawn as a bakery order docket. It does not follow
 // the period filter: it is always the live list.
-const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isLoading }) => {
+const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isLoading, isError = false }) => {
   const [showAllStock, setShowAllStock] = useState(false);
+  // Keeps the countdown moving between refetches
   const now = useNow(30 * 1000);
 
   const shell = (children: React.ReactNode) => (
@@ -90,6 +84,9 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
 
   if (isLoading) {
     return shell(<div className="mt-4 h-56 animate-pulse rounded-lg bg-amber-100/60" />);
+  }
+  if (isError) {
+    return shell(<p className="mt-4 text-sm text-rose-700">Nu s-a putut încărca lista curentă.</p>);
   }
   if (!data?.list) {
     return shell(<p className="mt-4 text-sm text-gray-600">Nu există nicio listă curentă.</p>);
@@ -206,7 +203,7 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
                   className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100"
                 >
                   <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                  {data.sold_out_count} epuizate
+                  {pluralRo(data.sold_out_count, 'epuizat', 'epuizate')}
                 </Link>
               )}
               {data.low_stock_count > 0 && (

@@ -21,9 +21,16 @@ interface ListsTrendBarChartProps {
   currentListId?: number;
   isLoading: boolean;
   isRefreshing: boolean;
+  isError?: boolean;
 }
 
-const ListsTrendBarChart: React.FC<ListsTrendBarChartProps> = ({ lists, currentListId, isLoading, isRefreshing }) => {
+const ListsTrendBarChart: React.FC<ListsTrendBarChartProps> = ({
+  lists,
+  currentListId,
+  isLoading,
+  isRefreshing,
+  isError,
+}) => {
   const [metric, setMetric] = useState<Metric>('revenue');
   const [view, setView] = useState<View>('chart');
   const metricDef = METRICS.find((m) => m.value === metric)!;
@@ -82,6 +89,7 @@ const ListsTrendBarChart: React.FC<ListsTrendBarChartProps> = ({ lists, currentL
       icon={BarChart3}
       isLoading={isLoading}
       isRefreshing={isRefreshing}
+      isError={isError}
       isEmpty={lists.length === 0}
       placeholderHeight={280}
       actions={

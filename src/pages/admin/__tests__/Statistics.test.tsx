@@ -1,10 +1,11 @@
 import { describe, test, expect, vi } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/mocks/server'
 import { renderWithProviders } from '@/test/testUtils'
-import { createTestCustomerStats, createTestStatsOverview } from '@/test/mocks/handlers'
+import { createTestCurrentListStats, createTestCustomerStats, createTestStatsOverview } from '@/test/mocks/handlers'
+import { toISODate } from '@/components/features/admin/statistics/format'
 import Statistics from '../Statistics'
 
 const API = 'http://localhost:8001/api/v1'
@@ -22,7 +23,7 @@ describe('Statistics page', () => {
 
     // Current list and stock warnings
     expect(await screen.findByText('Livrare: Joi, 15 octombrie')).toBeInTheDocument()
-    expect(screen.getByText('1 epuizate')).toBeInTheDocument()
+    expect(screen.getByText('1 epuizat')).toBeInTheDocument()
 
     // Products, customers, breakdowns
     expect((await screen.findAllByText('Cozonac cu nucă')).length).toBeGreaterThan(0)
@@ -75,18 +76,84 @@ describe('Statistics page', () => {
       'Toată perioada',
       'Interval personalizat…',
     ])
-    // Opens on the last month
+    // Opens on the last month; presets end today, leaving the open list to the docket
+    const today = toISODate(new Date())
     expect(select).toHaveValue('months1')
-    await waitFor(() => expect(requested[0]).toMatch(/^\?start_date=\d{4}-\d{2}-\d{2}$/))
+    await waitFor(() => expect(requested[0]).toMatch(new RegExp(`^\\?start_date=\\d{4}-\\d{2}-\\d{2}&end_date=${today}$`)))
 
     await user.selectOptions(select, 'Anul acesta')
-    await waitFor(() => expect(requested).toContain(`?start_date=${new Date().getFullYear()}-01-01`))
+    await waitFor(() => expect(requested).toContain(`?start_date=${new Date().getFullYear()}-01-01&end_date=${today}`))
     await user.selectOptions(select, 'Toată perioada')
-    await waitFor(() => expect(requested).toContain(''))
+    await waitFor(() => expect(requested).toContain(`?end_date=${today}`))
 
     await user.selectOptions(select, 'Interval personalizat…')
     expect(screen.getByLabelText('De la')).toBeInTheDocument()
     expect(screen.getByLabelText('Până la')).toBeInTheDocument()
+  })
+
+  test('a custom range starts from the dates on screen and loads only a valid range', async () => {
+    const requested: string[] = []
+    server.use(
+      http.get(`${API}/statistics/overview`, ({ request }) => {
+        requested.push(new URL(request.url).search)
+        return HttpResponse.json(createTestStatsOverview())
+      })
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<Statistics />)
+
+    await waitFor(() => expect(requested).toHaveLength(1))
+    const [, start, end] = /start_date=([\d-]+)&end_date=([\d-]+)/.exec(requested[0])!
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Perioadă' }), 'Interval personalizat…')
+    const from = screen.getByLabelText('De la')
+    expect(from).toHaveValue(start)
+    expect(screen.getByLabelText('Până la')).toHaveValue(end)
+
+    // A start after the end is explained, not requested
+    fireEvent.change(from, { target: { value: '2099-01-01' } })
+    expect(await screen.findByRole('alert')).toHaveTextContent('înaintea datei de sfârșit')
+
+    fireEvent.change(from, { target: { value: '2020-01-01' } })
+    await waitFor(() => expect(requested).toContain(`?start_date=2020-01-01&end_date=${end}`))
+    expect(requested).toHaveLength(2)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  test('sections whose request failed say so instead of showing an empty state', async () => {
+    const fail = () => HttpResponse.json({ detail: 'Eroare' }, { status: 500 })
+    server.use(
+      http.get(`${API}/statistics/products`, fail),
+      http.get(`${API}/statistics/current-list`, fail)
+    )
+    renderWithProviders(<Statistics />)
+
+    expect(await screen.findByText('Nu s-a putut încărca lista curentă.')).toBeInTheDocument()
+    expect(screen.queryByText('Nu există nicio listă curentă.')).not.toBeInTheDocument()
+    // Top products, categories and unsold products
+    await waitFor(() => expect(screen.getAllByText('Nu s-au putut încărca datele.')).toHaveLength(3))
+    expect(screen.queryByText('Toate produsele oferite s-au vândut cel puțin o dată.')).not.toBeInTheDocument()
+    // Sections fed by the requests that succeeded still render
+    expect(await screen.findByText('Elena Florea')).toBeInTheDocument()
+  })
+
+  test('the trend chart marks the current list as in progress only while it takes orders', async () => {
+    const currentListClosing = (offsetMs: number) => {
+      const stats = createTestCurrentListStats()
+      return { ...stats, list: { ...stats.list, expiration_date: new Date(Date.now() + offsetMs).toISOString() } }
+    }
+    const legend = 'Lista curentă – încă primește comenzi'
+
+    server.use(http.get(`${API}/statistics/current-list`, () => HttpResponse.json(currentListClosing(60 * 60 * 1000))))
+    const { unmount } = renderWithProviders(<Statistics />)
+    expect(await screen.findByText(legend)).toBeInTheDocument()
+    unmount()
+
+    server.use(http.get(`${API}/statistics/current-list`, () => HttpResponse.json(currentListClosing(-60 * 60 * 1000))))
+    renderWithProviders(<Statistics />)
+    expect(await screen.findByText('Comenzile s-au închis · În faza de producție')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Joi, 15 oct: 5\.880 RON$/ })).toBeInTheDocument()
+    expect(screen.queryByText(legend)).not.toBeInTheDocument()
   })
 
   test('the live docket links to the list orders and its stock', async () => {
@@ -96,7 +163,7 @@ describe('Statistics page', () => {
       'href',
       '/admin/lists/216/manage?tab=orders'
     )
-    expect(screen.getByRole('link', { name: '1 epuizate' })).toHaveAttribute('href', '/admin/lists/216/manage?tab=products2')
+    expect(screen.getByRole('link', { name: '1 epuizat' })).toHaveAttribute('href', '/admin/lists/216/manage?tab=products2')
     expect(screen.getByRole('link', { name: '1 stoc critic' })).toBeInTheDocument()
   })
 

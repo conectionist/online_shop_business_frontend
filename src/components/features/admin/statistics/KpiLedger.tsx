@@ -7,7 +7,6 @@ import {
   formatPercent,
   formatRON,
   formatShortDay,
-  pluralRo,
 } from './format';
 import KpiCard from './KpiCard';
 
@@ -69,7 +68,7 @@ const KpiLedger: React.FC<KpiLedgerProps> = ({ summary, previous, lists, isLoadi
           badge={
             newCustomers > 0 ? (
               <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-800">
-                +{pluralRo(newCustomers, 'nou', 'noi')}
+                +{formatNumber(newCustomers)} {newCustomers === 1 ? 'nou' : 'noi'}
               </span>
             ) : undefined
           }

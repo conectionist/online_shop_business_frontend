@@ -3,7 +3,7 @@ import { ChevronDown, Download, Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/ToastContainer';
 import { statisticsService } from '@/services/statistics';
-import { StatsOverview, StatsRange } from '@/types/statistics';
+import { StatsOverview, StatsPeriod, StatsRange } from '@/types/statistics';
 import { CsvRow, customerRows, downloadCsv, productRows, summaryRows } from './csv';
 import { describePeriod, periodSlug } from './period';
 
@@ -20,6 +20,7 @@ const EXPORTS: { kind: ExportKind; label: string; description: string; file: str
 
 interface ExportToolbarProps {
   range: StatsRange;
+  // Overview for `range`; undefined while it loads, which disables the menu
   overview?: StatsOverview;
 }
 
@@ -50,18 +51,24 @@ const ExportToolbar: React.FC<ExportToolbarProps> = ({ range, overview }) => {
     }
     setBusy(kind);
     try {
-      const periodText = describePeriod(overview.period);
       // Products and customers are fetched in full here; the page only shows the top 10.
-      // Called directly so the page's cached top-10 queries stay as they are.
+      // Called directly so the page's cached top-10 queries stay as they are. Each file
+      // is labelled with the period of the data it holds.
       let rows: CsvRow[];
+      let period: StatsPeriod;
       if (kind === 'summary') {
-        rows = summaryRows(overview, periodText);
+        period = overview.period;
+        rows = summaryRows(overview, describePeriod(period));
       } else if (kind === 'products') {
-        rows = productRows(await statisticsService.getProducts(range, EXPORT_LIMIT), periodText);
+        const products = await statisticsService.getProducts(range, EXPORT_LIMIT);
+        period = products.period;
+        rows = productRows(products, describePeriod(period));
       } else {
-        rows = customerRows(await statisticsService.getCustomers(range, EXPORT_LIMIT), periodText);
+        const customers = await statisticsService.getCustomers(range, EXPORT_LIMIT);
+        period = customers.period;
+        rows = customerRows(customers, describePeriod(period));
       }
-      downloadCsv(`${file}_${periodSlug(overview.period)}.csv`, rows);
+      downloadCsv(`${file}_${periodSlug(period)}.csv`, rows);
       if (menuRef.current) {
         menuRef.current.open = false;
       }

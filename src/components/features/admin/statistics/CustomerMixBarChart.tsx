@@ -13,6 +13,7 @@ interface CustomerMixBarChartProps {
   currentListId?: number;
   isLoading: boolean;
   isRefreshing: boolean;
+  isError?: boolean;
 }
 
 const SERIES = [
@@ -26,6 +27,7 @@ const CustomerMixBarChart: React.FC<CustomerMixBarChartProps> = ({
   currentListId,
   isLoading,
   isRefreshing,
+  isError,
 }) => {
   const totalNew = lists.reduce((sum, p) => sum + p.new_customers, 0);
   const kicker = `${totalNew === 1 ? '1 client nou atras' : `${pluralRo(totalNew, 'client nou', 'clienți noi')} atrași`} în această perioadă${
@@ -73,6 +75,7 @@ const CustomerMixBarChart: React.FC<CustomerMixBarChartProps> = ({
       icon={UserPlus}
       isLoading={isLoading}
       isRefreshing={isRefreshing}
+      isError={isError}
       isEmpty={lists.length === 0}
       placeholderHeight={280}
     >

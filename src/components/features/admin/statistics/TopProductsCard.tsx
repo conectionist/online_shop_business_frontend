@@ -11,9 +11,10 @@ interface TopProductsCardProps {
   data?: ProductStatsResponse;
   isLoading: boolean;
   isRefreshing: boolean;
+  isError?: boolean;
 }
 
-const TopProductsCard: React.FC<TopProductsCardProps> = ({ data, isLoading, isRefreshing }) => {
+const TopProductsCard: React.FC<TopProductsCardProps> = ({ data, isLoading, isRefreshing, isError }) => {
   const [sortBy, setSortBy] = useState<SortBy>('quantity');
   const rows = (sortBy === 'quantity' ? data?.top_by_quantity : data?.top_by_revenue) ?? [];
   const max = Math.max(...rows.map((r) => r[sortBy]), 1);
@@ -25,6 +26,7 @@ const TopProductsCard: React.FC<TopProductsCardProps> = ({ data, isLoading, isRe
       icon={Trophy}
       isLoading={isLoading}
       isRefreshing={isRefreshing}
+      isError={isError}
       isEmpty={rows.length === 0}
       placeholderHeight={320}
       actions={

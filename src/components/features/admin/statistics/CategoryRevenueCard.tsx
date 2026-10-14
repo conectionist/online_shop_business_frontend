@@ -9,9 +9,10 @@ interface CategoryRevenueCardProps {
   categories: CategoryStat[];
   isLoading: boolean;
   isRefreshing: boolean;
+  isError?: boolean;
 }
 
-const CategoryRevenueCard: React.FC<CategoryRevenueCardProps> = ({ categories, isLoading, isRefreshing }) => {
+const CategoryRevenueCard: React.FC<CategoryRevenueCardProps> = ({ categories, isLoading, isRefreshing, isError }) => {
   const total = categories.reduce((sum, c) => sum + c.revenue, 0);
   return (
     <Panel
@@ -24,6 +25,7 @@ const CategoryRevenueCard: React.FC<CategoryRevenueCardProps> = ({ categories, i
       icon={Layers}
       isLoading={isLoading}
       isRefreshing={isRefreshing}
+      isError={isError}
       isEmpty={categories.length === 0}
       placeholderHeight={280}
     >

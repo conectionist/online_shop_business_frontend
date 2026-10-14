@@ -2,7 +2,7 @@
  * Utility functions for formatting dates in Romanian
  */
 
-const ROMANIAN_MONTHS = [
+export const ROMANIAN_MONTHS = [
   'ianuarie',
   'februarie',
   'martie',

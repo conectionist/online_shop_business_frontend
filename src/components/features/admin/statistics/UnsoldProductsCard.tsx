@@ -10,10 +10,11 @@ interface UnsoldProductsCardProps {
   data?: ProductStatsResponse;
   isLoading: boolean;
   isRefreshing: boolean;
+  isError?: boolean;
 }
 
 // Products offered in the period's lists that nobody ordered
-const UnsoldProductsCard: React.FC<UnsoldProductsCardProps> = ({ data, isLoading, isRefreshing }) => {
+const UnsoldProductsCard: React.FC<UnsoldProductsCardProps> = ({ data, isLoading, isRefreshing, isError }) => {
   const [expanded, setExpanded] = useState(false);
   const unsold = data?.unsold_products ?? [];
   const shown = expanded ? unsold : unsold.slice(0, PREVIEW);
@@ -21,11 +22,12 @@ const UnsoldProductsCard: React.FC<UnsoldProductsCardProps> = ({ data, isLoading
   return (
     <Panel
       title="Produse fără comenzi"
-      badge={isLoading ? undefined : unsold.length}
+      badge={isLoading || isError ? undefined : unsold.length}
       subtitle="Oferite în listele din perioada selectată, dar necomandate niciodată."
       icon={PackageX}
       isLoading={isLoading}
       isRefreshing={isRefreshing}
+      isError={isError}
       isEmpty={unsold.length === 0}
       emptyMessage="Toate produsele oferite s-au vândut cel puțin o dată."
       placeholderHeight={160}

@@ -1,22 +1,10 @@
 // Formatting helpers for the statistics page (Romanian locale)
 
+import { ROMANIAN_MONTHS } from '@/utils/dateFormatters';
+
 export const EMPTY_MESSAGE = 'Nu există date pentru perioada selectată.';
 
 const SHORT_MONTHS = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-const LONG_MONTHS = [
-  'ianuarie',
-  'februarie',
-  'martie',
-  'aprilie',
-  'mai',
-  'iunie',
-  'iulie',
-  'august',
-  'septembrie',
-  'octombrie',
-  'noiembrie',
-  'decembrie',
-];
 export const WEEKDAYS_SHORT = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'];
 export const WEEKDAYS_LONG = ['Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă', 'Duminică'];
 
@@ -72,7 +60,7 @@ export const formatPoints = (difference: number): string => {
 };
 
 // Parse "YYYY-MM-DD" as a calendar date (no time zone shift)
-const parseDay = (value: string): Date => {
+export const parseDay = (value: string): Date => {
   const [y, m, d] = value.slice(0, 10).split('-').map(Number);
   return new Date(y, (m || 1) - 1, d || 1);
 };
@@ -94,7 +82,7 @@ export const formatWeekdayDay = (value: string): string => {
 export const formatLongWeekdayDay = (value: string): string => {
   const date = parseDay(value);
   const weekday = WEEKDAYS_LONG[(date.getDay() + 6) % 7];
-  return `${weekday}, ${date.getDate()} ${LONG_MONTHS[date.getMonth()]}`;
+  return `${weekday}, ${date.getDate()} ${ROMANIAN_MONTHS[date.getMonth()]}`;
 };
 
 // "15 aug – 15 oct 2026"; the start gets its own year only when the years differ

@@ -10,6 +10,7 @@ interface BreakdownCardProps {
   paymentMethods: BreakdownSlice[];
   isLoading: boolean;
   isRefreshing: boolean;
+  isError?: boolean;
 }
 
 const Breakdown: React.FC<{ title: string; slices: BreakdownSlice[] }> = ({ title, slices }) => {
@@ -36,13 +37,20 @@ const Breakdown: React.FC<{ title: string; slices: BreakdownSlice[] }> = ({ titl
 };
 
 // Share of orders per delivery type and per payment method
-const BreakdownCard: React.FC<BreakdownCardProps> = ({ deliveryTypes, paymentMethods, isLoading, isRefreshing }) => (
+const BreakdownCard: React.FC<BreakdownCardProps> = ({
+  deliveryTypes,
+  paymentMethods,
+  isLoading,
+  isRefreshing,
+  isError,
+}) => (
   <Panel
     title="Logistică & plată"
     subtitle="Comenzi, pondere și încasări"
     icon={Truck}
     isLoading={isLoading}
     isRefreshing={isRefreshing}
+    isError={isError}
     isEmpty={deliveryTypes.length === 0 && paymentMethods.length === 0}
     placeholderHeight={200}
   >

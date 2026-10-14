@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { CalendarRange } from 'lucide-react';
 import { StatsPeriod } from '@/types/statistics';
 import { CustomRange, PERIOD_PRESETS, PeriodPreset } from './period';
-import { describePeriod } from './period';
+import { checkCustomRange, describePeriod } from './period';
 
 interface StickyPeriodFilterProps {
   preset: PeriodPreset;
@@ -16,6 +16,59 @@ interface StickyPeriodFilterProps {
 const FIELD =
   'rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500';
 
+// Wait for typing to pause before loading a new custom range
+const CUSTOM_DEBOUNCE_MS = 500;
+
+interface CustomRangeInputsProps {
+  custom: CustomRange;
+  onCustomChange: (range: CustomRange) => void;
+}
+
+// Date inputs for a custom range. Edits stay local until they form a usable range, so
+// half-typed dates never reach the API.
+const CustomRangeInputs: React.FC<CustomRangeInputsProps> = ({ custom, onCustomChange }) => {
+  const [draft, setDraft] = useState(custom);
+  const check = checkCustomRange(draft);
+
+  useEffect(() => {
+    if (!check.usable || (draft.start_date === custom.start_date && draft.end_date === custom.end_date)) {
+      return;
+    }
+    const id = setTimeout(() => onCustomChange(draft), CUSTOM_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [draft, check.usable, custom, onCustomChange]);
+
+  return (
+    <>
+      <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+        De la
+        <input
+          type="date"
+          value={draft.start_date}
+          max={draft.end_date || undefined}
+          onChange={(e) => setDraft({ ...draft, start_date: e.target.value })}
+          className={FIELD}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+        Până la
+        <input
+          type="date"
+          value={draft.end_date}
+          min={draft.start_date || undefined}
+          onChange={(e) => setDraft({ ...draft, end_date: e.target.value })}
+          className={FIELD}
+        />
+      </label>
+      {check.message && (
+        <p role="alert" className="text-xs text-rose-700 sm:basis-full">
+          {check.message}
+        </p>
+      )}
+    </>
+  );
+};
+
 // Period dropdown that scopes every section below; sticks to the top of the viewport.
 // The -mx-6/px-6 bleed matches the admin layout card's p-6, so the bar spans the card.
 const StickyPeriodFilter: React.FC<StickyPeriodFilterProps> = ({
@@ -26,7 +79,7 @@ const StickyPeriodFilter: React.FC<StickyPeriodFilterProps> = ({
   period,
 }) => {
   return (
-    <div className="sticky top-0 z-30 -mx-6 border-y border-gray-200 bg-white/95 px-6 py-3 backdrop-blur-md print:static print:border-0 print:px-0">
+    <div className="sticky top-0 z-30 -mx-6 border-y border-gray-200 bg-white/95 px-6 py-3 backdrop-blur-md print:static print:mx-0 print:border-0 print:px-0">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end print:hidden">
           <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
@@ -44,30 +97,7 @@ const StickyPeriodFilter: React.FC<StickyPeriodFilterProps> = ({
             </select>
           </label>
 
-          {preset === 'custom' && (
-            <>
-              <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-                De la
-                <input
-                  type="date"
-                  value={custom.start_date}
-                  max={custom.end_date || undefined}
-                  onChange={(e) => onCustomChange({ ...custom, start_date: e.target.value })}
-                  className={FIELD}
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-                Până la
-                <input
-                  type="date"
-                  value={custom.end_date}
-                  min={custom.start_date || undefined}
-                  onChange={(e) => onCustomChange({ ...custom, end_date: e.target.value })}
-                  className={FIELD}
-                />
-              </label>
-            </>
-          )}
+          {preset === 'custom' && <CustomRangeInputs custom={custom} onCustomChange={onCustomChange} />}
         </div>
 
         {period && (

@@ -13,13 +13,14 @@ interface TopCustomersCardProps {
   data?: CustomerStatsResponse;
   isLoading: boolean;
   isRefreshing: boolean;
+  isError?: boolean;
 }
 
 // The sorted column reads strongest
 const valueClass = (active: boolean) =>
   `whitespace-nowrap px-1 py-2.5 text-right align-top ${active ? 'font-semibold text-gray-900' : 'text-gray-700'}`;
 
-const TopCustomersCard: React.FC<TopCustomersCardProps> = ({ data, isLoading, isRefreshing }) => {
+const TopCustomersCard: React.FC<TopCustomersCardProps> = ({ data, isLoading, isRefreshing, isError }) => {
   const [sortBy, setSortBy] = useState<SortBy>('orders');
   // Two rankings from the API: the top by order count need not be in the top by value
   const rows = (sortBy === 'orders' ? data?.top_customers_by_orders : data?.top_customers) ?? [];
@@ -31,6 +32,7 @@ const TopCustomersCard: React.FC<TopCustomersCardProps> = ({ data, isLoading, is
       icon={Crown}
       isLoading={isLoading}
       isRefreshing={isRefreshing}
+      isError={isError}
       isEmpty={rows.length === 0}
       placeholderHeight={280}
       actions={

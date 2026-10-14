@@ -2,6 +2,8 @@ import React from 'react';
 import { LucideIcon } from 'lucide-react';
 import { EMPTY_MESSAGE } from './format';
 
+const ERROR_MESSAGE = 'Nu s-au putut încărca datele.';
+
 interface PanelProps {
   title: string;
   icon: LucideIcon;
@@ -13,6 +15,9 @@ interface PanelProps {
   isLoading?: boolean;
   // True while newer data loads: keep the old render, dimmed, instead of a skeleton
   isRefreshing?: boolean;
+  // The request failed and there is nothing to show; takes precedence over isEmpty
+  isError?: boolean;
+  errorMessage?: string;
   isEmpty?: boolean;
   emptyMessage?: string;
   // Height of the skeleton / empty placeholder, matching the content it replaces
@@ -30,6 +35,8 @@ const Panel: React.FC<PanelProps> = ({
   actions,
   isLoading = false,
   isRefreshing = false,
+  isError = false,
+  errorMessage = ERROR_MESSAGE,
   isEmpty = false,
   emptyMessage = EMPTY_MESSAGE,
   placeholderHeight = 240,
@@ -63,6 +70,13 @@ const Panel: React.FC<PanelProps> = ({
             style={{ height: placeholderHeight }}
             aria-label="Se încarcă"
           />
+        ) : isError ? (
+          <div
+            className="flex items-center justify-center rounded-md border border-dashed border-rose-200 px-4 text-center text-sm text-rose-700"
+            style={{ minHeight: Math.min(placeholderHeight, 160) }}
+          >
+            {errorMessage}
+          </div>
         ) : isEmpty ? (
           <div
             className="flex items-center justify-center rounded-md border border-dashed border-gray-200 px-4 text-center text-sm text-gray-500"
