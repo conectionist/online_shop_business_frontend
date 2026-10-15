@@ -296,7 +296,13 @@ export const createTestCustomerStats = () => ({
 })
 
 export const createTestCurrentListStats = () => ({
-  list: { id: 216, data: '2026-10-15', expiration_date: '2026-10-14T19:00:00', is_published: true },
+  // Still taking orders whatever day the tests run
+  list: {
+    id: 216,
+    data: '2026-10-15',
+    expiration_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    is_published: true,
+  },
   orders: 88,
   revenue: 5880,
   customers: 85,

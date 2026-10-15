@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Trophy } from 'lucide-react';
 import { ProductStatsResponse } from '@/types/statistics';
-import { formatNumber, formatRON } from './format';
+import { formatRON, pluralRo } from './format';
 import Panel, { Segmented } from './Panel';
 import { PODIUM_CLASSES, THEME } from './theme';
 
@@ -78,7 +78,7 @@ const TopProductsCard: React.FC<TopProductsCardProps> = ({ data, isLoading, isRe
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-1 py-2.5 text-right align-top text-gray-800">
-                  {formatNumber(row.quantity)} buc
+                  {pluralRo(row.quantity, 'bucată', 'bucăți')}
                 </td>
                 <td className="whitespace-nowrap px-1 py-2.5 text-right align-top text-gray-800">
                   {formatRON(row.revenue)}

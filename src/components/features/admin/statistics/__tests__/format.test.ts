@@ -12,6 +12,7 @@ import {
   formatShortDay,
   formatWeekdayDay,
   pluralRo,
+  pluralWordRo,
 } from '../format'
 
 describe('statistics formatters', () => {
@@ -56,6 +57,12 @@ describe('statistics formatters', () => {
     expect(pluralRo(88, 'comandă', 'comenzi')).toBe('88 de comenzi')
     expect(pluralRo(101, 'comandă', 'comenzi')).toBe('101 comenzi')
     expect(pluralRo(1200, 'comandă', 'comenzi')).toBe('1.200 de comenzi')
+  })
+
+  test('pluralWordRo gives the words after the number', () => {
+    expect(pluralWordRo(1, 'bucată', 'bucăți')).toBe('bucată')
+    expect(pluralWordRo(7, 'bucată', 'bucăți')).toBe('bucăți')
+    expect(pluralWordRo(20, 'bucată', 'bucăți')).toBe('de bucăți')
   })
 
   test('formatLongWeekdayDay spells out the month', () => {

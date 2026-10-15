@@ -109,8 +109,8 @@ const StickyPeriodFilter: React.FC<StickyPeriodFilterProps> = ({
       </div>
 
       <p className="mt-2 text-xs text-gray-500 print:hidden">
-        * Indicatorii de mai jos reflectă listele cu livrare în perioada selectată. Lista curentă de mai sus rămâne
-        mereu live.
+        * Indicatorii de mai jos reflectă listele cu livrare în perioada selectată. Lista de mai sus rămâne mereu
+        live.
       </p>
     </div>
   );
