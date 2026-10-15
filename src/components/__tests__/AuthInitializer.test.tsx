@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import { vi } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/mocks/server'
@@ -26,7 +27,7 @@ describe('AuthInitializer — when user appears authenticated', () => {
     useAuthStore.getState().login({ id: 1, email: 'admin', name: 'admin', role: 'admin' })
   })
 
-  test('shows loading spinner during initialization', () => {
+  test('shows loading spinner during initialization', async () => {
     server.use(
       http.get(`${API}/auth/me`, async () => {
         // Delay response to keep spinner visible
@@ -36,6 +37,9 @@ describe('AuthInitializer — when user appears authenticated', () => {
     )
     renderAuthInitializer()
     expect(screen.getByText('Se inițializează aplicația...')).toBeInTheDocument()
+    // Let the delayed response land in this test: arriving later, it would log the
+    // shared store back in during another test
+    await screen.findByText('App Content')
   })
 
   test('calls GET /auth/me to validate session', async () => {
@@ -95,6 +99,7 @@ describe('AuthInitializer — when user appears authenticated', () => {
   test('logs out and renders children when /auth/me fails (401)', async () => {
     // The 401 from /auth/me triggers the axios interceptor which tries to refresh.
     // We need to also fail the refresh so the interceptor gives up and logs out.
+    const consoleError = vi.spyOn(console, 'error')
     server.use(
       http.get(`${API}/auth/me`, () => {
         return HttpResponse.json({ detail: 'Unauthorized' }, { status: 401 })
@@ -107,6 +112,13 @@ describe('AuthInitializer — when user appears authenticated', () => {
     await screen.findByText('App Content')
 
     expect(useAuthStore.getState().isAuthenticated).toBe(false)
+    // The interceptor logs the store out before its own chain ends, which already shows
+    // the children. Wait for AuthInitializer to handle the failure: finishing after the
+    // test environment is torn down, the chain throws "window is not defined".
+    await waitFor(() =>
+      expect(consoleError).toHaveBeenCalledWith('Auth initialization failed:', expect.anything())
+    )
+    consoleError.mockRestore()
   })
 })
 
