@@ -222,6 +222,89 @@ export const createTestListProductsOrdered = () => ({
   ],
 })
 
+// Statistics fixtures (admin statistics page)
+const createTestStatsSummary = (overrides: Record<string, number> = {}) => ({
+  revenue: 12480,
+  orders: 186,
+  average_order_value: 67.1,
+  items_sold: 540,
+  unique_customers: 94,
+  returning_customers: 67,
+  repeat_customer_rate: 0.7128,
+  cancelled_orders: 3,
+  cancelled_rate: 0.0159,
+  ...overrides,
+})
+
+const createTestStatsPeriod = () => ({
+  start_date: '2026-09-24',
+  end_date: '2026-10-15',
+  list_count: 2,
+  previous_start_date: '2026-08-27',
+  previous_end_date: '2026-09-17',
+  previous_list_count: 2,
+})
+
+export const createTestStatsOverview = () => ({
+  period: createTestStatsPeriod(),
+  summary: createTestStatsSummary(),
+  previous_summary: createTestStatsSummary({ revenue: 11534, orders: 179 }),
+  lists: [
+    { list_id: 215, data: '2026-10-08', orders: 98, revenue: 6600, average_order_value: 67.35, customers: 90, new_customers: 6, returning_customers: 84 },
+    { list_id: 216, data: '2026-10-15', orders: 88, revenue: 5880, average_order_value: 66.82, customers: 85, new_customers: 4, returning_customers: 81 },
+  ],
+  delivery_types: [
+    { id: 1, name: 'Ridicare de la sediu', orders: 110, revenue: 7300 },
+    { id: 3, name: 'Livrare la domiciliu', orders: 76, revenue: 5180 },
+  ],
+  payment_methods: [
+    { id: 5, name: 'cash', orders: 120, revenue: 8000 },
+    { id: 6, name: 'card', orders: 66, revenue: 4480 },
+  ],
+  heatmap: [
+    { weekday: 2, hour: 19, orders: 14 },
+    { weekday: 3, hour: 8, orders: 3 },
+  ],
+})
+
+export const createTestProductStats = () => ({
+  period: createTestStatsPeriod(),
+  top_by_quantity: [
+    { product_id: 13, name: 'Pâine de casă', category_name: 'Pâine', unit: 'buc', quantity: 120, revenue: 1440, orders: 80 },
+    { product_id: 17, name: 'Cozonac cu nucă', category_name: 'Cozonaci', unit: 'buc', quantity: 40, revenue: 2400, orders: 35 },
+  ],
+  top_by_revenue: [
+    { product_id: 17, name: 'Cozonac cu nucă', category_name: 'Cozonaci', unit: 'buc', quantity: 40, revenue: 2400, orders: 35 },
+    { product_id: 13, name: 'Pâine de casă', category_name: 'Pâine', unit: 'buc', quantity: 120, revenue: 1440, orders: 80 },
+  ],
+  categories: [
+    { category_id: 3, name: 'Cozonaci', quantity: 40, revenue: 2400 },
+    { category_id: 1, name: 'Pâine', quantity: 120, revenue: 1440 },
+  ],
+  unsold_products: [{ product_id: 21, name: 'Biscuiți cu ovăz', category_name: 'Produse de patiserie', times_offered: 2 }],
+  sell_outs: [{ product_id: 17, name: 'Cozonac cu nucă', category_name: 'Cozonaci', sold_out: 3, offered: 4 }],
+})
+
+export const createTestCustomerStats = () => ({
+  period: createTestStatsPeriod(),
+  top_customers: [
+    { name: 'Elena Florea', phone_number: '0760456644', orders: 2, lists: 2, revenue: 410, last_order_date: '2026-10-13T16:38:00Z' },
+  ],
+  top_customers_by_orders: [
+    { name: 'Elena Florea', phone_number: '0760456644', orders: 2, lists: 2, revenue: 410, last_order_date: '2026-10-13T16:38:00Z' },
+  ],
+})
+
+export const createTestCurrentListStats = () => ({
+  list: { id: 216, data: '2026-10-15', expiration_date: '2026-10-14T19:00:00', is_published: true },
+  orders: 88,
+  revenue: 5880,
+  customers: 85,
+  items_sold: 260,
+  previous: { id: 215, data: '2026-10-08', orders: 98, revenue: 6600 },
+  sold_out: [{ product_id: 17, name: 'Cozonac cu nucă', unit: 'buc', ordered: 20 }],
+})
+
 export const handlers = [
   // Business details
   http.get(`${API}/detalii-business`, () => {
@@ -282,6 +365,10 @@ export const handlers = [
     }
     return HttpResponse.json([])
   }),
+
+  // Statistics (admin)
+  http.get(`${API}/statistics/overview`, () => HttpResponse.json(createTestStatsOverview())),
+  http.get(`${API}/statistics/products`, () => HttpResponse.json(createTestProductStats())),
+  http.get(`${API}/statistics/customers`, () => HttpResponse.json(createTestCustomerStats())),
+  http.get(`${API}/statistics/current-list`, () => HttpResponse.json(createTestCurrentListStats())),
 ]
-
-

@@ -51,7 +51,7 @@ export const Header: React.FC<HeaderProps> = () => {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white shadow-sm border-b print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-end items-center h-16">
           {/* User Dropdown Menu */}

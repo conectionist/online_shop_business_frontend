@@ -102,8 +102,20 @@ export const queryKeys = {
   system: {
     all: ['system'] as const,
     config: () => [...queryKeys.system.all, 'config'] as const,
-    nextDeliveryDate: (referenceDate?: string) => 
+    nextDeliveryDate: (referenceDate?: string) =>
       [...queryKeys.system.all, 'next-delivery-date', referenceDate] as const,
+  },
+
+  // Statistics (admin)
+  statistics: {
+    all: ['statistics'] as const,
+    overview: (range: Record<string, any>) =>
+      [...queryKeys.statistics.all, 'overview', range] as const,
+    products: (range: Record<string, any>) =>
+      [...queryKeys.statistics.all, 'products', range] as const,
+    customers: (range: Record<string, any>) =>
+      [...queryKeys.statistics.all, 'customers', range] as const,
+    currentList: () => [...queryKeys.statistics.all, 'current-list'] as const,
   },
 };
 

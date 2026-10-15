@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart, Copy, Shield, Monitor } from 'lucide-react';
+import { FolderOpen, Package, List, Building2, CreditCard, Truck, Clock, Ruler, Wrench, ShoppingCart, Copy, Shield, Monitor, BarChart3 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { useLists, useCloneList, useUpdateList } from '@/hooks/useLists';
 import { useToast } from '@/components/ui/ToastContainer';
@@ -132,6 +132,20 @@ const AdminDashboard: React.FC = () => {
               </div>
             </Card>
           </div>
+
+          <Link to="/admin/statistics" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <BarChart3 className="h-8 w-8 text-amber-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Statistici</h3>
+                    <p className="text-gray-600 text-sm">Vânzări, produse și clienți</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </Link>
         </div>
       </div>
 
