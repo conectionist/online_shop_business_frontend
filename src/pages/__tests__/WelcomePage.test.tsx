@@ -19,9 +19,9 @@ describe('WelcomePage - Loading and Error States', () => {
   test('displays loading spinner while fetching data', () => {
     // Mock delayed response
     server.use(
-      http.get(`${API}/liste`, async () => {
+      http.get(`${API}/liste/published`, async () => {
         await new Promise(resolve => setTimeout(resolve, 100))
-        return HttpResponse.json([createTestList()])
+        return HttpResponse.json(createTestList())
       })
     )
 
@@ -32,25 +32,24 @@ describe('WelcomePage - Loading and Error States', () => {
 
   test('displays error message when published list fails to load', async () => {
     server.use(
-      http.get(`${API}/liste`, () => {
+      http.get(`${API}/liste/published`, () => {
         return new HttpResponse(null, { status: 500 })
       })
     )
 
     renderWithProviders(<WelcomePage />)
 
-    // When there's a server error, the page shows empty state  instead of error state
+    // A failed request is an error, not "no list published"
     await waitFor(() => {
-      expect(
-        screen.getByText(/Lista de produse nu a fost publicată încă/)
-      ).toBeInTheDocument()
+      expect(screen.getByText('Eroare la încărcarea listei')).toBeInTheDocument()
     })
+    expect(screen.queryByText(/Lista de produse nu a fost publicată încă/)).not.toBeInTheDocument()
   })
 
   test('displays empty state when no published list exists', async () => {
     server.use(
-      http.get(`${API}/liste`, () => {
-        return HttpResponse.json([])
+      http.get(`${API}/liste/published`, () => {
+        return HttpResponse.json(null)
       })
     )
 
@@ -67,8 +66,8 @@ describe('WelcomePage - Loading and Error States', () => {
     const customMessage = 'Vă mulțumim pentru vizită. Lista va fi disponibilă în curând!'
     
     server.use(
-      http.get(`${API}/liste`, () => {
-        return HttpResponse.json([])
+      http.get(`${API}/liste/published`, () => {
+        return HttpResponse.json(null)
       }),
       http.get(`${API}/detalii-business`, () => {
         return HttpResponse.json([{

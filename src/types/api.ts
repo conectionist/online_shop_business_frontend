@@ -31,6 +31,21 @@ export interface Product {
   };
 }
 
+// A product's offer as the backend's Google Merchant feed lists it (GET /products/{id}/offer)
+export interface OfferUnitAmount {
+  value: number;
+  unit: 'g' | 'kg' | 'ml' | 'l';
+}
+
+export interface ProductOffer {
+  product_id: number;
+  price: number;
+  currency: 'RON';
+  availability: 'in_stock' | 'out_of_stock';
+  // Price per kg / per litre; set only for products sold by weight or volume
+  unit_pricing: { measure: OfferUnitAmount; base: OfferUnitAmount } | null;
+}
+
 export interface ProductImage {
   id: number;
   path: string;

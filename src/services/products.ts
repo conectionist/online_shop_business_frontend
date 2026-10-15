@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api';
-import { Product, ProductCreate, ProductUpdate, ProductImage } from '@/types/api';
+import { Product, ProductCreate, ProductUpdate, ProductImage, ProductOffer } from '@/types/api';
 
 // Types for product operations
 export interface ProductFilters {
@@ -40,6 +40,12 @@ export const productService = {
   // Get a single product by ID (PUBLIC - no auth required)
   getProduct: async (id: number): Promise<Product> => {
     const response = await apiClient.get(`/products/${id}`);
+    return response.data;
+  },
+
+  // Get a product's price, availability and unit pricing as the Merchant feed lists them (PUBLIC)
+  getProductOffer: async (id: number): Promise<ProductOffer> => {
+    const response = await apiClient.get(`/products/${id}/offer`);
     return response.data;
   },
 

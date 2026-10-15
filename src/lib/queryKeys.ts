@@ -20,6 +20,7 @@ export const queryKeys = {
       [...queryKeys.products.lists(), filters] as const,
     details: () => [...queryKeys.products.all, 'detail'] as const,
     detail: (id: number) => [...queryKeys.products.details(), id] as const,
+    offer: (id: number) => [...queryKeys.products.all, 'offer', id] as const,
     byCategory: (categoryId: number) => 
       [...queryKeys.products.lists(), { categoryId }] as const,
   },

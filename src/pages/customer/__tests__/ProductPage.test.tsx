@@ -1,8 +1,13 @@
 import { describe, test, expect, beforeEach } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/test/mocks/server'
+import { createTestList, createTestProducts } from '@/test/mocks/handlers'
 import { renderWithProviders, resetCartStore } from '@/test/testUtils'
 import ProductPage from '../ProductPage'
+
+const API = 'http://localhost:8001/api/v1'
 
 describe('ProductPage - Page Rendering and Navigation', () => {
   beforeEach(() => {
@@ -99,9 +104,8 @@ describe('ProductPage - Product Details Display', () => {
       expect(screen.getByText('Pâine albă')).toBeInTheDocument()
     })
     
-    // Category badge should be present (either actual category or fallback)
-    const categoryElements = screen.queryAllByText(/Pâine|Categorie necunoscută/)
-    expect(categoryElements.length).toBeGreaterThan(0)
+    // Category badge shows the product's category
+    expect(await screen.findByText('Pâine')).toBeInTheDocument()
   })
 
   test('displays product price with correct format', async () => {
@@ -481,6 +485,140 @@ describe('ProductPage - Out of Stock Handling', () => {
       el.closest('span.bg-gradient-to-r')
     )
     expect(cartBadges.length).toBe(0)
+  })
+})
+
+describe('ProductPage - Structured Data Availability', () => {
+  const getProductSchema = () => {
+    const script = document.querySelector('script[data-schema-id="product"]')
+    return script ? JSON.parse(script.textContent || '{}') : null
+  }
+
+  const offerFor = (overrides = {}) => ({
+    product_id: 1,
+    price: 5.5,
+    currency: 'RON',
+    availability: 'in_stock',
+    unit_pricing: null,
+    ...overrides,
+  })
+
+  // Holds a mocked request until release() is called
+  const createGate = () => {
+    let release!: () => void
+    const opened = new Promise<void>(resolve => { release = resolve })
+    return { opened, release }
+  }
+
+  // Lets pending responses and re-renders finish, so "nothing appeared" is a real check
+  const settle = () => act(() => new Promise(resolve => setTimeout(resolve, 50)))
+
+  // The schema needs categories and units; wait for both, so its absence isn't due to them
+  const waitForCategoryAndUnit = async () => {
+    expect(await screen.findByText('Pâine')).toBeInTheDocument()
+    expect(await screen.findByText(/RON \/ 1 bucată/)).toBeInTheDocument()
+  }
+
+  beforeEach(() => {
+    resetCartStore()
+  })
+
+  test('marks a product the offer lists as in stock as InStock', async () => {
+    renderWithProviders(<ProductPage />, { route: '/product/1' })
+
+    await waitFor(() => {
+      expect(getProductSchema()?.offers.availability).toBe('https://schema.org/InStock')
+    })
+  })
+
+  test('marks a product the offer lists as out of stock as OutOfStock', async () => {
+    renderWithProviders(<ProductPage />, { route: '/product/4' })
+
+    await waitFor(() => {
+      expect(getProductSchema()?.offers.availability).toBe('https://schema.org/OutOfStock')
+    })
+  })
+
+  test('adds the unit price from the offer', async () => {
+    server.use(
+      http.get(`${API}/products/:id/offer`, () => HttpResponse.json(offerFor({
+        unit_pricing: { measure: { value: 600, unit: 'g' }, base: { value: 1, unit: 'kg' } },
+      })))
+    )
+    renderWithProviders(<ProductPage />, { route: '/product/1' })
+
+    await waitFor(() => {
+      expect(getProductSchema()?.offers.priceSpecification?.referenceQuantity).toMatchObject({
+        value: '600',
+        unitCode: 'GRM',
+      })
+    })
+  })
+
+  test('injects no schema until the offer arrives', async () => {
+    const offerGate = createGate()
+    server.use(
+      http.get(`${API}/products/:id/offer`, async () => {
+        await offerGate.opened
+        return HttpResponse.json(offerFor())
+      })
+    )
+    renderWithProviders(<ProductPage />, { route: '/product/1' })
+
+    // The page doesn't wait for the offer, but the schema must
+    await waitForCategoryAndUnit()
+    expect(screen.getByText('Adaugă în coș')).toBeInTheDocument()
+    await settle()
+    expect(getProductSchema()).toBeNull()
+
+    offerGate.release()
+    await waitFor(() => {
+      expect(getProductSchema()?.offers.availability).toBe('https://schema.org/InStock')
+    })
+  })
+
+  test('injects no schema when the offer request fails', async () => {
+    let offerRequests = 0
+    server.use(
+      http.get(`${API}/products/:id/offer`, () => {
+        offerRequests += 1
+        return new HttpResponse(null, { status: 500 })
+      })
+    )
+    renderWithProviders(<ProductPage />, { route: '/product/1' })
+
+    await waitForCategoryAndUnit()
+    await waitFor(() => expect(offerRequests).toBe(1))
+    await settle()
+
+    // The page still works; only the structured data is left out
+    expect(screen.getByText('Adaugă în coș')).toBeInTheDocument()
+    expect(getProductSchema()).toBeNull()
+  })
+
+  test('shows the skeleton, not the archived view, while the published list loads', async () => {
+    const listGate = createGate()
+    let productServed = false
+    server.use(
+      http.get(`${API}/liste/published`, async () => {
+        await listGate.opened
+        return HttpResponse.json(createTestList())
+      }),
+      http.get(`${API}/products/:id`, ({ params }) => {
+        productServed = true
+        return HttpResponse.json(createTestProducts().find(p => p.id === Number(params.id)))
+      })
+    )
+    renderWithProviders(<ProductPage />, { route: '/product/1' })
+
+    await waitFor(() => expect(productServed).toBe(true))
+    await settle()
+    expect(screen.queryByText('Acest produs nu este disponibil momentan.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Pâine albă')).not.toBeInTheDocument()
+
+    listGate.release()
+    expect(await screen.findByText('Adaugă în coș')).toBeInTheDocument()
+    expect(screen.queryByText('Acest produs nu este disponibil momentan.')).not.toBeInTheDocument()
   })
 })
 

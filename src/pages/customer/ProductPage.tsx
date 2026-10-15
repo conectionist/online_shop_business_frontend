@@ -4,7 +4,7 @@ import { ArrowLeft, Package, Plus, Minus, ShoppingCart, Share2, Copy, CheckCircl
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/stores/cartStore';
 import { usePublishedList, useListProductsOrdered } from '@/hooks/useLists';
-import { useProduct } from '@/hooks/useProducts';
+import { useProduct, useProductOffer } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useUnits } from '@/hooks/useUnits';
 import { useImageSize } from '@/hooks/useImageSize';
@@ -24,7 +24,7 @@ const ProductPage: React.FC = () => {
   const [linkCopied, setLinkCopied] = useState(false);
   
   const { addItem, getTotalItems } = useCartStore();
-  const { data: publishedList } = usePublishedList();
+  const { data: publishedList, isLoading: isLoadingPublishedList } = usePublishedList();
   
   // Fetch product directly from database
   const productIdNum = parseInt(productId || '0');
@@ -32,6 +32,8 @@ const ProductPage: React.FC = () => {
   
   // Get published list products to check availability
   const { data: publishedListProductsData, isLoading: isLoadingPublishedProducts } = useListProductsOrdered(publishedList?.id || 0);
+  // Price, availability and unit pricing for the structured data, as the Merchant feed lists them
+  const { data: offer } = useProductOffer(productIdNum);
   const { data: categories } = useCategories();
   const { data: units } = useUnits();
 
@@ -52,6 +54,8 @@ const ProductPage: React.FC = () => {
   // Use published list product data if available (includes stoc_produs), otherwise use direct fetch
   const displayProduct = productInPublishedList || product;
   const isArchivedMode = !productInPublishedList;
+  // Can be ordered: in the published list and not sold out
+  const isInStock = !!productInPublishedList && productInPublishedList.stoc_produs !== 0;
 
   // Helper functions
   const getCategoryName = (categoryId: number) => {
@@ -62,13 +66,14 @@ const ProductPage: React.FC = () => {
     return units?.find(u => u.id === unitId)?.denumire || 'unitate';
   };
 
-  // Inject product schema markup for SEO - must be before any early returns
+  // Inject product schema markup for SEO - must be before any early returns.
+  // Skipped until the offer arrives, and when it fails, so a guessed availability is never published.
   useEffect(() => {
-    if (product && categories && units) {
+    if (product && categories && units && offer) {
       try {
         const categoryName = getCategoryName(product.category_id);
         const unitName = getUnitName(product.unitati_id);
-        const productSchema = generateProductSchema(product, categoryName, unitName);
+        const productSchema = generateProductSchema(product, categoryName, unitName, offer);
         injectSchemaMarkup(productSchema, 'product');
       } catch (error) {
         console.warn('Failed to generate product schema:', error);
@@ -79,10 +84,12 @@ const ProductPage: React.FC = () => {
     return () => {
       removeSchemaMarkup('product');
     };
-  }, [product, categories, units]);
+  }, [product, categories, units, offer]);
 
-  // Show skeleton loader with layout immediately for better UX
-  if (isLoadingProduct || isLoadingPublishedProducts) {
+  // Show skeleton loader with layout immediately for better UX.
+  // The list products query stays disabled (not loading) until the published list arrives,
+  // so wait for the published list too, or the page briefly renders as archived.
+  if (isLoadingProduct || isLoadingPublishedList || isLoadingPublishedProducts) {
     return (
       <>
         <SEO 
@@ -176,8 +183,7 @@ const ProductPage: React.FC = () => {
 
   const productImages = displayProduct.images || [];
   const hasMultipleImages = productImages.length > 1;
-  // Product is unavailable if it's in archived mode OR if it's in published list but out of stock
-  const isUnavailable = isArchivedMode || (productInPublishedList && displayProduct.stoc_produs === 0);
+  const isUnavailable = !isInStock;
 
   // Generate product-specific SEO data
   const productTitle = displayProduct.nume;

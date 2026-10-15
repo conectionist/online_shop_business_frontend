@@ -317,13 +317,23 @@ export const handlers = [
     return HttpResponse.json([createTestBusinessDetails()])
   }),
 
-  // Lists (published)
+  // Lists
   http.get(`${API}/liste`, () => {
     return HttpResponse.json([createTestList()])
   }),
 
+  // The list customers can order from right now
+  http.get(`${API}/liste/published`, () => {
+    return HttpResponse.json(createTestList())
+  }),
+
+  // The most recently expired published list
+  http.get(`${API}/liste/last-expired`, () => {
+    return HttpResponse.json(null)
+  }),
+
   // Categories
-  http.get(`${API}/categorii`, () => {
+  http.get(`${API}/categories`, () => {
     return HttpResponse.json(createTestCategories())
   }),
 
@@ -352,6 +362,25 @@ export const handlers = [
       return HttpResponse.json(product)
     }
     return new HttpResponse(null, { status: 404 })
+  }),
+
+  // Product offer: in stock when the product is in the published list (101) with stock left
+  http.get(`${API}/products/:id/offer`, ({ params }) => {
+    const id = parseInt(params.id as string)
+    const product = createTestProducts().find(p => p.id === id)
+    if (!product) {
+      return new HttpResponse(null, { status: 404 })
+    }
+    const listed = createTestListProductsOrdered()
+      .categories.flatMap(c => c.products)
+      .find(p => p.id === id)
+    return HttpResponse.json({
+      product_id: id,
+      price: product.pret,
+      currency: 'RON',
+      availability: listed && listed.stoc_produs !== 0 ? 'in_stock' : 'out_of_stock',
+      unit_pricing: null,
+    })
   }),
 
   // List products ordered

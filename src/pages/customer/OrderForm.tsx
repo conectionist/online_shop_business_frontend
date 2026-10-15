@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { usePublishedList } from '@/hooks/useLists';
 import { useListDeliveryTypes } from '@/hooks/useLists';
@@ -17,6 +18,8 @@ import { useCreateOrder } from '@/hooks/useOrders';
 import { OrderCreate } from '@/types/api';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
 import Modal from '@/components/ui/Modal';
+import { invalidateQueries } from '@/lib/queryKeys';
+import { formatDateRomanian } from '@/utils/dateFormatters';
 
 interface OrderFormData {
   nume: string;
@@ -30,6 +33,7 @@ interface OrderFormData {
 
 const OrderForm: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { items, getTotalPrice, clearCart, removeItem } = useCartStore();
 
   // Get the current published list and list-specific delivery types
@@ -43,6 +47,7 @@ const OrderForm: React.FC = () => {
   const [outOfStockModalOpen, setOutOfStockModalOpen] = useState(false);
   const [outOfStockProducts, setOutOfStockProducts] = useState<Array<{ id: number; nume: string }>>([]);
   const [serverErrorModalOpen, setServerErrorModalOpen] = useState(false);
+  const [listClosedModalOpen, setListClosedModalOpen] = useState(false);
 
   // Prepare order creation
   const createOrderMutation = useCreateOrder();
@@ -164,7 +169,7 @@ const OrderForm: React.FC = () => {
     return productIds;
   };
 
-  const submitOrderToServer = async (orderData: ReturnType<typeof buildOrderDataForSession>, source?: string): Promise<{ success: boolean; status?: number; outOfStockProductIds?: number[] }> => {
+  const submitOrderToServer = async (orderData: ReturnType<typeof buildOrderDataForSession>, source?: string): Promise<{ success: boolean; status?: number; outOfStockProductIds?: number[]; listClosed?: boolean }> => {
     if (!publishedList) {
       return { success: false };
     }
@@ -208,6 +213,9 @@ const OrderForm: React.FC = () => {
         }
         // Fallback: if no error_code or unknown error_code, assume duplicate (legacy behavior)
         return { success: true, status: 409 };
+      } else if (status === 400 && errorDetail?.error_code === 'LIST_NOT_OPEN') {
+        // The list closed (expired or unpublished) while the customer was ordering
+        return { success: false, status: 400, listClosed: true };
       } else if (status === 400) {
         // Legacy: 400 status for out-of-stock (backward compatibility)
         const outOfStockProductIds = parseOutOfStockProducts(error);
@@ -295,6 +303,9 @@ const OrderForm: React.FC = () => {
         // Navigate to confirmation page (only if window.open succeeded)
         navigate('/order-confirmation');
       }, 0);
+    } else if (result.listClosed) {
+      // The order was not placed; keep the cart, it is cleared when a new list is published
+      setListClosedModalOpen(true);
     } else if ((result.status === 400 || result.status === 409) && result.outOfStockProductIds && result.outOfStockProductIds.length > 0) {
       // Insufficient stock: show modal and remove products from cart
       const removedProducts = items
@@ -686,6 +697,40 @@ const OrderForm: React.FC = () => {
                   if (items.length === 0) {
                     navigate('/');
                   }
+                }}
+                className="w-full"
+              >
+                Am înțeles
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* List Closed Modal */}
+        <Modal
+          isOpen={listClosedModalOpen}
+          onClose={() => setListClosedModalOpen(false)}
+          title="Lista s-a închis"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3 p-4 bg-orange-50 border border-orange-200 rounded-md">
+              <AlertCircle className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-orange-800">
+                  Nu mai primim comenzi pentru {formatDateRomanian(publishedList.data)}. Comanda ta nu a fost trimisă.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-200">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setListClosedModalOpen(false);
+                  // Refetch the lists so the home page shows that ordering has closed
+                  queryClient.invalidateQueries({ queryKey: invalidateQueries.lists() });
+                  navigate('/');
                 }}
                 className="w-full"
               >

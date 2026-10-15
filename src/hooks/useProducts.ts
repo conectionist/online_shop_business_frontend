@@ -32,6 +32,16 @@ export const useProduct = (id: number) => {
   });
 };
 
+// Hook to fetch a product's offer (availability and unit pricing), used for its structured data
+export const useProductOffer = (id: number) => {
+  return useQuery({
+    queryKey: queryKeys.products.offer(id),
+    queryFn: () => productService.getProductOffer(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000, // 2 minutes - availability changes when a list expires
+  });
+};
+
 // Hook to create a product
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();

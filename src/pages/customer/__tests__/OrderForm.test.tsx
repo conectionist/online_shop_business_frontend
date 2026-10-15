@@ -78,9 +78,9 @@ describe('OrderForm', () => {
     addTestCartItem()
     // Delay list response to keep loading visible
     server.use(
-      http.get(`${API}/liste`, async () => {
+      http.get(`${API}/liste/published`, async () => {
         await new Promise(r => setTimeout(r, 200))
-        return HttpResponse.json([{ id: 101, data: '2025-01-01', is_current: true, is_published: true, is_deleted: false }])
+        return HttpResponse.json({ id: 101, data: '2025-01-01', is_current: true, is_published: true, is_deleted: false })
       })
     )
     renderOrderForm()
@@ -274,5 +274,45 @@ describe('OrderForm', () => {
 
     await screen.findByText('Eroare la procesarea comenzii')
     expect(screen.getByText(/Serverul întâmpină probleme tehnice/)).toBeInTheDocument()
+  })
+
+  test('shows the list-closed modal on 400 LIST_NOT_OPEN', async () => {
+    addTestCartItem()
+
+    server.use(
+      http.get(`${API}/liste/:listId/delivery-types`, () => {
+        return HttpResponse.json([
+          { id: 2, denumire: 'Ridicare de la brutărie', description: 'Ridici de la noi', order_index: 1 },
+        ])
+      }),
+      http.post(`${API}/orders`, () => {
+        return HttpResponse.json(
+          { detail: { error_code: 'LIST_NOT_OPEN', message: 'List 101 is not open for orders', list_id: 101 } },
+          { status: 400 }
+        )
+      })
+    )
+
+    const user = userEvent.setup()
+    renderOrderForm()
+
+    await screen.findByText('Finalizează Comanda')
+
+    await user.type(screen.getByPlaceholderText('Prenumele tău'), 'Ion')
+    await user.type(screen.getByPlaceholderText('Numele tău'), 'Popescu')
+    await screen.findByText('Numerar la livrare')
+    await user.click(screen.getByLabelText(/Numerar la livrare/))
+    await screen.findByText('Ridicare de la brutărie')
+    await user.click(screen.getByLabelText(/Ridicare de la brutărie/))
+    await user.click(screen.getByText('Trimite comanda pe Whatsapp'))
+
+    await screen.findByText('Lista s-a închis')
+    expect(screen.getByText(/Nu mai primim comenzi pentru .*Comanda ta nu a fost trimisă/)).toBeInTheDocument()
+    expect(screen.queryByText('Eroare la procesarea comenzii')).not.toBeInTheDocument()
+    // The order was not placed, so the cart keeps its items
+    expect(useCartStore.getState().items).toHaveLength(1)
+
+    await user.click(screen.getByText('Am înțeles'))
+    expect(await screen.findByTestId('location-pathname')).toHaveTextContent('/')
   })
 })
