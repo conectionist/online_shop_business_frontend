@@ -62,7 +62,8 @@ describe('useStatistics hooks', () => {
     const { result } = renderHookWithQuery(() => useCustomerStats({}))
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(search).toBe('?limit=10')
+    // The top customers card shows 10 at a time, up to the API maximum
+    expect(search).toBe('?limit=100')
   })
 
   test('useCurrentListStats returns the live list figures', async () => {

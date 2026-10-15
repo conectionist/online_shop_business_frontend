@@ -10,6 +10,7 @@ import {
 import { CustomRange, PeriodPreset, resolveRange } from '@/components/features/admin/statistics/period';
 import { parseDay, toISODate } from '@/components/features/admin/statistics/format';
 import { useNow } from '@/components/features/admin/statistics/useNow';
+import { listStatus } from '@/components/features/admin/statistics/listStatus';
 import ExportToolbar from '@/components/features/admin/statistics/ExportToolbar';
 import LiveCurrentListDocket from '@/components/features/admin/statistics/LiveCurrentListDocket';
 import StickyPeriodFilter from '@/components/features/admin/statistics/StickyPeriodFilter';
@@ -55,10 +56,7 @@ const Statistics: React.FC = () => {
   const lists = overview.data?.lists ?? [];
   // Charts mark the current list as in progress only while it still takes orders
   const liveList = currentList.data?.list;
-  const openListId =
-    liveList?.is_published && (!liveList.expiration_date || new Date(liveList.expiration_date) > now)
-      ? liveList.id
-      : undefined;
+  const openListId = liveList && listStatus(liveList, now) === 'active' ? liveList.id : undefined;
   const overviewLoading = overview.isLoading;
   const overviewRefreshing = overview.isFetching && overview.isPlaceholderData;
   const productsRefreshing = products.isFetching && products.isPlaceholderData;

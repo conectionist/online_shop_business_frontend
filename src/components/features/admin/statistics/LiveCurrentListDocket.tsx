@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, ChevronDown, Clock, Radio, XCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ChevronDown, Clock, Lock, PauseCircle, Radio, XCircle } from 'lucide-react';
 import { CurrentListStats } from '@/types/statistics';
 import {
   formatCountdown,
@@ -9,12 +9,24 @@ import {
   formatPercent,
   formatRON,
   pluralRo,
+  pluralWordRo,
 } from './format';
+import { ListStatus, listStatus } from './listStatus';
 import { THEME } from './theme';
 import { useNow } from './useNow';
 
 const SOLD_OUT_PREVIEW = 4;
 const CLOSING_SOON_MS = 6 * 60 * 60 * 1000;
+
+const CHIP = 'mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm';
+
+// Heading and rubber stamp per status: only a published list that has not expired takes
+// orders, so only that one is "current"
+const STATUS: Record<ListStatus, { heading: string; stamp: string; stampClass: string }> = {
+  active: { heading: 'Lista curentă', stamp: 'Publicată', stampClass: 'border-emerald-600 bg-emerald-50 text-emerald-800' },
+  expired: { heading: 'Ultima listă', stamp: 'Expirată', stampClass: 'border-rose-600 bg-rose-50 text-rose-800' },
+  draft: { heading: 'Ultima listă', stamp: 'Ciornă', stampClass: 'border-gray-400 bg-gray-100 text-gray-700' },
+};
 
 interface LiveCurrentListDocketProps {
   data?: CurrentListStats;
@@ -30,14 +42,15 @@ const Metric: React.FC<{ label: string; children: React.ReactNode }> = ({ label,
   </div>
 );
 
-// The list taking orders right now, drawn as a bakery order docket. It does not follow
-// the period filter: it is always the live list.
+// The list taking orders right now, or else the latest list, drawn as a bakery order
+// docket. It does not follow the period filter: it is always live. Hidden when there are
+// no lists at all.
 const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isLoading, isError = false }) => {
   const [showAllSoldOut, setShowAllSoldOut] = useState(false);
   // Keeps the countdown moving between refetches
   const now = useNow(30 * 1000);
 
-  const shell = (children: React.ReactNode) => (
+  const shell = (children: React.ReactNode, heading = STATUS.active.heading) => (
     <section
       aria-labelledby="live-list-title"
       className="rounded-xl border border-amber-200 border-t-4 border-t-amber-600 bg-gradient-to-b from-white to-amber-50/40 p-5 sm:p-6 print:break-inside-avoid print:bg-none"
@@ -47,7 +60,7 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
         className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8d3e0f]"
       >
         <Radio className="h-4 w-4" aria-hidden="true" />
-        Lista curentă
+        {heading}
       </h2>
       {children}
     </section>
@@ -60,13 +73,15 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
     return shell(<p className="mt-4 text-sm text-rose-700">Nu s-a putut încărca lista curentă.</p>);
   }
   if (!data?.list) {
-    return shell(<p className="mt-4 text-sm text-gray-600">Nu există nicio listă curentă.</p>);
+    return null;
   }
 
   const { list, previous } = data;
+  const status = listStatus(list, now);
+  const { heading, stamp, stampClass } = STATUS[status];
   const msLeft = list.expiration_date ? new Date(list.expiration_date).getTime() - now.getTime() : null;
-  const timeLeft = list.expiration_date ? formatCountdown(list.expiration_date, now) : null;
-  const closingSoon = msLeft !== null && msLeft > 0 && msLeft < CLOSING_SOON_MS;
+  const timeLeft = status === 'active' && list.expiration_date ? formatCountdown(list.expiration_date, now) : null;
+  const closingSoon = timeLeft !== null && msLeft !== null && msLeft < CLOSING_SOON_MS;
   const ordersRatio = previous?.orders ? data.orders / previous.orders : null;
   const ordersLink =
     data.orders === 0
@@ -83,35 +98,46 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             {/* Rubber-stamp status */}
             <span
-              className={`inline-flex -rotate-2 items-center rounded-sm border-2 px-2 py-0.5 text-xs font-bold uppercase tracking-widest ${
-                list.is_published
-                  ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                  : 'border-gray-400 bg-gray-100 text-gray-700'
-              }`}
+              className={`inline-flex -rotate-2 items-center rounded-sm border-2 px-2 py-0.5 text-xs font-bold uppercase tracking-widest ${stampClass}`}
             >
-              {list.is_published ? 'Publicată' : 'Ciornă'}
+              {stamp}
             </span>
             <p className="text-xl font-bold text-gray-900 sm:text-2xl">Livrare: {formatLongWeekdayDay(list.data)}</p>
           </div>
-          {list.expiration_date &&
-            (timeLeft ? (
-              <p
-                className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ${
-                  closingSoon ? 'bg-amber-100 font-medium text-amber-900 ring-1 ring-amber-300' : 'bg-white/80 text-gray-700'
-                }`}
-              >
+          {status === 'active' ? (
+            <p
+              className={`${CHIP} ${
+                closingSoon ? 'bg-amber-100 font-medium text-amber-900 ring-1 ring-amber-300' : 'bg-white/80 text-gray-700'
+              }`}
+            >
+              {timeLeft ? (
                 <Clock
                   className={`h-4 w-4 ${closingSoon ? 'text-amber-600 motion-safe:animate-pulse' : 'text-gray-500'}`}
                   aria-hidden="true"
                 />
-                Comenzile se închid în: <span className="font-semibold tabular-nums">{timeLeft}</span>
-              </p>
-            ) : (
-              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-sm text-gray-700">
+              ) : (
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                Comenzile s-au închis · În faza de producție
-              </p>
-            ))}
+              )}
+              <span>
+                Se pot primi comenzi
+                {timeLeft && (
+                  <>
+                    {' · lista expiră în '}
+                    <span className="font-semibold tabular-nums">{timeLeft}</span>
+                  </>
+                )}
+              </span>
+            </p>
+          ) : (
+            <p className={`${CHIP} bg-white/80 text-gray-700`}>
+              {status === 'expired' ? (
+                <Lock className="h-4 w-4 text-gray-500" aria-hidden="true" />
+              ) : (
+                <PauseCircle className="h-4 w-4 text-gray-500" aria-hidden="true" />
+              )}
+              {status === 'expired' ? 'Nu se mai pot primi comenzi' : 'Nu se pot primi comenzi încă'}
+            </p>
+          )}
         </div>
         <Link
           to={`/admin/lists/${list.id}/manage?tab=orders`}
@@ -157,9 +183,10 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
         </Metric>
         <Metric label="Produse de copt">
           <p className="text-3xl font-bold text-gray-900">
-            {formatNumber(data.items_sold)} <span className="text-base font-semibold text-gray-600">buc</span>
+            {formatNumber(data.items_sold)}{' '}
+            <span className="text-base font-semibold text-gray-600">{pluralWordRo(data.items_sold, 'bucată', 'bucăți')}</span>
           </p>
-          <p className="text-xs text-gray-600">comandate până acum</p>
+          <p className="text-xs text-gray-600">{data.items_sold === 1 ? 'comandată' : 'comandate'} până acum</p>
         </Metric>
       </dl>
 
@@ -201,9 +228,9 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
                     <XCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" aria-hidden="true" />
                     <span className="truncate">{item.name}</span>
                   </span>
+                  {/* Counted in pieces: the product's unit describes one piece ("500 gr") */}
                   <span className="shrink-0 tabular-nums text-gray-600">
-                    {formatNumber(item.ordered)}
-                    {item.unit ? ` ${item.unit}` : ''} comandate
+                    {pluralRo(item.ordered, 'bucată comandată', 'bucăți comandate')}
                   </span>
                 </li>
               ))}
@@ -225,7 +252,8 @@ const LiveCurrentListDocket: React.FC<LiveCurrentListDocketProps> = ({ data, isL
           </>
         )}
       </div>
-    </>
+    </>,
+    heading
   );
 };
 

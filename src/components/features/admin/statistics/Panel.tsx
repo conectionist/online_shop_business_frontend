@@ -110,6 +110,17 @@ export const ShowAllButton: React.FC<{ expanded: boolean; total: number; onToggl
   </button>
 );
 
+// "Vezi încă …" button that reveals the next rows of a list shown a few at a time
+export const ShowMoreButton: React.FC<{ label: string; onClick: () => void }> = ({ label, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="mt-2 text-sm font-medium text-[#8d3e0f] hover:text-[#6b3210] print:hidden"
+  >
+    {label}
+  </button>
+);
+
 // Segmented control for metric and view toggles inside panels
 interface SegmentedProps<T extends string> {
   options: { value: T; label: string }[];

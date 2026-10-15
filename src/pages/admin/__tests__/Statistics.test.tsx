@@ -11,6 +11,7 @@ import {
   createTestStatsOverview,
 } from '@/test/mocks/handlers'
 import { toISODate } from '@/components/features/admin/statistics/format'
+import { CurrentListStats } from '@/types/statistics'
 import Statistics from '../Statistics'
 
 const API = 'http://localhost:8001/api/v1'
@@ -29,7 +30,7 @@ describe('Statistics page', () => {
     // Current list and stock warnings
     expect(await screen.findByText('Livrare: Joi, 15 octombrie')).toBeInTheDocument()
     const docket = screen.getByRole('region', { name: 'Lista curentă' })
-    expect(within(docket).getByText('20 buc comandate')).toBeInTheDocument()
+    expect(within(docket).getByText('20 de bucăți comandate')).toBeInTheDocument()
 
     // Products, customers, breakdowns
     expect((await screen.findAllByText('Cozonac cu nucă')).length).toBeGreaterThan(0)
@@ -135,7 +136,6 @@ describe('Statistics page', () => {
     renderWithProviders(<Statistics />)
 
     expect(await screen.findByText('Nu s-a putut încărca lista curentă.')).toBeInTheDocument()
-    expect(screen.queryByText('Nu există nicio listă curentă.')).not.toBeInTheDocument()
     // Top products, categories, sold-out and unsold products
     await waitFor(() => expect(screen.getAllByText('Nu s-au putut încărca datele.')).toHaveLength(4))
     expect(screen.queryByText('Toate produsele oferite s-au vândut cel puțin o dată.')).not.toBeInTheDocument()
@@ -157,7 +157,7 @@ describe('Statistics page', () => {
 
     server.use(http.get(`${API}/statistics/current-list`, () => HttpResponse.json(currentListClosing(-60 * 60 * 1000))))
     renderWithProviders(<Statistics />)
-    expect(await screen.findByText('Comenzile s-au închis · În faza de producție')).toBeInTheDocument()
+    expect(await screen.findByText('Nu se mai pot primi comenzi')).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: /Joi, 15 oct: 5\.880 RON$/ })).toBeInTheDocument()
     expect(screen.queryByText(legend)).not.toBeInTheDocument()
   })
@@ -176,7 +176,68 @@ describe('Statistics page', () => {
     )
     const soldOut = within(docket).getByRole('list', { name: 'Produse epuizate' })
     expect(within(soldOut).getByText('Cozonac cu nucă')).toBeInTheDocument()
-    expect(within(soldOut).getByText('20 buc comandate')).toBeInTheDocument()
+    expect(within(soldOut).getByText('20 de bucăți comandate')).toBeInTheDocument()
+  })
+
+  describe('the docket names the list by whether it takes orders', () => {
+    const withList = (list: Partial<NonNullable<CurrentListStats['list']>> | null) =>
+      server.use(
+        http.get(`${API}/statistics/current-list`, () => {
+          const stats = createTestCurrentListStats()
+          return HttpResponse.json({ ...stats, list: list && { ...stats.list, ...list } })
+        })
+      )
+    const hour = 60 * 60 * 1000
+
+    test('a published list before its expiration date is the current list', async () => {
+      withList({ expiration_date: new Date(Date.now() + 26 * hour).toISOString() })
+      renderWithProviders(<Statistics />)
+
+      // The loading skeleton has the same heading, so wait for the list itself
+      expect(await screen.findByText('Publicată')).toBeInTheDocument()
+      const docket = screen.getByRole('region', { name: 'Lista curentă' })
+      expect(within(docket).getByText(/Se pot primi comenzi · lista expiră în/)).toHaveTextContent(
+        'Se pot primi comenzi · lista expiră în 1 zi 1 oră'
+      )
+    })
+
+    test('a published list without an expiration date takes orders', async () => {
+      withList({ expiration_date: null })
+      renderWithProviders(<Statistics />)
+
+      expect(await screen.findByText('Se pot primi comenzi')).toBeInTheDocument()
+      expect(screen.getByRole('region', { name: 'Lista curentă' })).toHaveTextContent('Publicată')
+    })
+
+    test('a published list past its expiration date is the latest list, expired', async () => {
+      withList({ expiration_date: new Date(Date.now() - hour).toISOString() })
+      renderWithProviders(<Statistics />)
+
+      const docket = await screen.findByRole('region', { name: 'Ultima listă' })
+      expect(within(docket).getByText('Expirată')).toBeInTheDocument()
+      expect(within(docket).getByText('Nu se mai pot primi comenzi')).toBeInTheDocument()
+    })
+
+    test('an unpublished list is the latest list, a draft', async () => {
+      withList({ is_published: false })
+      renderWithProviders(<Statistics />)
+
+      const docket = await screen.findByRole('region', { name: 'Ultima listă' })
+      expect(within(docket).getByText('Ciornă')).toBeInTheDocument()
+      expect(within(docket).getByText('Nu se pot primi comenzi încă')).toBeInTheDocument()
+    })
+
+    test('without any list there is no docket', async () => {
+      withList(null)
+      renderWithProviders(<Statistics />)
+
+      await screen.findByText('12.480 RON')
+      // The loading skeleton has the docket's heading; once the request is done the card is gone
+      await waitFor(() =>
+        expect(screen.queryByRole('region', { name: /Lista curentă|Ultima listă/ })).not.toBeInTheDocument()
+      )
+      expect(screen.queryByText(/Livrare:/)).not.toBeInTheDocument()
+    })
   })
 
   test('the docket says when nothing has sold out yet', async () => {
@@ -238,6 +299,49 @@ describe('Statistics page', () => {
     await user.click(screen.getByRole('button', { name: 'După valoare' }))
     expect(within(firstRow()).getByText('Bogdan Rusu')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'După valoare' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  describe('top customers show 10 at a time', () => {
+    const withCustomers = (count: number) => {
+      const customers = Array.from({ length: count }, (_, i) => ({
+        name: `Client ${i + 1}`, phone_number: null, orders: count - i, lists: count - i, revenue: 1000 - i,
+        last_order_date: '2026-10-13T16:38:00Z',
+      }))
+      server.use(
+        http.get(`${API}/statistics/customers`, () =>
+          HttpResponse.json({ ...createTestCustomerStats(), top_customers: customers, top_customers_by_orders: customers })
+        )
+      )
+    }
+    // Header row excluded
+    const shownRows = () => within(screen.getByRole('table', { name: 'Top clienți' })).getAllByRole('row').length - 1
+
+    test('each click adds the next 10', async () => {
+      withCustomers(25)
+      const user = userEvent.setup()
+      renderWithProviders(<Statistics />)
+
+      await user.click(await screen.findByRole('button', { name: 'Vezi încă 10 clienți' }))
+      expect(shownRows()).toBe(20)
+      await user.click(screen.getByRole('button', { name: 'Vezi încă 5 clienți' }))
+      expect(shownRows()).toBe(25)
+      expect(screen.getByText('Client 25')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /Vezi încă/ })).not.toBeInTheDocument()
+    })
+
+    test('says when the API maximum of 100 is reached', async () => {
+      withCustomers(100)
+      const user = userEvent.setup()
+      renderWithProviders(<Statistics />)
+
+      await screen.findByRole('button', { name: 'Vezi încă 10 clienți' })
+      expect(shownRows()).toBe(10)
+      for (let shown = 10; shown < 100; shown += 10) {
+        await user.click(screen.getByRole('button', { name: 'Vezi încă 10 clienți' }))
+      }
+      expect(shownRows()).toBe(100)
+      expect(screen.getByText('Sunt afișați primii 100 de clienți.')).toBeInTheDocument()
+    })
   })
 
   test('the trend chart shows a tooltip per list and has a table view', async () => {

@@ -14,15 +14,20 @@ export const formatNumber = (value: number): string => integerFormat.format(Math
 
 export const formatRON = (value: number): string => `${formatNumber(value)} RON`;
 
-// Romanian counted nouns: "1 oră", "3 ore", "20 de ore" (from 20 up, "de" joins number and noun)
-export const pluralRo = (n: number, one: string, many: string): string => {
+// The words after a number in Romanian: "oră" for 1, "ore" for 3, "de ore" for 20 (from 20
+// up, "de" joins number and noun). For layouts that style the number apart.
+export const pluralWordRo = (n: number, one: string, many: string): string => {
   if (n === 1) {
-    return `1 ${one}`;
+    return one;
   }
   const lastTwo = Math.abs(n) % 100;
   const de = n !== 0 && (lastTwo === 0 || lastTwo >= 20);
-  return `${formatNumber(n)} ${de ? 'de ' : ''}${many}`;
+  return `${de ? 'de ' : ''}${many}`;
 };
+
+// Romanian counted nouns: "1 oră", "3 ore", "20 de ore"
+export const pluralRo = (n: number, one: string, many: string): string =>
+  `${formatNumber(n)} ${pluralWordRo(n, one, many)}`;
 
 // Compact axis labels: 950, 1,2k, 12k
 export const formatCompact = (value: number): string => {

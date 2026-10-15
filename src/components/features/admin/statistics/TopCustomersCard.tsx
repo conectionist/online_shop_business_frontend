@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Crown } from 'lucide-react';
+import { TOP_CUSTOMERS_LIMIT } from '@/hooks/useStatistics';
 import { CustomerStatsResponse } from '@/types/statistics';
 import { formatDateShortRomanian } from '@/utils/dateFormatters';
 import { formatNumber, formatRON, pluralRo } from './format';
-import Panel, { Segmented } from './Panel';
+import Panel, { Segmented, ShowMoreButton } from './Panel';
 import { displayPhone } from './phone';
 import { PODIUM_CLASSES } from './theme';
 
 type SortBy = 'orders' | 'revenue';
+
+// Rows shown at first, and added by each "Vezi încă" click
+const STEP = 10;
 
 interface TopCustomersCardProps {
   data?: CustomerStatsResponse;
@@ -22,8 +26,16 @@ const valueClass = (active: boolean) =>
 
 const TopCustomersCard: React.FC<TopCustomersCardProps> = ({ data, isLoading, isRefreshing, isError }) => {
   const [sortBy, setSortBy] = useState<SortBy>('orders');
+  const [visible, setVisible] = useState(STEP);
   // Two rankings from the API: the top by order count need not be in the top by value
   const rows = (sortBy === 'orders' ? data?.top_customers_by_orders : data?.top_customers) ?? [];
+  const more = Math.min(STEP, rows.length - visible);
+
+  // A new period starts from the top 10 again; switching the ranking keeps the count
+  const periodKey = `${data?.period.start_date}_${data?.period.end_date}`;
+  useEffect(() => {
+    setVisible(STEP);
+  }, [periodKey]);
 
   return (
     <Panel
@@ -58,7 +70,7 @@ const TopCustomersCard: React.FC<TopCustomersCardProps> = ({ data, isLoading, is
             </tr>
           </thead>
           <tbody className="tabular-nums">
-            {rows.map((row, index) => (
+            {rows.slice(0, visible).map((row, index) => (
               <tr key={`${row.name}-${row.phone_number ?? ''}`} className="border-b border-gray-100 last:border-0">
                 <td className="px-1 py-2.5 align-top">
                   <span
@@ -90,6 +102,16 @@ const TopCustomersCard: React.FC<TopCustomersCardProps> = ({ data, isLoading, is
           </tbody>
         </table>
       </div>
+      {more > 0 ? (
+        <ShowMoreButton
+          label={`Vezi încă ${pluralRo(more, 'client', 'clienți')}`}
+          onClick={() => setVisible((v) => v + STEP)}
+        />
+      ) : (
+        rows.length >= TOP_CUSTOMERS_LIMIT && (
+          <p className="mt-2 text-xs text-gray-500">Sunt afișați primii {TOP_CUSTOMERS_LIMIT} de clienți.</p>
+        )
+      )}
     </Panel>
   );
 };
