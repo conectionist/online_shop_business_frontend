@@ -24,7 +24,7 @@ const ProductPage: React.FC = () => {
   const [linkCopied, setLinkCopied] = useState(false);
   
   const { addItem, getTotalItems } = useCartStore();
-  const { data: publishedList } = usePublishedList();
+  const { data: publishedList, isLoading: isLoadingPublishedList } = usePublishedList();
   
   // Fetch product directly from database
   const productIdNum = parseInt(productId || '0');
@@ -62,13 +62,17 @@ const ProductPage: React.FC = () => {
     return units?.find(u => u.id === unitId)?.denumire || 'unitate';
   };
 
-  // Inject product schema markup for SEO - must be before any early returns
+  // Inject product schema markup for SEO - must be before any early returns.
+  // Wait for the published list too, so availability isn't reported before stock is known
+  // (the list products query stays disabled, not loading, until the published list arrives).
+  const isLoadingAvailability = isLoadingPublishedList || isLoadingPublishedProducts;
+  const isInStock = !!productInPublishedList && productInPublishedList.stoc_produs !== 0;
   useEffect(() => {
-    if (product && categories && units) {
+    if (product && categories && units && !isLoadingAvailability) {
       try {
         const categoryName = getCategoryName(product.category_id);
         const unitName = getUnitName(product.unitati_id);
-        const productSchema = generateProductSchema(product, categoryName, unitName);
+        const productSchema = generateProductSchema(product, categoryName, unitName, isInStock);
         injectSchemaMarkup(productSchema, 'product');
       } catch (error) {
         console.warn('Failed to generate product schema:', error);
@@ -79,7 +83,7 @@ const ProductPage: React.FC = () => {
     return () => {
       removeSchemaMarkup('product');
     };
-  }, [product, categories, units]);
+  }, [product, categories, units, isLoadingAvailability, isInStock]);
 
   // Show skeleton loader with layout immediately for better UX
   if (isLoadingProduct || isLoadingPublishedProducts) {

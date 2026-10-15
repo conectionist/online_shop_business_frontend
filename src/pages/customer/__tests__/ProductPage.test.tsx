@@ -1,8 +1,13 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/test/mocks/server'
+import { createTestCategories } from '@/test/mocks/handlers'
 import { renderWithProviders, resetCartStore } from '@/test/testUtils'
 import ProductPage from '../ProductPage'
+
+const API = 'http://localhost:8001/api/v1'
 
 describe('ProductPage - Page Rendering and Navigation', () => {
   beforeEach(() => {
@@ -481,6 +486,49 @@ describe('ProductPage - Out of Stock Handling', () => {
       el.closest('span.bg-gradient-to-r')
     )
     expect(cartBadges.length).toBe(0)
+  })
+})
+
+describe('ProductPage - Structured Data Availability', () => {
+  const getProductSchema = () => {
+    const script = document.querySelector('script[data-schema-id="product"]')
+    return script ? JSON.parse(script.textContent || '{}') : null
+  }
+
+  beforeEach(() => {
+    resetCartStore()
+    // The schema waits for categories; the categories service uses /categories, not /categorii
+    server.use(
+      http.get(`${API}/categories`, () => HttpResponse.json(createTestCategories()))
+    )
+  })
+
+  test('marks a product in the published list as in stock', async () => {
+    renderWithProviders(<ProductPage />, { route: '/product/1' })
+
+    await waitFor(() => {
+      expect(getProductSchema()?.offers.availability).toBe('https://schema.org/InStock')
+    })
+  })
+
+  test('marks a product with zero list stock as out of stock', async () => {
+    renderWithProviders(<ProductPage />, { route: '/product/4' })
+
+    await waitFor(() => {
+      expect(getProductSchema()?.offers.availability).toBe('https://schema.org/OutOfStock')
+    })
+  })
+
+  test('marks a product as out of stock when no list is published', async () => {
+    server.use(http.get(`${API}/liste`, () => HttpResponse.json([])))
+    renderWithProviders(<ProductPage />, { route: '/product/1' })
+
+    await waitFor(() => {
+      expect(screen.getByText('Acest produs nu este disponibil momentan.')).toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(getProductSchema()?.offers.availability).toBe('https://schema.org/OutOfStock')
+    })
   })
 })
 

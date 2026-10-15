@@ -1,13 +1,32 @@
 import { Product } from '@/types/api';
 import { getProductImageUrl } from '@/services/api';
+import { getUnitPricing, UN_CEFACT_CODES } from '@/utils/unitPricing';
 
 // Product Schema Markup Generator
-export const generateProductSchema = (product: Product, categoryName: string, unitName: string) => {
+export const generateProductSchema = (product: Product, categoryName: string, unitName: string, inStock: boolean) => {
   const baseUrl = window.location.origin;
-  
+
   // Use the existing getProductImageUrl function to get the correct image URL
   const imageUrl = getProductImageUrl(product, 'original');
-  
+
+  // Price per kg / per litre for products sold by weight or volume (EU unit pricing)
+  const unitPricing = getUnitPricing(product.cantitate, unitName);
+  const priceSpecification = unitPricing ? {
+    "@type": "UnitPriceSpecification",
+    "price": product.pret,
+    "priceCurrency": "RON",
+    "referenceQuantity": {
+      "@type": "QuantitativeValue",
+      "value": String(unitPricing.measure.value),
+      "unitCode": UN_CEFACT_CODES[unitPricing.measure.unit],
+      "valueReference": {
+        "@type": "QuantitativeValue",
+        "value": String(unitPricing.base.value),
+        "unitCode": UN_CEFACT_CODES[unitPricing.base.unit]
+      }
+    }
+  } : undefined;
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -23,7 +42,8 @@ export const generateProductSchema = (product: Product, categoryName: string, un
       "@type": "Offer",
       "price": product.pret,
       "priceCurrency": "RON",
-      "availability": "https://schema.org/InStock",
+      "priceSpecification": priceSpecification,
+      "availability": inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "url": `${baseUrl}/product/${product.id}`,
       "seller": {
         "@type": "Organization",

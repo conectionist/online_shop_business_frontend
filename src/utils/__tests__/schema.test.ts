@@ -39,40 +39,71 @@ afterEach(() => {
 
 describe('generateProductSchema', () => {
   test('returns object with @context and @type "Product"', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată')
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
     expect(schema['@context']).toBe('https://schema.org')
     expect(schema['@type']).toBe('Product')
   })
 
   test('uses product.nume as name', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată')
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
     expect(schema.name).toBe('Pâine albă')
   })
 
   test('uses product.description when present', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată')
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
     expect(schema.description).toBe('Pâine proaspătă din aluat dospit')
   })
 
   test('falls back to generated description when description is missing', () => {
     const noDesc = { ...mockProduct, description: undefined }
-    const schema = generateProductSchema(noDesc, 'Pâine', 'bucată')
+    const schema = generateProductSchema(noDesc, 'Pâine', 'bucată', true)
     expect(schema.description).toContain('Pâine albă')
   })
 
   test('includes offers with price, currency "RON", and product URL', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată')
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
     expect(schema.offers.price).toBe(5.5)
     expect(schema.offers.priceCurrency).toBe('RON')
     expect(schema.offers.url).toContain('/product/1')
   })
 
   test('includes additionalProperty with unit name and quantity', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată')
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
     const unitProp = schema.additionalProperty.find((p: any) => p.name === 'unit')
     const qtyProp = schema.additionalProperty.find((p: any) => p.name === 'quantity')
     expect(unitProp!.value).toBe('bucată')
     expect(qtyProp!.value).toBe(10)
+  })
+
+  test('availability is InStock when the product can be ordered', () => {
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
+    expect(schema.offers.availability).toBe('https://schema.org/InStock')
+  })
+
+  test('availability is OutOfStock when the product cannot be ordered', () => {
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', false)
+    expect(schema.offers.availability).toBe('https://schema.org/OutOfStock')
+  })
+
+  test('adds a unit price specification for products sold by weight', () => {
+    const byWeight = { ...mockProduct, pret: 16, cantitate: 600 }
+    const schema = generateProductSchema(byWeight, 'Pâine', 'gr', true)
+    expect(schema.offers.priceSpecification).toEqual({
+      '@type': 'UnitPriceSpecification',
+      price: 16,
+      priceCurrency: 'RON',
+      referenceQuantity: {
+        '@type': 'QuantitativeValue',
+        value: '600',
+        unitCode: 'GRM',
+        valueReference: { '@type': 'QuantitativeValue', value: '1', unitCode: 'KGM' },
+      },
+    })
+  })
+
+  test('omits the unit price specification for products sold by the piece', () => {
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'buc', true)
+    expect(schema.offers.priceSpecification).toBeUndefined()
   })
 })
 
