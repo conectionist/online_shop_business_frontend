@@ -26,7 +26,7 @@ describe('AuthInitializer — when user appears authenticated', () => {
     useAuthStore.getState().login({ id: 1, email: 'admin', name: 'admin', role: 'admin' })
   })
 
-  test('shows loading spinner during initialization', () => {
+  test('shows loading spinner during initialization', async () => {
     server.use(
       http.get(`${API}/auth/me`, async () => {
         // Delay response to keep spinner visible
@@ -36,6 +36,9 @@ describe('AuthInitializer — when user appears authenticated', () => {
     )
     renderAuthInitializer()
     expect(screen.getByText('Se inițializează aplicația...')).toBeInTheDocument()
+    // Let the delayed response land in this test: arriving later, it would log the
+    // shared store back in during another test
+    await screen.findByText('App Content')
   })
 
   test('calls GET /auth/me to validate session', async () => {
