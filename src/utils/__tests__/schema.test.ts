@@ -6,6 +6,7 @@ import {
   injectSchemaMarkup,
   removeSchemaMarkup,
 } from '@/utils/schema'
+import type { ProductOffer } from '@/types/api'
 
 vi.mock('@/services/api', () => ({
   getProductImageUrl: vi.fn(() => 'http://localhost:3000/images/test.jpg'),
@@ -26,6 +27,14 @@ const mockProduct = {
   image_versions: { original: '', medium: '', thumbnail: '' },
 } as any
 
+const inStockOffer: ProductOffer = {
+  product_id: 1,
+  price: 5.5,
+  currency: 'RON',
+  availability: 'in_stock',
+  unit_pricing: null,
+}
+
 beforeEach(() => {
   vi.restoreAllMocks()
 })
@@ -39,55 +48,67 @@ afterEach(() => {
 
 describe('generateProductSchema', () => {
   test('returns object with @context and @type "Product"', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', inStockOffer)
     expect(schema['@context']).toBe('https://schema.org')
     expect(schema['@type']).toBe('Product')
   })
 
   test('uses product.nume as name', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', inStockOffer)
     expect(schema.name).toBe('Pâine albă')
   })
 
   test('uses product.description when present', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', inStockOffer)
     expect(schema.description).toBe('Pâine proaspătă din aluat dospit')
   })
 
   test('falls back to generated description when description is missing', () => {
     const noDesc = { ...mockProduct, description: undefined }
-    const schema = generateProductSchema(noDesc, 'Pâine', 'bucată', true)
+    const schema = generateProductSchema(noDesc, 'Pâine', 'bucată', inStockOffer)
     expect(schema.description).toContain('Pâine albă')
   })
 
   test('includes offers with price, currency "RON", and product URL', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', inStockOffer)
     expect(schema.offers.price).toBe(5.5)
     expect(schema.offers.priceCurrency).toBe('RON')
     expect(schema.offers.url).toContain('/product/1')
   })
 
   test('includes additionalProperty with unit name and quantity', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', inStockOffer)
     const unitProp = schema.additionalProperty.find((p: any) => p.name === 'unit')
     const qtyProp = schema.additionalProperty.find((p: any) => p.name === 'quantity')
     expect(unitProp!.value).toBe('bucată')
     expect(qtyProp!.value).toBe(10)
   })
 
-  test('availability is InStock when the product can be ordered', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', true)
+  test('availability is InStock when the offer is in stock', () => {
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', inStockOffer)
     expect(schema.offers.availability).toBe('https://schema.org/InStock')
   })
 
-  test('availability is OutOfStock when the product cannot be ordered', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', false)
+  test('availability is OutOfStock when the offer is out of stock', () => {
+    const offer: ProductOffer = { ...inStockOffer, availability: 'out_of_stock' }
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', offer)
     expect(schema.offers.availability).toBe('https://schema.org/OutOfStock')
   })
 
-  test('adds a unit price specification for products sold by weight', () => {
+  test('takes the price from the offer, as the feed does', () => {
+    const offer: ProductOffer = { ...inStockOffer, price: 7 }
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'bucată', offer)
+    expect(schema.offers.price).toBe(7)
+  })
+
+  test('adds a unit price specification from the offer', () => {
     const byWeight = { ...mockProduct, pret: 16, cantitate: 600 }
-    const schema = generateProductSchema(byWeight, 'Pâine', 'gr', true)
+    const offer: ProductOffer = {
+      ...inStockOffer,
+      price: 16,
+      unit_pricing: { measure: { value: 600, unit: 'g' }, base: { value: 1, unit: 'kg' } },
+    }
+    const schema = generateProductSchema(byWeight, 'Pâine', 'gr', offer)
     expect(schema.offers.priceSpecification).toEqual({
       '@type': 'UnitPriceSpecification',
       price: 16,
@@ -101,8 +122,17 @@ describe('generateProductSchema', () => {
     })
   })
 
-  test('omits the unit price specification for products sold by the piece', () => {
-    const schema = generateProductSchema(mockProduct, 'Pâine', 'buc', true)
+  test('maps volume units to UN/CEFACT codes', () => {
+    const offer: ProductOffer = {
+      ...inStockOffer,
+      unit_pricing: { measure: { value: 0.75, unit: 'l' }, base: { value: 1, unit: 'l' } },
+    }
+    const schema = generateProductSchema(mockProduct, 'Băuturi', 'Sticla de 0,75l', offer)
+    expect(schema.offers.priceSpecification?.referenceQuantity).toMatchObject({ value: '0.75', unitCode: 'LTR' })
+  })
+
+  test('omits the unit price specification when the offer has no unit pricing', () => {
+    const schema = generateProductSchema(mockProduct, 'Pâine', 'buc', inStockOffer)
     expect(schema.offers.priceSpecification).toBeUndefined()
   })
 })

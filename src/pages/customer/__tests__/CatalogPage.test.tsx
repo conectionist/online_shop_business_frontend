@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/mocks/server'
-import { createTestProducts, createTestCategories } from '@/test/mocks/handlers'
+import { createTestProducts } from '@/test/mocks/handlers'
 import CatalogPage from '../CatalogPage'
 import { useCartStore } from '@/stores/cartStore'
 import { resetCartStore } from '@/test/testUtils'
@@ -33,12 +33,8 @@ const renderCatalogPage = () => {
 
 beforeEach(() => {
   resetCartStore()
-  // Categories service uses /categories (English), not /categorii (Romanian)
-  // Also add GET /products handler (not in global handlers)
+  // Add GET /products handler (not in global handlers)
   server.use(
-    http.get(`${API}/categories`, () => {
-      return HttpResponse.json(createTestCategories())
-    }),
     http.get(`${API}/products`, () => {
       return HttpResponse.json(createTestProducts())
     })

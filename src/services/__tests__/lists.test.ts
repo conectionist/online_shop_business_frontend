@@ -101,90 +101,53 @@ describe('listService — basic CRUD', () => {
   })
 })
 
-describe('listService — published list logic', () => {
-  const futureDate = new Date(Date.now() + 86400000).toISOString()
-  const pastDate = new Date(Date.now() - 86400000).toISOString()
-  const olderPastDate = new Date(Date.now() - 172800000).toISOString()
+describe('listService — published list lookups', () => {
+  // Which list is active is decided by the backend, in Romania time
 
-  test('getPublishedList returns published, non-deleted list', async () => {
+  test('getPublishedList returns the list from GET /liste/published', async () => {
     server.use(
-      http.get(`${API}/liste`, () => HttpResponse.json([
-        { id: 1, is_published: false, is_deleted: false },
-        { id: 2, is_published: true, is_deleted: false, expiration_date: futureDate },
-      ]))
+      http.get(`${API}/liste/published`, () => HttpResponse.json({ id: 2, is_published: true, is_deleted: false }))
     )
     const result = await listService.getPublishedList()
     expect(result).toMatchObject({ id: 2 })
   })
 
-  test('getPublishedList returns null when list is expired', async () => {
+  test('getPublishedList returns null when no list is active', async () => {
     server.use(
-      http.get(`${API}/liste`, () => HttpResponse.json([
-        { id: 1, is_published: true, is_deleted: false, expiration_date: pastDate },
-      ]))
+      http.get(`${API}/liste/published`, () => HttpResponse.json(null))
     )
     const result = await listService.getPublishedList()
     expect(result).toBeNull()
   })
 
-  test('getPublishedList returns null when no published list exists', async () => {
+  test('getPublishedList throws on API error instead of reporting no list', async () => {
     server.use(
-      http.get(`${API}/liste`, () => HttpResponse.json([
-        { id: 1, is_published: false, is_deleted: false },
-      ]))
+      http.get(`${API}/liste/published`, () => new HttpResponse(null, { status: 500 }))
     )
-    const result = await listService.getPublishedList()
-    expect(result).toBeNull()
+    await expect(listService.getPublishedList()).rejects.toThrow()
   })
 
-  test('getPublishedList returns null on API error', async () => {
+  test('getLastExpiredPublishedList returns the list from GET /liste/last-expired', async () => {
     server.use(
-      http.get(`${API}/liste`, () => HttpResponse.error())
-    )
-    const result = await listService.getPublishedList()
-    expect(result).toBeNull()
-  })
-
-  test('getLastExpiredPublishedList returns most recently expired list', async () => {
-    server.use(
-      http.get(`${API}/liste`, () => HttpResponse.json([
-        { id: 1, is_published: true, is_deleted: false, expiration_date: olderPastDate },
-        { id: 2, is_published: true, is_deleted: false, expiration_date: pastDate },
-      ]))
+      http.get(`${API}/liste/last-expired`, () => HttpResponse.json({ id: 2, is_published: true, is_deleted: false }))
     )
     const result = await listService.getLastExpiredPublishedList()
     expect(result).toMatchObject({ id: 2 })
   })
 
-  test('getLastExpiredPublishedList returns null when no expired lists', async () => {
+  test('getLastExpiredPublishedList returns null when no list has expired', async () => {
     server.use(
-      http.get(`${API}/liste`, () => HttpResponse.json([
-        { id: 1, is_published: true, is_deleted: false, expiration_date: futureDate },
-      ]))
+      http.get(`${API}/liste/last-expired`, () => HttpResponse.json(null))
     )
     const result = await listService.getLastExpiredPublishedList()
     expect(result).toBeNull()
   })
 
-  test('getLastExpiredPublishedList ignores deleted lists', async () => {
+  test('getLastExpiredPublishedList throws on API error', async () => {
     server.use(
-      http.get(`${API}/liste`, () => HttpResponse.json([
-        { id: 1, is_published: true, is_deleted: true, expiration_date: pastDate },
-      ]))
+      http.get(`${API}/liste/last-expired`, () => HttpResponse.error())
     )
-    const result = await listService.getLastExpiredPublishedList()
-    expect(result).toBeNull()
-  })
-
-  test('getLastExpiredPublishedList ignores lists without expiration_date', async () => {
-    server.use(
-      http.get(`${API}/liste`, () => HttpResponse.json([
-        { id: 1, is_published: true, is_deleted: false, expiration_date: null },
-        { id: 2, is_published: true, is_deleted: false },
-      ]))
-    )
-    const result = await listService.getLastExpiredPublishedList()
-    expect(result).toBeNull()
+    await expect(listService.getLastExpiredPublishedList()).rejects.toThrow()
   })
 })
 

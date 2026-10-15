@@ -40,6 +40,9 @@ beforeEach(() => {
   vi.restoreAllMocks()
   server.use(
     http.get(`${API}/liste`, () => HttpResponse.json(mockLists)),
+    // Before /liste/:id, which would otherwise match these paths
+    http.get(`${API}/liste/published`, () => HttpResponse.json(mockList)),
+    http.get(`${API}/liste/last-expired`, () => HttpResponse.json(null)),
     http.get(`${API}/liste/:id`, ({ params }) => {
       const l = mockLists.find(x => x.id === Number(params.id))
       return l ? HttpResponse.json(l) : new HttpResponse(null, { status: 404 })
@@ -76,6 +79,7 @@ describe('usePublishedList', () => {
   test('uses composite query key with published suffix', async () => {
     const { result } = renderHookWithQuery(() => usePublishedList())
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toEqual(mockList)
   })
 })
 
@@ -83,6 +87,7 @@ describe('useLastExpiredList', () => {
   test('uses composite query key with last-expired suffix', async () => {
     const { result } = renderHookWithQuery(() => useLastExpiredList())
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toBeNull()
   })
 })
 

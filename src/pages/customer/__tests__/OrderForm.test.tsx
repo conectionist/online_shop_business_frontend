@@ -78,9 +78,9 @@ describe('OrderForm', () => {
     addTestCartItem()
     // Delay list response to keep loading visible
     server.use(
-      http.get(`${API}/liste`, async () => {
+      http.get(`${API}/liste/published`, async () => {
         await new Promise(r => setTimeout(r, 200))
-        return HttpResponse.json([{ id: 101, data: '2025-01-01', is_current: true, is_published: true, is_deleted: false }])
+        return HttpResponse.json({ id: 101, data: '2025-01-01', is_current: true, is_published: true, is_deleted: false })
       })
     )
     renderOrderForm()

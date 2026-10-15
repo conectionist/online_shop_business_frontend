@@ -1,20 +1,28 @@
-import { Product } from '@/types/api';
+import { Product, ProductOffer, OfferUnitAmount } from '@/types/api';
 import { getProductImageUrl } from '@/services/api';
-import { getUnitPricing, UN_CEFACT_CODES } from '@/utils/unitPricing';
 
-// Product Schema Markup Generator
-export const generateProductSchema = (product: Product, categoryName: string, unitName: string, inStock: boolean) => {
+// UN/CEFACT codes used by schema.org QuantitativeValue.unitCode
+const UN_CEFACT_CODES: Record<OfferUnitAmount['unit'], string> = {
+  g: 'GRM',
+  kg: 'KGM',
+  ml: 'MLT',
+  l: 'LTR',
+};
+
+// Product Schema Markup Generator. Price, availability and unit pricing come from the
+// backend offer, which the Google Merchant feed is built from, so the two always agree.
+export const generateProductSchema = (product: Product, categoryName: string, unitName: string, offer: ProductOffer) => {
   const baseUrl = window.location.origin;
 
   // Use the existing getProductImageUrl function to get the correct image URL
   const imageUrl = getProductImageUrl(product, 'original');
 
   // Price per kg / per litre for products sold by weight or volume (EU unit pricing)
-  const unitPricing = getUnitPricing(product.cantitate, unitName);
+  const unitPricing = offer.unit_pricing;
   const priceSpecification = unitPricing ? {
     "@type": "UnitPriceSpecification",
-    "price": product.pret,
-    "priceCurrency": "RON",
+    "price": offer.price,
+    "priceCurrency": offer.currency,
     "referenceQuantity": {
       "@type": "QuantitativeValue",
       "value": String(unitPricing.measure.value),
@@ -40,10 +48,10 @@ export const generateProductSchema = (product: Product, categoryName: string, un
     },
     "offers": {
       "@type": "Offer",
-      "price": product.pret,
-      "priceCurrency": "RON",
+      "price": offer.price,
+      "priceCurrency": offer.currency,
       "priceSpecification": priceSpecification,
-      "availability": inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "availability": offer.availability === 'in_stock' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "url": `${baseUrl}/product/${product.id}`,
       "seller": {
         "@type": "Organization",
