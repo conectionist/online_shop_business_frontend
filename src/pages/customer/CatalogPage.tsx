@@ -447,7 +447,7 @@ const CatalogPage: React.FC = () => {
             onClick={() => setViewMode('categories')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               viewMode === 'categories'
-                ? 'bg-amber-600 text-white'
+                ? 'bg-amber-700 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -459,7 +459,7 @@ const CatalogPage: React.FC = () => {
             onClick={() => setViewMode('products')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               viewMode === 'products'
-                ? 'bg-amber-600 text-white'
+                ? 'bg-amber-700 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -508,7 +508,7 @@ const CatalogPage: React.FC = () => {
                       {hasImage ? (
                         <img
                           src={getCategoryImageUrl(category, imageSize)}
-                          alt={category.name}
+                          alt=""
                           className="w-full h-full object-cover"
                           loading="lazy"
                           onError={(e) => {

@@ -406,9 +406,9 @@ const ProductPage: React.FC = () => {
                 {/* Description */}
                 {displayProduct.description && (
                   <div className="space-y-3">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-semibold text-gray-900">
                       Despre acest produs
-                    </h3>
+                    </h2>
                     <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-amber-100">
                       <p className="text-gray-700 leading-relaxed text-base">
                         {displayProduct.description}
@@ -487,9 +487,9 @@ const ProductPage: React.FC = () => {
 
                 {/* Share Section */}
                 <div className="space-y-3 pt-6 border-t border-amber-100">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-gray-900">
                     Distribuie produsul
-                  </h3>
+                  </h2>
                   <div className="flex flex-col items-start gap-3">
                     <Button
                       variant="secondary"
