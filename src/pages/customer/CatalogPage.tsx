@@ -14,6 +14,7 @@ import { getCategoryImageUrl, getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
+import { cartLinkLabel } from '@/utils/cartLabel';
 
 const CatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -472,7 +473,7 @@ const CatalogPage: React.FC = () => {
       {/* Floating Cart Icon */}
       {publishedList && viewMode === 'products' && (
         <div ref={cartIconRef} className="fixed top-4 right-4 z-50">
-          <Link to="/cart" aria-label="Coș de cumpărături">
+          <Link to="/cart" aria-label={cartLinkLabel(getTotalItems())}>
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
               {getTotalItems() > 0 && (
@@ -627,7 +628,8 @@ const CatalogPage: React.FC = () => {
                     <Link
                       to={`/product/${product.id}`}
                       className="block"
-                      aria-label={product.nume}
+                      tabIndex={-1}
+                      aria-hidden="true"
                     >
                       <div className="p-4">
                         <div className={components.interactive.imageContainer + " relative"}>
@@ -708,7 +710,7 @@ const CatalogPage: React.FC = () => {
                           <div className="space-y-3 mt-4">
                             <div className="flex items-center justify-center space-x-4">
                               <Button
-                                aria-label="Scade cantitatea"
+                                aria-label={`Scade cantitatea pentru ${product.nume}`}
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => handleQuantityChange(product.id, -1)}
@@ -721,7 +723,7 @@ const CatalogPage: React.FC = () => {
                                 {currentQuantity}
                               </span>
                               <Button
-                                aria-label="Crește cantitatea"
+                                aria-label={`Crește cantitatea pentru ${product.nume}`}
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => handleQuantityChange(product.id, 1)}

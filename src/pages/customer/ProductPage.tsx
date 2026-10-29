@@ -13,6 +13,7 @@ import AppLightbox from '@/components/ui/Lightbox';
 import SEO from '@/components/SEO';
 import { generateProductSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
+import { cartLinkLabel } from '@/utils/cartLabel';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -293,7 +294,7 @@ const ProductPage: React.FC = () => {
       {/* Floating Cart Icon - Hidden in archived mode */}
       {!isArchivedMode && (
         <div className="fixed top-4 right-4 z-50">
-          <Link to="/cart" aria-label="Coș de cumpărături">
+          <Link to="/cart" aria-label={cartLinkLabel(getTotalItems())}>
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
               {getTotalItems() > 0 && (

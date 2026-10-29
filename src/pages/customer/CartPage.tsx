@@ -128,7 +128,7 @@ const CartPage: React.FC = () => {
                 <div className="flex items-center justify-center pt-3 border-t border-amber-100 space-x-4">
                   {/* Delete Button */}
                   <Button
-                    aria-label="Elimină din coș"
+                    aria-label={`Elimină ${item.nume} din coș`}
                     variant="secondary"
                     size="sm"
                     onClick={() => removeItem(item.id)}
@@ -140,7 +140,7 @@ const CartPage: React.FC = () => {
                   {/* Quantity Controls */}
                   <div className="flex items-center space-x-2">
                     <Button
-                      aria-label="Scade cantitatea"
+                      aria-label={`Scade cantitatea pentru ${item.nume}`}
                       variant="secondary"
                       size="sm"
                       onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
@@ -152,11 +152,11 @@ const CartPage: React.FC = () => {
                       {item.quantity}
                     </span>
                     <Button
-                      aria-label="Crește cantitatea"
+                      aria-label={`Crește cantitatea pentru ${item.nume}`}
                       variant="primary"
                       size="sm"
                       onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                      className="w-8 h-8 p-0 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm hover:shadow-md transition-all duration-300"
+                      className="w-8 h-8 p-0 bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 text-white shadow-sm hover:shadow-md transition-all duration-300"
                     >
                       <Plus className="w-4 h-4" />
                     </Button>

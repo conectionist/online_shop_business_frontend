@@ -15,6 +15,7 @@ import { getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
 import { formatDateRomanian } from '@/utils/dateFormatters';
+import { cartLinkLabel } from '@/utils/cartLabel';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
@@ -259,7 +260,7 @@ const WelcomePage: React.FC = () => {
     <>
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50" ref={cartIconRef}>
-        <Link to="/cart" aria-label="Coș de cumpărături">
+        <Link to="/cart" aria-label={cartLinkLabel(getTotalItems())}>
           <div className={components.interactive.floatingCart}>
             <ShoppingCart className="h-6 w-6 text-amber-700" />
             {getTotalItems() > 0 && (
@@ -397,7 +398,8 @@ const WelcomePage: React.FC = () => {
                         <Link 
                           to={`/product/${product.id}`}
                           className="block"
-                          aria-label={product.nume}
+                          tabIndex={-1}
+                          aria-hidden="true"
                         >
                           <div className="p-4">
                             <div className={components.interactive.imageContainer + " relative"}>
@@ -503,7 +505,7 @@ const WelcomePage: React.FC = () => {
                               <div className="flex flex-col items-center gap-2 pt-3 justify-center">
                                 <div className="flex items-center justify-between gap-2 w-full sm:w-auto justify-center">
                                   <Button
-                                    aria-label="Scade cantitatea"
+                                    aria-label={`Scade cantitatea pentru ${product.nume}`}
                                     variant="secondary"
                                     size="sm"
                                     onClick={() => handleQuantityChange(product.id, (quantities[product.id] || 1) - 1)}
@@ -516,7 +518,7 @@ const WelcomePage: React.FC = () => {
                                     {quantities[product.id] || 1}
                                   </span>
                                   <Button
-                                    aria-label="Crește cantitatea"
+                                    aria-label={`Crește cantitatea pentru ${product.nume}`}
                                     variant="secondary"
                                     size="sm"
                                     onClick={() => handleQuantityChange(product.id, (quantities[product.id] || 1) + 1)}
