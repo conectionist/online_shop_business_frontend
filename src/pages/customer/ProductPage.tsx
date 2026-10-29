@@ -13,6 +13,7 @@ import AppLightbox from '@/components/ui/Lightbox';
 import SEO from '@/components/SEO';
 import { generateProductSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
+import { cartLinkLabel } from '@/utils/cartLabel';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -24,6 +25,7 @@ const ProductPage: React.FC = () => {
   const [linkCopied, setLinkCopied] = useState(false);
   
   const { addItem, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
   const { data: publishedList, isLoading: isLoadingPublishedList } = usePublishedList();
   
   // Fetch product directly from database
@@ -205,31 +207,16 @@ const ProductPage: React.FC = () => {
     if (isUnavailable) {
       return;
     }
-    // Get current cart state to check if item exists
-    const currentItems = useCartStore.getState().items;
-    const existingItem = currentItems.find(item => item.id === displayProduct.id);
-    
-    if (existingItem) {
-      // If item already exists, add the selected quantity to the existing quantity
-      const newQuantity = existingItem.quantity + quantity;
-      useCartStore.getState().updateQuantity(displayProduct.id, newQuantity);
-    } else {
-      // If it's a new item, add it with the selected quantity
-      addItem({
-        id: displayProduct.id,
-        nume: displayProduct.nume,
-        pret: displayProduct.pret,
-        unitati_id: displayProduct.unitati_id,
-        unitate_denumire: getUnitName(displayProduct.unitati_id),
-        images: displayProduct.images,
-        listId: publishedList.id
-      });
-      
-      // Update the quantity to the selected amount since addItem always adds with quantity 1
-      setTimeout(() => {
-        useCartStore.getState().updateQuantity(product.id, quantity);
-      }, 0);
-    }
+    // Adds to an existing line or creates a new one, in a single store update
+    addItem({
+      id: displayProduct.id,
+      nume: displayProduct.nume,
+      pret: displayProduct.pret,
+      unitati_id: displayProduct.unitati_id,
+      unitate_denumire: getUnitName(displayProduct.unitati_id),
+      images: displayProduct.images,
+      listId: publishedList.id
+    }, quantity);
   };
 
   const handleQuantityChange = (newQuantity: number) => {
@@ -293,12 +280,12 @@ const ProductPage: React.FC = () => {
       {/* Floating Cart Icon - Hidden in archived mode */}
       {!isArchivedMode && (
         <div className="fixed top-4 right-4 z-50">
-          <Link to="/cart">
+          <Link to="/cart" aria-label={cartLinkLabel(totalItems)}>
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
-                  {getTotalItems()}
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
+                  {totalItems}
                 </span>
               )}
             </div>
@@ -406,9 +393,9 @@ const ProductPage: React.FC = () => {
                 {/* Description */}
                 {displayProduct.description && (
                   <div className="space-y-3">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-semibold text-gray-900">
                       Despre acest produs
-                    </h3>
+                    </h2>
                     <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-amber-100">
                       <p className="text-gray-700 leading-relaxed text-base">
                         {displayProduct.description}
@@ -435,6 +422,7 @@ const ProductPage: React.FC = () => {
                         </label>
                         <div className="flex items-center space-x-4">
                           <Button
+                            aria-label="Scade cantitatea"
                             variant="secondary"
                             size="sm"
                             onClick={() => handleQuantityChange(quantity - 1)}
@@ -447,6 +435,7 @@ const ProductPage: React.FC = () => {
                             {quantity}
                           </span>
                           <Button
+                            aria-label="Crește cantitatea"
                             variant="secondary"
                             size="sm"
                             onClick={() => handleQuantityChange(quantity + 1)}
@@ -485,9 +474,9 @@ const ProductPage: React.FC = () => {
 
                 {/* Share Section */}
                 <div className="space-y-3 pt-6 border-t border-amber-100">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-gray-900">
                     Distribuie produsul
-                  </h3>
+                  </h2>
                   <div className="flex flex-col items-start gap-3">
                     <Button
                       variant="secondary"

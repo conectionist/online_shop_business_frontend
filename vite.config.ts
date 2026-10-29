@@ -18,6 +18,10 @@ export default defineConfig({
       filename: 'sw.js',
       injectManifest: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        // The PDF and Excel libraries (~850 kB gzipped) are only used by admin
+        // exports. Keep them out of the precache so shoppers never download
+        // them; sw.ts caches them at runtime once an admin uses an export.
+        globIgnores: ['**/node_modules/**/*', '**/assets/react-pdf*.js', '**/assets/xlsx*.js'],
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'favicon.svg'],
       manifest: false,

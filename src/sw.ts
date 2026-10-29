@@ -4,7 +4,7 @@
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
-import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies'
+import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
 
@@ -27,6 +27,20 @@ registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 60 }),
+    ],
+  }),
+)
+
+// Hashed JS chunks left out of the precache (the admin PDF/Excel libraries):
+// cache them on first use. Their file names change with their content.
+registerRoute(
+  ({ url, request }) =>
+    url.origin === self.location.origin && url.pathname.startsWith('/assets/') && request.destination === 'script',
+  new CacheFirst({
+    cacheName: 'lazy-assets',
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 30 * 24 * 60 * 60 }),
     ],
   }),
 )

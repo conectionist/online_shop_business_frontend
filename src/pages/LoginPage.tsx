@@ -114,7 +114,7 @@ const LoginPage: React.FC = () => {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Sau{' '}
-            <Link to="/" className="font-medium text-amber-600 hover:text-amber-500">
+            <Link to="/" className="font-medium text-amber-700 hover:text-amber-800">
               reveniți la pagina principală
             </Link>
           </p>
@@ -193,7 +193,7 @@ const LoginPage: React.FC = () => {
                               <button
                   type="submit"
                   disabled={isLoading || isSuccess}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:bg-amber-400 disabled:cursor-not-allowed transition-all duration-200"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-amber-700 hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:bg-amber-700 disabled:cursor-not-allowed transition-all duration-200"
                 >
                 {isLoading ? (
                   <>
