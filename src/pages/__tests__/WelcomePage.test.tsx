@@ -312,17 +312,14 @@ describe('WelcomePage - Shopping Cart Integration', () => {
     })
 
     // Find and click the "Add to cart" button for the first product
-    const addToCartButtons = screen.queryAllByRole('button', { name: /Adaugă în coș/i })
-    
-    if (addToCartButtons.length > 0) {
-      await user.click(addToCartButtons[0])
+    const addToCartButtons = screen.getAllByRole('button', { name: /Adaugă în coș/i })
+    await user.click(addToCartButtons[0])
 
-      // Wait for cart count badge to appear
-      await waitFor(() => {
-        const cartLink = screen.getByRole('link', { name: 'Coș de cumpărături, 1 produs' })
-        expect(cartLink).toHaveTextContent('1')
-      })
-    }
+    // Wait for cart count badge to appear
+    await waitFor(() => {
+      const cartLink = screen.getByRole('link', { name: 'Coș de cumpărături, 1 produs' })
+      expect(cartLink).toHaveTextContent('1')
+    })
   })
 
   test('quantity selector increments correctly', async () => {

@@ -286,8 +286,8 @@ const OrderForm: React.FC = () => {
       // Persist for confirmation page
       sessionStorage.setItem('orderData', JSON.stringify(orderData));
 
-      // Clear cart
-      clearCart();
+      // Clear cart (silently: the order went through, nothing for screen readers to hear)
+      clearCart({ silent: true });
 
       // Open WhatsApp using setTimeout(0) to preserve gesture context on iOS
       // This queues the open in the next event loop tick, which helps on iOS Safari

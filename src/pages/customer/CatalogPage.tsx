@@ -14,7 +14,7 @@ import { getCategoryImageUrl, getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
-import { cartLinkLabel, formatImageCount } from '@/utils/cartLabel';
+import { cartLinkLabel, formatImageCount, formatRomanianCount } from '@/utils/cartLabel';
 
 const CatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -135,27 +135,16 @@ const CatalogPage: React.FC = () => {
 
     const quantity = quantities[product.id] || 1;
     
-    const currentItems = useCartStore.getState().items;
-    const existingItem = currentItems.find(item => item.id === product.id);
-
-    if (existingItem) {
-      const newQuantity = existingItem.quantity + quantity;
-      useCartStore.getState().updateQuantity(product.id, newQuantity);
-    } else {
-      addItem({
-        id: product.id,
-        nume: product.nume,
-        pret: product.pret,
-        unitati_id: product.unitati_id,
-        unitate_denumire: getUnitName(product.unitati_id),
-        images: product.images,
-        listId: publishedList.id
-      });
-      
-      setTimeout(() => {
-        useCartStore.getState().updateQuantity(product.id, quantity);
-      }, 0);
-    }
+    // Adds to an existing line or creates a new one, in a single store update
+    addItem({
+      id: product.id,
+      nume: product.nume,
+      pret: product.pret,
+      unitati_id: product.unitati_id,
+      unitate_denumire: getUnitName(product.unitati_id),
+      images: product.images,
+      listId: publishedList.id
+    }, quantity);
 
     setAddingToCart({ ...addingToCart, [product.id]: true });
     animateImageToCart(product.id);
@@ -580,7 +569,7 @@ const CatalogPage: React.FC = () => {
               <p className="text-sm text-gray-600">
                 {filteredAndSortedProducts.length === 0
                   ? 'Nu s-au găsit produse'
-                  : `${filteredAndSortedProducts.length} ${filteredAndSortedProducts.length === 1 ? 'produs găsit' : 'produse găsite'}`
+                  : formatRomanianCount(filteredAndSortedProducts.length, 'produs găsit', 'produse găsite')
                 }
               </p>
             )}

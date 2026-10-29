@@ -207,31 +207,16 @@ const ProductPage: React.FC = () => {
     if (isUnavailable) {
       return;
     }
-    // Get current cart state to check if item exists
-    const currentItems = useCartStore.getState().items;
-    const existingItem = currentItems.find(item => item.id === displayProduct.id);
-    
-    if (existingItem) {
-      // If item already exists, add the selected quantity to the existing quantity
-      const newQuantity = existingItem.quantity + quantity;
-      useCartStore.getState().updateQuantity(displayProduct.id, newQuantity);
-    } else {
-      // If it's a new item, add it with the selected quantity
-      addItem({
-        id: displayProduct.id,
-        nume: displayProduct.nume,
-        pret: displayProduct.pret,
-        unitati_id: displayProduct.unitati_id,
-        unitate_denumire: getUnitName(displayProduct.unitati_id),
-        images: displayProduct.images,
-        listId: publishedList.id
-      });
-      
-      // Update the quantity to the selected amount since addItem always adds with quantity 1
-      setTimeout(() => {
-        useCartStore.getState().updateQuantity(product.id, quantity);
-      }, 0);
-    }
+    // Adds to an existing line or creates a new one, in a single store update
+    addItem({
+      id: displayProduct.id,
+      nume: displayProduct.nume,
+      pret: displayProduct.pret,
+      unitati_id: displayProduct.unitati_id,
+      unitate_denumire: getUnitName(displayProduct.unitati_id),
+      images: displayProduct.images,
+      listId: publishedList.id
+    }, quantity);
   };
 
   const handleQuantityChange = (newQuantity: number) => {

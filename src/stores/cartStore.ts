@@ -14,37 +14,50 @@ export interface CartItem {
 
 interface CartStore {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  /**
+   * Bumped on changes the shopper makes (add, remove, quantity, "Golește coșul"),
+   * not on automatic ones (purging an expired list, clearing after an order).
+   * CartAnnouncer uses it to decide when to speak. Not persisted.
+   */
+  userChangeId: number;
+  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
   removeItem: (itemId: number) => void;
   updateQuantity: (itemId: number, quantity: number) => void;
   purgeItemsNotInList: (listId: number) => void;
-  clearCart: () => void;
+  clearCart: (options?: { silent?: boolean }) => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
 }
+
+export const selectTotalItems = (state: { items: CartItem[] }): number =>
+  state.items.reduce((total, item) => total + item.quantity, 0);
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      userChangeId: 0,
       
-      addItem: (item) => {
+      addItem: (item, quantity = 1) => {
+        const amount = Math.max(1, quantity);
         set((state) => {
           const existingItem = state.items.find(i => i.id === item.id);
           
           if (existingItem) {
-            // Update quantity if item already exists
+            // Add to the existing quantity
             return {
+              userChangeId: state.userChangeId + 1,
               items: state.items.map(i => 
                 i.id === item.id 
-                  ? { ...i, quantity: i.quantity + 1 }
+                  ? { ...i, quantity: i.quantity + amount }
                   : i
               )
             };
           } else {
-            // Add new item with quantity 1
+            // Add new item with the requested quantity in a single update
             return {
-              items: [...state.items, { ...item, quantity: 1 }]
+              userChangeId: state.userChangeId + 1,
+              items: [...state.items, { ...item, quantity: amount }]
             };
           }
         });
@@ -52,12 +65,14 @@ export const useCartStore = create<CartStore>()(
       
       removeItem: (itemId) => {
         set((state) => ({
+          userChangeId: state.userChangeId + 1,
           items: state.items.filter(item => item.id !== itemId)
         }));
       },
       
       updateQuantity: (itemId, quantity) => {
         set((state) => ({
+          userChangeId: state.userChangeId + 1,
           items: state.items.map(item => 
             item.id === itemId 
               ? { ...item, quantity: Math.max(0, quantity) }
@@ -72,14 +87,14 @@ export const useCartStore = create<CartStore>()(
         }));
       },
       
-      clearCart: () => {
-        set({ items: [] });
+      clearCart: (options) => {
+        set((state) => ({
+          items: [],
+          userChangeId: options?.silent ? state.userChangeId : state.userChangeId + 1,
+        }));
       },
       
-      getTotalItems: () => {
-        const { items } = get();
-        return items.reduce((total, item) => total + item.quantity, 0);
-      },
+      getTotalItems: () => selectTotalItems(get()),
       
       getTotalPrice: () => {
         const { items } = get();
@@ -88,6 +103,7 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'cart-storage', // unique name for localStorage key
+      partialize: (state) => ({ items: state.items }),
     }
   )
 ); 

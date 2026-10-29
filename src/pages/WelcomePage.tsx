@@ -149,25 +149,16 @@ const WelcomePage: React.FC = () => {
     animateImageToCart(productId);
     setAddingToCart(prev => ({ ...prev, [productId]: true }));
     await new Promise(resolve => setTimeout(resolve, 300));
-    const currentItems = useCartStore.getState().items;
-    const existingItem = currentItems.find(item => item.id === productId);
-    if (existingItem) {
-      const newQuantity = existingItem.quantity + quantity;
-      useCartStore.getState().updateQuantity(productId, newQuantity);
-    } else {
-      addItem({
-        id: product.id,
-        nume: product.nume,
-        pret: product.pret,
-        unitati_id: product.unitati_id,
-        unitate_denumire: getUnitName(product.unitati_id),
-        images: product.images,
-        listId: publishedList.id
-      });
-      setTimeout(() => {
-        useCartStore.getState().updateQuantity(productId, quantity);
-      }, 0);
-    }
+    // Adds to an existing line or creates a new one, in a single store update
+    addItem({
+      id: product.id,
+      nume: product.nume,
+      pret: product.pret,
+      unitati_id: product.unitati_id,
+      unitate_denumire: getUnitName(product.unitati_id),
+      images: product.images,
+      listId: publishedList.id
+    }, quantity);
     setAddingToCart(prev => ({ ...prev, [productId]: false }));
   };
 

@@ -1,4 +1,4 @@
-import { useCartStore } from '@/stores/cartStore'
+import { selectTotalItems, useCartStore } from '@/stores/cartStore'
 import type { CartItem } from '@/stores/cartStore'
 
 const makeItem = (overrides: Partial<CartItem> = {}): Omit<CartItem, 'quantity'> => ({
@@ -12,7 +12,7 @@ const makeItem = (overrides: Partial<CartItem> = {}): Omit<CartItem, 'quantity'>
 })
 
 beforeEach(() => {
-  useCartStore.setState({ items: [] })
+  useCartStore.setState({ items: [], userChangeId: 0 })
 })
 
 describe('addItem', () => {
@@ -142,5 +142,53 @@ describe('getTotalPrice', () => {
     useCartStore.getState().addItem(makeItem({ id: 1, pret: 2.5 }))
     useCartStore.getState().updateQuantity(1, 3)
     expect(useCartStore.getState().getTotalPrice()).toBeCloseTo(7.5)
+  })
+})
+
+describe('addItem with quantity', () => {
+  test('adds a new item with the given quantity in one update', () => {
+    const seen: number[] = []
+    const unsubscribe = useCartStore.subscribe((s) => seen.push(selectTotalItems(s)))
+    useCartStore.getState().addItem(makeItem(), 3)
+    unsubscribe()
+    expect(useCartStore.getState().items[0].quantity).toBe(3)
+    expect(seen).toEqual([3])
+  })
+
+  test('adds the given quantity to an existing item', () => {
+    useCartStore.getState().addItem(makeItem(), 2)
+    useCartStore.getState().addItem(makeItem(), 3)
+    expect(useCartStore.getState().items[0].quantity).toBe(5)
+  })
+
+  test('treats quantities below 1 as 1', () => {
+    useCartStore.getState().addItem(makeItem(), 0)
+    expect(useCartStore.getState().items[0].quantity).toBe(1)
+  })
+})
+
+describe('userChangeId', () => {
+  test('is bumped by shopper actions', () => {
+    const { addItem, updateQuantity, removeItem, clearCart } = useCartStore.getState()
+    addItem(makeItem())
+    updateQuantity(1, 4)
+    removeItem(1)
+    clearCart()
+    expect(useCartStore.getState().userChangeId).toBe(4)
+  })
+
+  test('is not bumped by automatic changes', () => {
+    useCartStore.setState({ items: [{ ...makeItem({ listId: 1 }), quantity: 2 }] })
+    useCartStore.getState().purgeItemsNotInList(2)
+    useCartStore.getState().clearCart({ silent: true })
+    expect(useCartStore.getState().userChangeId).toBe(0)
+  })
+})
+
+describe('persistence', () => {
+  test('stores only the items', () => {
+    useCartStore.getState().addItem(makeItem())
+    const saved = JSON.parse(localStorage.getItem('cart-storage') ?? '{}')
+    expect(Object.keys(saved.state)).toEqual(['items'])
   })
 })

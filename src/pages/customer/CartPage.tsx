@@ -17,6 +17,7 @@ const CartPage: React.FC = () => {
     getTotalItems, 
     getTotalPrice 
   } = useCartStore();
+  const totalItems = getTotalItems();
   const { data: businessDetails } = useBusinessDetailsSingle();
 
   const handleQuantityChange = (itemId: number, newQuantity: number) => {
@@ -69,14 +70,14 @@ const CartPage: React.FC = () => {
             <Button 
               variant="secondary" 
               size="sm"
-              onClick={clearCart}
+              onClick={() => clearCart()}
               className={components.button.secondaryDanger()}
             >
               Golește coșul
             </Button>
           </div>
           <p className="text-gray-600 mt-2">
-            {formatProductCount(getTotalItems())} în coș
+            {formatProductCount(totalItems)} în coș
           </p>
         </div>
 
@@ -177,7 +178,7 @@ const CartPage: React.FC = () => {
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Numărul de produse:</span>
-              <span className="font-medium text-amber-700">{getTotalItems()}</span>
+              <span className="font-medium text-amber-700">{totalItems}</span>
             </div>
             <div className="flex justify-between text-lg font-semibold border-t border-amber-200 pt-3">
               <span>Total:</span>
