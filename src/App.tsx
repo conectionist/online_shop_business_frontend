@@ -1,60 +1,92 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import AdminLayout from './components/layout/AdminLayout'
 import ProtectedRoute from './components/ProtectedRoute'
-import RouteErrorBoundary from './components/RouteErrorBoundary'
 import SEO from './components/SEO'
 import ScrollToTop from './components/ScrollToTop'
 import WelcomePage from './pages/WelcomePage'
-import LoginPage from './pages/LoginPage'
-import AdminDashboard from './pages/admin/Dashboard'
-import AdvancedOperations from '@/pages/admin/AdvancedOperations'
-import NotificationsHome from '@/pages/admin/notifications/NotificationsHome'
-import MySubscriptions from '@/pages/admin/notifications/MySubscriptions'
-import SessionsList from './pages/admin/SessionsList'
-import Loading from './components/ui/Loading'
-import CategoriesList from './pages/admin/CategoriesList'
-import CategoryForm from './pages/admin/CategoryForm'
-import ProductsList from './pages/admin/ProductsList'
-import ProductForm from './pages/admin/ProductForm'
-import UnitsList from './pages/admin/UnitsList'
-import UnitForm from './pages/admin/UnitForm'
-import DeliverySchedulesList from './pages/admin/DeliverySchedulesList'
-import DeliveryScheduleForm from './pages/admin/DeliveryScheduleForm'
-import DeliveryTypesList from './pages/admin/DeliveryTypesList'
-import DeliveryTypeForm from './pages/admin/DeliveryTypeForm'
-import PaymentMethodsList from './pages/admin/PaymentMethodsList'
-import PaymentMethodForm from './pages/admin/PaymentMethodForm'
-import BusinessDetailsList from './pages/admin/BusinessDetailsList'
-import SecurityPage from './pages/admin/SecurityPage'
-import BusinessDetailsForm from './pages/admin/BusinessDetailsForm'
-import ListsList from './pages/admin/ListsList'
-import ListForm from './pages/admin/ListForm'
-import ListProducts from './pages/admin/ListProducts'
-import ListManagement from './pages/admin/ListManagement'
-import CartPage from './pages/customer/CartPage'
-import OrderForm from './pages/customer/OrderForm'
-import OrderConfirmation from './pages/customer/OrderConfirmation'
-import ProductPage from './pages/customer/ProductPage'
-import CatalogPage from './pages/customer/CatalogPage'
-import CategoryCatalogPage from './pages/customer/CategoryCatalogPage'
-import PrivacyPolicy from './pages/PrivacyPolicy'
-import TermsAndConditions from './pages/TermsAndConditions'
 import AppLayout from './components/layout/AppLayout'
-import CookiesPolicy from './pages/CookiesPolicy'
-import ReturnsPolicy from './pages/ReturnsPolicy'
-import ContactPage from './pages/ContactPage'
 import { queryClient } from './lib/queryClient'
 import { ToastProvider } from './components/ui/ToastContainer'
 import AuthInitializer from './components/AuthInitializer'
 import { usePublishedList } from './hooks/useLists'
 import { useCartStore } from './stores/cartStore'
 
-// Admin-only, so it loads on demand and stays out of the shop's main bundle
+// The landing page ships in the main bundle. Every other page is its own chunk,
+// loaded when first visited, so shoppers don't download admin code (PDF and
+// Excel export, drag and drop) or pages they never open.
+
+// Shop pages. The main ones are also prefetched once the landing page is idle.
+const loadCatalogPage = () => import('./pages/customer/CatalogPage')
+const loadCategoryCatalogPage = () => import('./pages/customer/CategoryCatalogPage')
+const loadProductPage = () => import('./pages/customer/ProductPage')
+const loadCartPage = () => import('./pages/customer/CartPage')
+const loadOrderForm = () => import('./pages/customer/OrderForm')
+
+const CatalogPage = lazy(loadCatalogPage)
+const CategoryCatalogPage = lazy(loadCategoryCatalogPage)
+const ProductPage = lazy(loadProductPage)
+const CartPage = lazy(loadCartPage)
+const OrderForm = lazy(loadOrderForm)
+const OrderConfirmation = lazy(() => import('./pages/customer/OrderConfirmation'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'))
+const CookiesPolicy = lazy(() => import('./pages/CookiesPolicy'))
+const ReturnsPolicy = lazy(() => import('./pages/ReturnsPolicy'))
+
+const prefetchShopPages = () => {
+  for (const load of [loadCatalogPage, loadCategoryCatalogPage, loadProductPage, loadCartPage, loadOrderForm]) {
+    load().catch(() => {
+      // Prefetch is best effort; the route retries when visited
+    })
+  }
+}
+
+// Admin pages
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'))
+const AdvancedOperations = lazy(() => import('@/pages/admin/AdvancedOperations'))
+const NotificationsHome = lazy(() => import('@/pages/admin/notifications/NotificationsHome'))
+const MySubscriptions = lazy(() => import('@/pages/admin/notifications/MySubscriptions'))
+const SessionsList = lazy(() => import('./pages/admin/SessionsList'))
+const CategoriesList = lazy(() => import('./pages/admin/CategoriesList'))
+const CategoryForm = lazy(() => import('./pages/admin/CategoryForm'))
+const ProductsList = lazy(() => import('./pages/admin/ProductsList'))
+const ProductForm = lazy(() => import('./pages/admin/ProductForm'))
+const UnitsList = lazy(() => import('./pages/admin/UnitsList'))
+const UnitForm = lazy(() => import('./pages/admin/UnitForm'))
+const DeliverySchedulesList = lazy(() => import('./pages/admin/DeliverySchedulesList'))
+const DeliveryScheduleForm = lazy(() => import('./pages/admin/DeliveryScheduleForm'))
+const DeliveryTypesList = lazy(() => import('./pages/admin/DeliveryTypesList'))
+const DeliveryTypeForm = lazy(() => import('./pages/admin/DeliveryTypeForm'))
+const PaymentMethodsList = lazy(() => import('./pages/admin/PaymentMethodsList'))
+const PaymentMethodForm = lazy(() => import('./pages/admin/PaymentMethodForm'))
+const BusinessDetailsList = lazy(() => import('./pages/admin/BusinessDetailsList'))
+const SecurityPage = lazy(() => import('./pages/admin/SecurityPage'))
+const BusinessDetailsForm = lazy(() => import('./pages/admin/BusinessDetailsForm'))
+const ListsList = lazy(() => import('./pages/admin/ListsList'))
+const ListForm = lazy(() => import('./pages/admin/ListForm'))
+const ListProducts = lazy(() => import('./pages/admin/ListProducts'))
+const ListManagement = lazy(() => import('./pages/admin/ListManagement'))
 const Statistics = lazy(() => import('./pages/admin/Statistics'))
+
+// Warms the shop page chunks after the first load, so moving from the landing
+// page to the catalog, a product or the cart doesn't wait on the network.
+function PrefetchShopPages() {
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(prefetchShopPages, { timeout: 5000 })
+      return () => window.cancelIdleCallback(id)
+    }
+    const timer = setTimeout(prefetchShopPages, 3000)
+    return () => clearTimeout(timer)
+  }, [])
+  return null
+}
 
 function CartListSync() {
   const { data: publishedList } = usePublishedList()
@@ -71,6 +103,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <CartListSync />
+      <PrefetchShopPages />
       <ToastProvider>
       <AuthInitializer>
       <Router>
@@ -137,16 +170,7 @@ function App() {
             <Route path="advanced/notifications" element={<NotificationsHome />} />
             <Route path="advanced/notifications/my-subscriptions" element={<MySubscriptions />} />
             <Route path="sessions" element={<SessionsList />} />
-            <Route
-              path="statistics"
-              element={
-                <RouteErrorBoundary>
-                  <Suspense fallback={<Loading text="Se încarcă statisticile..." />}>
-                    <Statistics />
-                  </Suspense>
-                </RouteErrorBoundary>
-              }
-            />
+            <Route path="statistics" element={<Statistics />} />
             {/* Future admin routes will go here */}
           </Route>
 

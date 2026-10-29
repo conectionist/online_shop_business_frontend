@@ -16,11 +16,7 @@ import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
 import { getDeliveryTax } from '@/utils/delivery';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
-import OrdersPDF from '@/components/features/admin/OrdersPDF';
-import ProductsTotalsPDF from '@/components/features/admin/ProductsTotalsPDF';
-import * as XLSX from 'xlsx-js-style';
 import { EditOrderForm } from '@/components/features/admin/EditOrderForm';
-import { pdf } from '@react-pdf/renderer';
 
 
 interface ListOrdersTabProps {
@@ -481,6 +477,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         return;
       }
 
+      // The PDF libraries are large, so they load only when an export is requested
+      const [{ pdf }, { default: OrdersPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/features/admin/OrdersPDF'),
+      ]);
+
       // Create PDF document using react-pdf/renderer
       const pdfDoc = (
         <OrdersPDF
@@ -588,6 +590,10 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         })
         .map(({ name, quantity }) => ({ name, quantity }));
 
+      const [{ pdf }, { default: ProductsTotalsPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/features/admin/ProductsTotalsPDF'),
+      ]);
       const doc = <ProductsTotalsPDF items={items} />;
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
@@ -608,7 +614,7 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
     }
   };
 
-  const handleTotalsSaveAsXLS = () => {
+  const handleTotalsSaveAsXLS = async () => {
     setTotalsMenuOpen(false);
     // Build items in the same order as the Produse tab (flattened list order)
     const orderedProductIds: number[] = (listProductsData?.categories || [])
@@ -624,6 +630,20 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         return ia - ib;
       })
       .map(({ id, ...rest }) => rest);
+
+    // The Excel library is large, so it loads only when an export is requested
+    let XLSX: typeof import('xlsx-js-style');
+    try {
+      XLSX = await import('xlsx-js-style');
+    } catch (error) {
+      console.error('Error loading Excel export:', error);
+      showToast({
+        type: 'error',
+        title: 'Eroare la generarea fișierului Excel',
+        message: 'Vă rugăm să reîncărcați pagina și să încercați din nou.'
+      });
+      return;
+    }
 
     // Create worksheet and workbook
     const worksheet = XLSX.utils.json_to_sheet(items, { header: ['Nume', 'Cantitate'] });
