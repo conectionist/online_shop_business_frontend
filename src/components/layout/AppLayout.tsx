@@ -8,7 +8,8 @@ const AppLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="flex-1">
-        <RouteSuspense>
+        {/* Full-height placeholder so the footer stays below the fold while a page loads */}
+        <RouteSuspense fallbackClassName="min-h-screen">
           <Outlet />
         </RouteSuspense>
       </div>

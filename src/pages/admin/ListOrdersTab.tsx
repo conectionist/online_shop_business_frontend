@@ -16,6 +16,7 @@ import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
 import { getDeliveryTax } from '@/utils/delivery';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
+import { isChunkLoadError } from '@/utils/chunkLoad';
 import { EditOrderForm } from '@/components/features/admin/EditOrderForm';
 
 
@@ -519,7 +520,10 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       showToast({
         type: 'error',
         title: 'Eroare la generarea PDF-ului',
-        message: 'Vă rugăm să încercați din nou.'
+        // A PDF library that failed to load stays failed until the page reloads
+        message: isChunkLoadError(error)
+          ? 'Vă rugăm să reîncărcați pagina și să încercați din nou.'
+          : 'Vă rugăm să încercați din nou.'
       });
     }
   };
@@ -609,7 +613,10 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       showToast({
         type: 'error',
         title: 'Eroare la generarea PDF-ului',
-        message: 'Vă rugăm să încercați din nou.'
+        // A PDF library that failed to load stays failed until the page reloads
+        message: isChunkLoadError(error)
+          ? 'Vă rugăm să reîncărcați pagina și să încercați din nou.'
+          : 'Vă rugăm să încercați din nou.'
       });
     }
   };
@@ -645,40 +652,49 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       return;
     }
 
-    // Create worksheet and workbook
-    const worksheet = XLSX.utils.json_to_sheet(items, { header: ['Nume', 'Cantitate'] });
+    try {
+      // Create worksheet and workbook
+      const worksheet = XLSX.utils.json_to_sheet(items, { header: ['Nume', 'Cantitate'] });
 
-    // Header styling: uppercase, bold
-    const headerCells = ['A1', 'B1'];
-    headerCells.forEach((cell) => {
-      const c = worksheet[cell];
-      if (c && c.v) {
-        c.v = String(c.v).toUpperCase();
-        c.s = { font: { bold: true } } as any;
+      // Header styling: uppercase, bold
+      const headerCells = ['A1', 'B1'];
+      headerCells.forEach((cell) => {
+        const c = worksheet[cell];
+        if (c && c.v) {
+          c.v = String(c.v).toUpperCase();
+          c.s = { font: { bold: true } } as any;
+        }
+      });
+
+      // Column widths: widen name column, narrower quantity
+      (worksheet as any)['!cols'] = [
+        { wch: 40 }, // Nume column width
+        { wch: 12 }, // Cantitate column width
+      ];
+
+      // Center align the quantity column values
+      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+      for (let r = range.s.r + 1; r <= range.e.r; r++) {
+        const addr = XLSX.utils.encode_cell({ r, c: 1 }); // column B (Cantitate)
+        const cell = worksheet[addr];
+        if (cell) {
+          cell.s = { alignment: { horizontal: 'center' } } as any;
+        }
       }
-    });
 
-    // Column widths: widen name column, narrower quantity
-    (worksheet as any)['!cols'] = [
-      { wch: 40 }, // Nume column width
-      { wch: 12 }, // Cantitate column width
-    ];
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Totaluri');
 
-    // Center align the quantity column values
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-    for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const addr = XLSX.utils.encode_cell({ r, c: 1 }); // column B (Cantitate)
-      const cell = worksheet[addr];
-      if (cell) {
-        cell.s = { alignment: { horizontal: 'center' } } as any;
-      }
+      // Generate and trigger download as .xlsx
+      XLSX.writeFile(workbook, `total-comenzi-per-produs-${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      console.error('Error generating Excel file:', error);
+      showToast({
+        type: 'error',
+        title: 'Eroare la generarea fișierului Excel',
+        message: 'Vă rugăm să încercați din nou.'
+      });
     }
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Totaluri');
-
-    // Generate and trigger download as .xlsx
-    XLSX.writeFile(workbook, `total-comenzi-per-produs-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   // Close dropdown when clicking outside

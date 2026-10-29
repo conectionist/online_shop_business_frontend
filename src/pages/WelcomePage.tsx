@@ -185,7 +185,8 @@ const WelcomePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="text-center py-12">
+      // Full height so the footer stays below the fold until the list loads
+      <div className="text-center py-12 min-h-screen" role="status">
         <div className="max-w-md mx-auto px-6 sm:px-6">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Se încarcă...</p>
