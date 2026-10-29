@@ -15,7 +15,7 @@ import { getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
 import { formatDateRomanian } from '@/utils/dateFormatters';
-import { cartLinkLabel, formatImageCount } from '@/utils/cartLabel';
+import { cartLinkLabel, formatImageCount, formatProductCount } from '@/utils/cartLabel';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
@@ -674,7 +674,7 @@ const WelcomePage: React.FC = () => {
           <Link to="/cart">
             <Button variant="primary" className="px-8 py-3 text-lg">
               <ShoppingCart className="w-5 h-5 mr-2" />
-              Vezi Coșul ({totalItems} produse)
+              Vezi Coșul ({formatProductCount(totalItems)})
             </Button>
           </Link>
         </div>

@@ -6,6 +6,7 @@ import { Package, Trash2, Plus, Minus, ArrowLeft, ShoppingCart } from 'lucide-re
 import { Button } from '@/components/ui/Button';
 import { Link } from 'react-router-dom';
 import { components } from '@/utils/theme';
+import { formatProductCount } from '@/utils/cartLabel';
 
 const CartPage: React.FC = () => {
   const { 
@@ -75,7 +76,7 @@ const CartPage: React.FC = () => {
             </Button>
           </div>
           <p className="text-gray-600 mt-2">
-            {getTotalItems()} produse în coș
+            {formatProductCount(getTotalItems())} în coș
           </p>
         </div>
 
