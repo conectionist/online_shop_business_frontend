@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
-import CartAnnouncer, { ANNOUNCEMENT_CLEAR_MS } from '../CartAnnouncer'
+import CartAnnouncer, { ANNOUNCE_DELAY_MS, ANNOUNCEMENT_CLEAR_MS } from '../CartAnnouncer'
 import { useCartStore } from '@/stores/cartStore'
 
 const item = {
@@ -11,7 +11,11 @@ const item = {
   listId: 1,
 }
 
+const region = () => screen.getByRole('status')
+const flush = () => act(() => vi.advanceTimersByTime(ANNOUNCE_DELAY_MS))
+
 beforeEach(() => {
+  vi.useFakeTimers()
   useCartStore.setState({ items: [], userChangeId: 0 })
 })
 
@@ -23,57 +27,83 @@ describe('CartAnnouncer', () => {
   test('renders an empty polite live region initially', () => {
     useCartStore.setState({ items: [{ ...item, quantity: 2 }] })
     render(<CartAnnouncer />)
-    const region = screen.getByRole('status')
-    expect(region).toHaveAttribute('aria-live', 'polite')
-    expect(region).toHaveTextContent('')
+    expect(region()).toHaveAttribute('aria-live', 'polite')
+    expect(region()).toHaveTextContent('')
   })
 
   test('announces the new count when an item is added', () => {
     render(<CartAnnouncer />)
     act(() => useCartStore.getState().addItem(item))
-    expect(screen.getByRole('status')).toHaveTextContent('Coș actualizat: 1 produs')
+    flush()
+    expect(region()).toHaveTextContent('Coș actualizat: 1 produs')
     act(() => useCartStore.getState().addItem(item))
-    expect(screen.getByRole('status')).toHaveTextContent('Coș actualizat: 2 produse')
+    flush()
+    expect(region()).toHaveTextContent('Coș actualizat: 2 produse')
   })
 
   test('announces the final count when adding several at once', () => {
     render(<CartAnnouncer />)
     act(() => useCartStore.getState().addItem(item, 3))
-    expect(screen.getByRole('status')).toHaveTextContent('Coș actualizat: 3 produse')
+    flush()
+    expect(region()).toHaveTextContent('Coș actualizat: 3 produse')
   })
 
   test('announces when the shopper empties the cart', () => {
     useCartStore.setState({ items: [{ ...item, quantity: 1 }] })
     render(<CartAnnouncer />)
     act(() => useCartStore.getState().clearCart())
-    expect(screen.getByRole('status')).toHaveTextContent('Coșul este gol')
+    flush()
+    expect(region()).toHaveTextContent('Coșul este gol')
   })
 
   test('stays silent for automatic changes', () => {
-    useCartStore.setState({ items: [{ ...item, quantity: 1 }] })
+    useCartStore.setState({ items: [{ ...item, quantity: 1 }, { ...item, id: 2, quantity: 1 }] })
     render(<CartAnnouncer />)
+    act(() => useCartStore.getState().removeItems([2], { silent: true }))
     act(() => useCartStore.getState().purgeItemsNotInList(99))
-    expect(screen.getByRole('status')).toHaveTextContent('')
     useCartStore.setState({ items: [{ ...item, quantity: 1 }] })
     act(() => useCartStore.getState().clearCart({ silent: true }))
-    expect(screen.getByRole('status')).toHaveTextContent('')
+    flush()
+    expect(region()).toHaveTextContent('')
   })
 
   test('clears the message after a few seconds', () => {
-    vi.useFakeTimers()
     render(<CartAnnouncer />)
     act(() => useCartStore.getState().addItem(item))
-    expect(screen.getByRole('status')).toHaveTextContent('Coș actualizat: 1 produs')
+    flush()
+    expect(region()).toHaveTextContent('Coș actualizat: 1 produs')
     act(() => vi.advanceTimersByTime(ANNOUNCEMENT_CLEAR_MS))
-    expect(screen.getByRole('status')).toHaveTextContent('')
+    expect(region()).toHaveTextContent('')
   })
 
-  test('an automatic change does not keep an old message around', () => {
-    vi.useFakeTimers()
+  test('a silent change clears a message that no longer matches the cart', () => {
     render(<CartAnnouncer />)
     act(() => useCartStore.getState().addItem(item))
+    flush()
     act(() => useCartStore.getState().purgeItemsNotInList(99))
-    act(() => vi.advanceTimersByTime(ANNOUNCEMENT_CLEAR_MS))
-    expect(screen.getByRole('status')).toHaveTextContent('')
+    expect(region()).toHaveTextContent('')
+  })
+
+  test('re-announces when the new message repeats the previous text', () => {
+    render(<CartAnnouncer />)
+    act(() => useCartStore.getState().addItem(item, 3))
+    flush()
+    expect(region()).toHaveTextContent('Coș actualizat: 3 produse')
+    // Shopper goes 3 -> 2 -> 3 within the clear window
+    act(() => useCartStore.getState().updateQuantity(1, 2))
+    act(() => useCartStore.getState().updateQuantity(1, 3))
+    // The region is emptied first, then refilled, so screen readers hear it again
+    expect(region()).toHaveTextContent('')
+    flush()
+    expect(region()).toHaveTextContent('Coș actualizat: 3 produse')
+  })
+
+  test('a no-op change is not announced', () => {
+    useCartStore.setState({ items: [{ ...item, quantity: 2 }] })
+    render(<CartAnnouncer />)
+    act(() => useCartStore.getState().updateQuantity(1, 2))
+    act(() => useCartStore.getState().removeItem(42))
+    flush()
+    expect(region()).toHaveTextContent('')
   })
 })

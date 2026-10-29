@@ -171,10 +171,11 @@ describe('userChangeId', () => {
   test('is bumped by shopper actions', () => {
     const { addItem, updateQuantity, removeItem, clearCart } = useCartStore.getState()
     addItem(makeItem())
+    addItem(makeItem({ id: 2 }))
     updateQuantity(1, 4)
     removeItem(1)
     clearCart()
-    expect(useCartStore.getState().userChangeId).toBe(4)
+    expect(useCartStore.getState().userChangeId).toBe(5)
   })
 
   test('is not bumped by automatic changes', () => {
@@ -190,5 +191,42 @@ describe('persistence', () => {
     useCartStore.getState().addItem(makeItem())
     const saved = JSON.parse(localStorage.getItem('cart-storage') ?? '{}')
     expect(Object.keys(saved.state)).toEqual(['items'])
+  })
+})
+
+describe('removeItems', () => {
+  test('removes several items in one update', () => {
+    useCartStore.getState().addItem(makeItem({ id: 1 }))
+    useCartStore.getState().addItem(makeItem({ id: 2 }))
+    useCartStore.getState().addItem(makeItem({ id: 3 }))
+    let updates = 0
+    const unsubscribe = useCartStore.subscribe(() => updates++)
+    useCartStore.getState().removeItems([1, 3])
+    unsubscribe()
+    expect(useCartStore.getState().items.map(i => i.id)).toEqual([2])
+    expect(updates).toBe(1)
+  })
+
+  test('silent removal does not count as a shopper change', () => {
+    useCartStore.getState().addItem(makeItem({ id: 1 }))
+    const before = useCartStore.getState().userChangeId
+    useCartStore.getState().removeItems([1], { silent: true })
+    expect(useCartStore.getState().items).toHaveLength(0)
+    expect(useCartStore.getState().userChangeId).toBe(before)
+  })
+})
+
+describe('no-op changes', () => {
+  test('leave the state untouched', () => {
+    useCartStore.getState().addItem(makeItem({ id: 1 }), 2)
+    const before = useCartStore.getState()
+    let updates = 0
+    const unsubscribe = useCartStore.subscribe(() => updates++)
+    useCartStore.getState().updateQuantity(1, 2)
+    useCartStore.getState().removeItem(42)
+    useCartStore.getState().removeItems([42])
+    unsubscribe()
+    expect(updates).toBe(0)
+    expect(useCartStore.getState().userChangeId).toBe(before.userChangeId)
   })
 })

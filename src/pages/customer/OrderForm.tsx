@@ -34,7 +34,7 @@ interface OrderFormData {
 const OrderForm: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { items, getTotalPrice, clearCart, removeItem } = useCartStore();
+  const { items, getTotalPrice, clearCart, removeItems } = useCartStore();
 
   // Get the current published list and list-specific delivery types
   const { data: publishedList, isLoading: isLoadingList } = usePublishedList();
@@ -314,10 +314,8 @@ const OrderForm: React.FC = () => {
       
       setOutOfStockProducts(removedProducts);
       
-      // Remove out-of-stock products from cart
-      result.outOfStockProductIds.forEach(productId => {
-        removeItem(productId);
-      });
+      // Remove out-of-stock products from cart (silently: the modal explains it)
+      removeItems(result.outOfStockProductIds, { silent: true });
       
       setOutOfStockModalOpen(true);
     } else if (result.status && (result.status === 500 || result.status >= 500)) {
