@@ -13,7 +13,7 @@ import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } fr
 import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
-import { cartLinkLabel } from '@/utils/cartLabel';
+import { cartLinkLabel, formatImageCount } from '@/utils/cartLabel';
 
 const CategoryCatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +33,7 @@ const CategoryCatalogPage: React.FC = () => {
   const { data: units } = useUnits();
 
   const { addItem, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
 
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
   const [quantities, setQuantities] = React.useState<{ [key: number]: number }>({});
@@ -351,12 +352,12 @@ const CategoryCatalogPage: React.FC = () => {
       {/* Floating Cart Icon */}
       {publishedList && (
         <div ref={cartIconRef} className="fixed top-4 right-4 z-50">
-          <Link to="/cart" aria-label={cartLinkLabel(getTotalItems())}>
+          <Link to="/cart" aria-label={cartLinkLabel(totalItems)}>
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
-                  {getTotalItems()}
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
+                  {totalItems}
                 </span>
               )}
             </div>
@@ -522,6 +523,9 @@ const CategoryCatalogPage: React.FC = () => {
                           <h2 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
                             {product.nume}
                           </h2>
+                          {product.images && product.images.length > 1 && (
+                            <span className="sr-only">, {formatImageCount(product.images.length)}</span>
+                          )}
                         </Link>
                       </div>
 

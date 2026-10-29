@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { cartLinkLabel, formatProductCount } from '../cartLabel'
+import { cartLinkLabel, cartUpdateAnnouncement, formatImageCount, formatProductCount } from '../cartLabel'
 
 describe('formatProductCount', () => {
   test.each([
@@ -23,5 +23,25 @@ describe('cartLinkLabel', () => {
 
   test('includes the item count', () => {
     expect(cartLinkLabel(3)).toBe('Coș de cumpărături, 3 produse')
+  })
+})
+
+describe('formatImageCount', () => {
+  test.each([
+    [1, '1 imagine'],
+    [4, '4 imagini'],
+    [25, '25 de imagini'],
+  ])('%i -> %s', (count, expected) => {
+    expect(formatImageCount(count)).toBe(expected)
+  })
+})
+
+describe('cartUpdateAnnouncement', () => {
+  test('empty cart', () => {
+    expect(cartUpdateAnnouncement(0)).toBe('Coșul este gol')
+  })
+
+  test('with items', () => {
+    expect(cartUpdateAnnouncement(1)).toBe('Coș actualizat: 1 produs')
   })
 })

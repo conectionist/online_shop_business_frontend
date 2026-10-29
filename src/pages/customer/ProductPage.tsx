@@ -25,6 +25,7 @@ const ProductPage: React.FC = () => {
   const [linkCopied, setLinkCopied] = useState(false);
   
   const { addItem, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
   const { data: publishedList, isLoading: isLoadingPublishedList } = usePublishedList();
   
   // Fetch product directly from database
@@ -294,12 +295,12 @@ const ProductPage: React.FC = () => {
       {/* Floating Cart Icon - Hidden in archived mode */}
       {!isArchivedMode && (
         <div className="fixed top-4 right-4 z-50">
-          <Link to="/cart" aria-label={cartLinkLabel(getTotalItems())}>
+          <Link to="/cart" aria-label={cartLinkLabel(totalItems)}>
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
-                  {getTotalItems()}
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
+                  {totalItems}
                 </span>
               )}
             </div>

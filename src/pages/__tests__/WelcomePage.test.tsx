@@ -319,9 +319,8 @@ describe('WelcomePage - Shopping Cart Integration', () => {
 
       // Wait for cart count badge to appear
       await waitFor(() => {
-        const cartBadge = document.querySelector('.bg-gradient-to-r.from-red-500')
-        expect(cartBadge).toBeInTheDocument()
-        expect(cartBadge).toHaveTextContent('1')
+        const cartLink = screen.getByRole('link', { name: 'Coș de cumpărături, 1 produs' })
+        expect(cartLink).toHaveTextContent('1')
       })
     }
   })

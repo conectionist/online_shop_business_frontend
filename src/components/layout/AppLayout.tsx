@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Footer from '@/components/layout/Footer';
+import CartAnnouncer from '@/components/layout/CartAnnouncer';
 
 const AppLayout: React.FC = () => {
   return (
@@ -9,6 +10,7 @@ const AppLayout: React.FC = () => {
         <Outlet />
       </div>
       <Footer />
+      <CartAnnouncer />
     </div>
   );
 };

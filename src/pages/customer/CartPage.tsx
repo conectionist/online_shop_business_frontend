@@ -156,7 +156,7 @@ const CartPage: React.FC = () => {
                       variant="primary"
                       size="sm"
                       onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                      className="w-8 h-8 p-0 bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 text-white shadow-sm hover:shadow-md transition-all duration-300"
+                      className={components.button.primarySmall('w-8 h-8 p-0')}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>

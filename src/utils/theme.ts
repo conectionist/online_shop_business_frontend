@@ -25,6 +25,7 @@ export const theme = {
   // Text colors
   text: {
     primary: 'text-amber-700',
+    // Same as primary on purpose: amber-600 fails 4.5:1 contrast on white
     secondary: 'text-amber-700',
     accent: 'text-amber-400',
     muted: 'text-gray-600',

@@ -15,7 +15,7 @@ import { getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
 import { formatDateRomanian } from '@/utils/dateFormatters';
-import { cartLinkLabel } from '@/utils/cartLabel';
+import { cartLinkLabel, formatImageCount } from '@/utils/cartLabel';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
@@ -48,6 +48,7 @@ const WelcomePage: React.FC = () => {
 
   // Cart store
   const { addItem, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
 
   // Interactive states
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
@@ -260,12 +261,12 @@ const WelcomePage: React.FC = () => {
     <>
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50" ref={cartIconRef}>
-        <Link to="/cart" aria-label={cartLinkLabel(getTotalItems())}>
+        <Link to="/cart" aria-label={cartLinkLabel(totalItems)}>
           <div className={components.interactive.floatingCart}>
             <ShoppingCart className="h-6 w-6 text-amber-700" />
-            {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
-                {getTotalItems()}
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
+                {totalItems}
               </span>
             )}
           </div>
@@ -447,6 +448,9 @@ const WelcomePage: React.FC = () => {
                                     <h4 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
                                       {product.nume}
                                     </h4>
+                                    {product.images && product.images.length > 1 && (
+                                      <span className="sr-only">, {formatImageCount(product.images.length)}</span>
+                                    )}
                                   </Link>
                                 </div>
                                 
@@ -665,12 +669,12 @@ const WelcomePage: React.FC = () => {
       </div>
 
       {/* Cart Action Button */}
-      {getTotalItems() > 0 && (
+      {totalItems > 0 && (
         <div className="mt-8 text-center">
           <Link to="/cart">
             <Button variant="primary" className="px-8 py-3 text-lg">
               <ShoppingCart className="w-5 h-5 mr-2" />
-              Vezi Coșul ({getTotalItems()} produse)
+              Vezi Coșul ({totalItems} produse)
             </Button>
           </Link>
         </div>
