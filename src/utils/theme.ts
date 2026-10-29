@@ -25,7 +25,8 @@ export const theme = {
   // Text colors
   text: {
     primary: 'text-amber-700',
-    secondary: 'text-amber-600',
+    // Same as primary on purpose: amber-600 fails 4.5:1 contrast on white
+    secondary: 'text-amber-700',
     accent: 'text-amber-400',
     muted: 'text-gray-600',
     dark: 'text-gray-900',
@@ -34,8 +35,8 @@ export const theme = {
   // Button variants
   buttons: {
     primary: {
-      base: 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105',
-      small: 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm hover:shadow-md transition-all duration-300',
+      base: 'bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105',
+      small: 'bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 text-white shadow-sm hover:shadow-md transition-all duration-300',
     },
     secondary: {
       base: 'bg-white border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300',

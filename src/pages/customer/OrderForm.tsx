@@ -34,7 +34,7 @@ interface OrderFormData {
 const OrderForm: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { items, getTotalPrice, clearCart, removeItem } = useCartStore();
+  const { items, getTotalPrice, clearCart, removeItems } = useCartStore();
 
   // Get the current published list and list-specific delivery types
   const { data: publishedList, isLoading: isLoadingList } = usePublishedList();
@@ -286,8 +286,8 @@ const OrderForm: React.FC = () => {
       // Persist for confirmation page
       sessionStorage.setItem('orderData', JSON.stringify(orderData));
 
-      // Clear cart
-      clearCart();
+      // Clear cart (silently: the order went through, nothing for screen readers to hear)
+      clearCart({ silent: true });
 
       // Open WhatsApp using setTimeout(0) to preserve gesture context on iOS
       // This queues the open in the next event loop tick, which helps on iOS Safari
@@ -314,10 +314,8 @@ const OrderForm: React.FC = () => {
       
       setOutOfStockProducts(removedProducts);
       
-      // Remove out-of-stock products from cart
-      result.outOfStockProductIds.forEach(productId => {
-        removeItem(productId);
-      });
+      // Remove out-of-stock products from cart (silently: the modal explains it)
+      removeItems(result.outOfStockProductIds, { silent: true });
       
       setOutOfStockModalOpen(true);
     } else if (result.status && (result.status === 500 || result.status >= 500)) {

@@ -45,8 +45,7 @@ describe('ProductPage - Page Rendering and Navigation', () => {
     })
 
     // Cart icon should be present
-    const cartLinks = screen.getAllByRole('link', { name: '' })
-    const cartLink = cartLinks.find(link => link.getAttribute('href') === '/cart')
+    const cartLink = screen.getByRole('link', { name: 'Coș de cumpărături' })
     expect(cartLink).toBeInTheDocument()
   })
 
@@ -77,8 +76,7 @@ describe('ProductPage - Page Rendering and Navigation', () => {
       expect(screen.getByText('Pâine albă')).toBeInTheDocument()
     })
 
-    const cartLinks = screen.getAllByRole('link', { name: '' })
-    const cartLink = cartLinks.find(link => link.getAttribute('href') === '/cart')
+    const cartLink = screen.getByRole('link', { name: 'Coș de cumpărături' })
     expect(cartLink).toHaveAttribute('href', '/cart')
   })
 })

@@ -15,6 +15,7 @@ import { getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, generateMainPageSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
 import { formatDateRomanian } from '@/utils/dateFormatters';
+import { cartLinkLabel, formatImageCount, formatProductCount } from '@/utils/cartLabel';
 
 const WelcomePage: React.FC = () => {
   const { data: businessDetails } = useBusinessDetailsSingle();
@@ -47,6 +48,7 @@ const WelcomePage: React.FC = () => {
 
   // Cart store
   const { addItem, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
 
   // Interactive states
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
@@ -147,25 +149,16 @@ const WelcomePage: React.FC = () => {
     animateImageToCart(productId);
     setAddingToCart(prev => ({ ...prev, [productId]: true }));
     await new Promise(resolve => setTimeout(resolve, 300));
-    const currentItems = useCartStore.getState().items;
-    const existingItem = currentItems.find(item => item.id === productId);
-    if (existingItem) {
-      const newQuantity = existingItem.quantity + quantity;
-      useCartStore.getState().updateQuantity(productId, newQuantity);
-    } else {
-      addItem({
-        id: product.id,
-        nume: product.nume,
-        pret: product.pret,
-        unitati_id: product.unitati_id,
-        unitate_denumire: getUnitName(product.unitati_id),
-        images: product.images,
-        listId: publishedList.id
-      });
-      setTimeout(() => {
-        useCartStore.getState().updateQuantity(productId, quantity);
-      }, 0);
-    }
+    // Adds to an existing line or creates a new one, in a single store update
+    addItem({
+      id: product.id,
+      nume: product.nume,
+      pret: product.pret,
+      unitati_id: product.unitati_id,
+      unitate_denumire: getUnitName(product.unitati_id),
+      images: product.images,
+      listId: publishedList.id
+    }, quantity);
     setAddingToCart(prev => ({ ...prev, [productId]: false }));
   };
 
@@ -232,7 +225,7 @@ const WelcomePage: React.FC = () => {
                 Pentru a vedea toate produsele,<br />apasă{' '}
                 <Link 
                   to="/catalog" 
-                  className="text-amber-600 hover:text-amber-700 font-semibold underline"
+                  className="text-amber-700 hover:text-amber-800 font-semibold underline"
                 >
                   aici
                 </Link>
@@ -259,12 +252,12 @@ const WelcomePage: React.FC = () => {
     <>
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50" ref={cartIconRef}>
-        <Link to="/cart">
+        <Link to="/cart" aria-label={cartLinkLabel(totalItems)}>
           <div className={components.interactive.floatingCart}>
             <ShoppingCart className="h-6 w-6 text-amber-700" />
-            {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
-                {getTotalItems()}
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
+                {totalItems}
               </span>
             )}
           </div>
@@ -378,9 +371,9 @@ const WelcomePage: React.FC = () => {
               return Object.entries(productsByCategory).map(([categoryName, products]: [string, any]) => (
                 <div key={categoryName} className="space-y-4">
                   <div className={`${components.backgrounds.category} border ${components.borders.primary} rounded-xl px-6 py-4 text-center`}>
-                    <h4 className="text-lg font-bold text-amber-800">
+                    <h3 className="text-lg font-bold text-amber-800">
                       {categoryName}
-                    </h4>
+                    </h3>
                     <div className="w-12 h-0.5 bg-amber-400 mx-auto mt-2 rounded-full"></div>
                   </div>
                   <div className="space-y-4">
@@ -397,6 +390,8 @@ const WelcomePage: React.FC = () => {
                         <Link 
                           to={`/product/${product.id}`}
                           className="block"
+                          tabIndex={-1}
+                          aria-hidden="true"
                         >
                           <div className="p-4">
                             <div className={components.interactive.imageContainer + " relative"}>
@@ -441,9 +436,12 @@ const WelcomePage: React.FC = () => {
                                     to={`/product/${product.id}`}
                                     className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
                                   >
-                                    <h5 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
+                                    <h4 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
                                       {product.nume}
-                                    </h5>
+                                    </h4>
+                                    {product.images && product.images.length > 1 && (
+                                      <span className="sr-only">, {formatImageCount(product.images.length)}</span>
+                                    )}
                                   </Link>
                                 </div>
                                 
@@ -460,7 +458,7 @@ const WelcomePage: React.FC = () => {
                                               e.stopPropagation();
                                               toggleDescription(product.id);
                                             }}
-                                            className="text-amber-600 hover:text-amber-700 text-xs font-medium ml-1 align-baseline"
+                                            className="text-amber-700 hover:text-amber-800 text-xs font-medium ml-1 align-baseline"
                                           >
                                             Arată mai puțin
                                           </button>
@@ -478,7 +476,7 @@ const WelcomePage: React.FC = () => {
                                               e.stopPropagation();
                                               toggleDescription(product.id);
                                             }}
-                                            className="ml-1 text-amber-600 hover:text-amber-700 text-xs font-medium align-baseline whitespace-nowrap"
+                                            className="ml-1 text-amber-700 hover:text-amber-800 text-xs font-medium align-baseline whitespace-nowrap"
                                           >
                                             Arată mai mult
                                           </button>
@@ -491,7 +489,7 @@ const WelcomePage: React.FC = () => {
                                 {/* Price and Quantity - Enhanced */}
                                 <div className="pt-2">
                                   <div>
-                                    <span className="text-lg font-bold text-amber-600">
+                                    <span className="text-lg font-bold text-amber-700">
                                       {product.pret} RON / {product.cantitate} {getUnitName(product.unitati_id)}
                                     </span>
                                   </div>
@@ -502,6 +500,7 @@ const WelcomePage: React.FC = () => {
                               <div className="flex flex-col items-center gap-2 pt-3 justify-center">
                                 <div className="flex items-center justify-between gap-2 w-full sm:w-auto justify-center">
                                   <Button
+                                    aria-label={`Scade cantitatea pentru ${product.nume}`}
                                     variant="secondary"
                                     size="sm"
                                     onClick={() => handleQuantityChange(product.id, (quantities[product.id] || 1) - 1)}
@@ -514,6 +513,7 @@ const WelcomePage: React.FC = () => {
                                     {quantities[product.id] || 1}
                                   </span>
                                   <Button
+                                    aria-label={`Crește cantitatea pentru ${product.nume}`}
                                     variant="secondary"
                                     size="sm"
                                     onClick={() => handleQuantityChange(product.id, (quantities[product.id] || 1) + 1)}
@@ -597,7 +597,7 @@ const WelcomePage: React.FC = () => {
           <div className="flex items-start space-x-3">
             <Clock className="h-6 w-6 text-blue-600 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900 mb-2">Orar Livrări</h4>
+              <h3 className="font-medium text-gray-900 mb-2">Orar Livrări</h3>
               <div className="text-sm text-gray-600 whitespace-pre-line">
                 {deliverySchedules?.find(s => s.id === publishedList.orare_livrari_id)?.orar_livrari || 'Orar nedefinit'}
               </div>
@@ -610,7 +610,7 @@ const WelcomePage: React.FC = () => {
           <div className="flex items-start space-x-3">
             <Truck className="h-6 w-6 text-orange-600 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900 mb-2">Metode de Livrare</h4>
+              <h3 className="font-medium text-gray-900 mb-2">Metode de Livrare</h3>
               <div className="text-sm text-gray-600">
                 {listDeliveryTypes && listDeliveryTypes.length > 0 
                   ? listDeliveryTypes.map(dt => (
@@ -640,7 +640,7 @@ const WelcomePage: React.FC = () => {
           <div className="flex items-start space-x-3">
             <CreditCard className="h-6 w-6 text-green-600 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900 mb-2">Metode de Plată</h4>
+              <h3 className="font-medium text-gray-900 mb-2">Metode de Plată</h3>
               <div className="text-sm text-gray-600">
                 {paymentMethods && paymentMethods.length > 0 
                   ? paymentMethods
@@ -660,12 +660,12 @@ const WelcomePage: React.FC = () => {
       </div>
 
       {/* Cart Action Button */}
-      {getTotalItems() > 0 && (
+      {totalItems > 0 && (
         <div className="mt-8 text-center">
           <Link to="/cart">
             <Button variant="primary" className="px-8 py-3 text-lg">
               <ShoppingCart className="w-5 h-5 mr-2" />
-              Vezi Coșul ({getTotalItems()} produse)
+              Vezi Coșul ({formatProductCount(totalItems)})
             </Button>
           </Link>
         </div>

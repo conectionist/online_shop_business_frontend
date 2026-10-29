@@ -34,7 +34,7 @@ const SortableImageItem: React.FC<{
       <div className="absolute top-1 right-1 flex gap-1">
         <button
           type="button"
-          className={`p-0.5 sm:p-1 rounded ${image.is_primary ? 'bg-amber-500 text-white' : 'bg-white/90 text-gray-700 border'}`}
+          className={`p-0.5 sm:p-1 rounded ${image.is_primary ? 'bg-amber-700 text-white' : 'bg-white/90 text-gray-700 border'}`}
           onClick={() => onPrimary(image.id)}
           title="Setează principal"
         >
