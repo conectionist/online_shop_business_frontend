@@ -293,7 +293,7 @@ const ProductPage: React.FC = () => {
       {/* Floating Cart Icon - Hidden in archived mode */}
       {!isArchivedMode && (
         <div className="fixed top-4 right-4 z-50">
-          <Link to="/cart">
+          <Link to="/cart" aria-label="Coș de cumpărături">
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
               {getTotalItems() > 0 && (
@@ -435,6 +435,7 @@ const ProductPage: React.FC = () => {
                         </label>
                         <div className="flex items-center space-x-4">
                           <Button
+                            aria-label="Scade cantitatea"
                             variant="secondary"
                             size="sm"
                             onClick={() => handleQuantityChange(quantity - 1)}
@@ -447,6 +448,7 @@ const ProductPage: React.FC = () => {
                             {quantity}
                           </span>
                           <Button
+                            aria-label="Crește cantitatea"
                             variant="secondary"
                             size="sm"
                             onClick={() => handleQuantityChange(quantity + 1)}

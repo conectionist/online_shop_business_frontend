@@ -114,7 +114,7 @@ const LoginPage: React.FC = () => {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Sau{' '}
-            <Link to="/" className="font-medium text-amber-600 hover:text-amber-500">
+            <Link to="/" className="font-medium text-amber-700 hover:text-amber-800">
               reveniți la pagina principală
             </Link>
           </p>

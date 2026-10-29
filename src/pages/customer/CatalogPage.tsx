@@ -472,7 +472,7 @@ const CatalogPage: React.FC = () => {
       {/* Floating Cart Icon */}
       {publishedList && viewMode === 'products' && (
         <div ref={cartIconRef} className="fixed top-4 right-4 z-50">
-          <Link to="/cart">
+          <Link to="/cart" aria-label="Coș de cumpărături">
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
               {getTotalItems() > 0 && (
@@ -587,9 +587,9 @@ const CatalogPage: React.FC = () => {
           {!allProducts || allProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 Nu există produse disponibile
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 Vă rugăm să reveniți mai târziu sau să explorați categorii.
               </p>
@@ -597,9 +597,9 @@ const CatalogPage: React.FC = () => {
           ) : filteredAndSortedProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 {searchTerm.trim() ? 'Nu s-au găsit produse' : 'Nu există produse disponibile'}
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 {searchTerm.trim()
                   ? 'Încearcă să modifici termenii de căutare.'
@@ -627,6 +627,7 @@ const CatalogPage: React.FC = () => {
                     <Link
                       to={`/product/${product.id}`}
                       className="block"
+                      aria-label={product.nume}
                     >
                       <div className="p-4">
                         <div className={components.interactive.imageContainer + " relative"}>
@@ -667,9 +668,9 @@ const CatalogPage: React.FC = () => {
                               to={`/product/${product.id}`}
                               className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
                             >
-                              <h5 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
+                              <h2 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
                                 {product.nume}
-                              </h5>
+                              </h2>
                             </Link>
                           </div>
 
@@ -684,7 +685,7 @@ const CatalogPage: React.FC = () => {
                                 {product.description.length > 80 && (
                                   <button
                                     onClick={() => toggleDescription(product.id)}
-                                    className="text-amber-600 hover:text-amber-700 font-medium ml-1"
+                                    className="text-amber-700 hover:text-amber-800 font-medium ml-1"
                                   >
                                     {expandedDescriptions[product.id] ? 'mai puțin' : 'mai mult'}
                                   </button>
@@ -695,7 +696,7 @@ const CatalogPage: React.FC = () => {
 
                           <div className="pt-2">
                             <div>
-                              <span className="text-lg font-bold text-amber-600">
+                              <span className="text-lg font-bold text-amber-700">
                                 {product.pret} RON / {product.cantitate} {getUnitName(product.unitati_id)}
                               </span>
                             </div>
@@ -707,6 +708,7 @@ const CatalogPage: React.FC = () => {
                           <div className="space-y-3 mt-4">
                             <div className="flex items-center justify-center space-x-4">
                               <Button
+                                aria-label="Scade cantitatea"
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => handleQuantityChange(product.id, -1)}
@@ -719,6 +721,7 @@ const CatalogPage: React.FC = () => {
                                 {currentQuantity}
                               </span>
                               <Button
+                                aria-label="Crește cantitatea"
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => handleQuantityChange(product.id, 1)}

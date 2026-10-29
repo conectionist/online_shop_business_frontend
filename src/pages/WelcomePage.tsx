@@ -232,7 +232,7 @@ const WelcomePage: React.FC = () => {
                 Pentru a vedea toate produsele,<br />apasă{' '}
                 <Link 
                   to="/catalog" 
-                  className="text-amber-600 hover:text-amber-700 font-semibold underline"
+                  className="text-amber-700 hover:text-amber-800 font-semibold underline"
                 >
                   aici
                 </Link>
@@ -259,7 +259,7 @@ const WelcomePage: React.FC = () => {
     <>
       {/* Floating Cart Icon */}
       <div className="fixed top-4 right-4 z-50" ref={cartIconRef}>
-        <Link to="/cart">
+        <Link to="/cart" aria-label="Coș de cumpărături">
           <div className={components.interactive.floatingCart}>
             <ShoppingCart className="h-6 w-6 text-amber-700" />
             {getTotalItems() > 0 && (
@@ -378,9 +378,9 @@ const WelcomePage: React.FC = () => {
               return Object.entries(productsByCategory).map(([categoryName, products]: [string, any]) => (
                 <div key={categoryName} className="space-y-4">
                   <div className={`${components.backgrounds.category} border ${components.borders.primary} rounded-xl px-6 py-4 text-center`}>
-                    <h4 className="text-lg font-bold text-amber-800">
+                    <h3 className="text-lg font-bold text-amber-800">
                       {categoryName}
-                    </h4>
+                    </h3>
                     <div className="w-12 h-0.5 bg-amber-400 mx-auto mt-2 rounded-full"></div>
                   </div>
                   <div className="space-y-4">
@@ -397,6 +397,7 @@ const WelcomePage: React.FC = () => {
                         <Link 
                           to={`/product/${product.id}`}
                           className="block"
+                          aria-label={product.nume}
                         >
                           <div className="p-4">
                             <div className={components.interactive.imageContainer + " relative"}>
@@ -441,9 +442,9 @@ const WelcomePage: React.FC = () => {
                                     to={`/product/${product.id}`}
                                     className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
                                   >
-                                    <h5 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
+                                    <h4 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
                                       {product.nume}
-                                    </h5>
+                                    </h4>
                                   </Link>
                                 </div>
                                 
@@ -460,7 +461,7 @@ const WelcomePage: React.FC = () => {
                                               e.stopPropagation();
                                               toggleDescription(product.id);
                                             }}
-                                            className="text-amber-600 hover:text-amber-700 text-xs font-medium ml-1 align-baseline"
+                                            className="text-amber-700 hover:text-amber-800 text-xs font-medium ml-1 align-baseline"
                                           >
                                             Arată mai puțin
                                           </button>
@@ -478,7 +479,7 @@ const WelcomePage: React.FC = () => {
                                               e.stopPropagation();
                                               toggleDescription(product.id);
                                             }}
-                                            className="ml-1 text-amber-600 hover:text-amber-700 text-xs font-medium align-baseline whitespace-nowrap"
+                                            className="ml-1 text-amber-700 hover:text-amber-800 text-xs font-medium align-baseline whitespace-nowrap"
                                           >
                                             Arată mai mult
                                           </button>
@@ -491,7 +492,7 @@ const WelcomePage: React.FC = () => {
                                 {/* Price and Quantity - Enhanced */}
                                 <div className="pt-2">
                                   <div>
-                                    <span className="text-lg font-bold text-amber-600">
+                                    <span className="text-lg font-bold text-amber-700">
                                       {product.pret} RON / {product.cantitate} {getUnitName(product.unitati_id)}
                                     </span>
                                   </div>
@@ -502,6 +503,7 @@ const WelcomePage: React.FC = () => {
                               <div className="flex flex-col items-center gap-2 pt-3 justify-center">
                                 <div className="flex items-center justify-between gap-2 w-full sm:w-auto justify-center">
                                   <Button
+                                    aria-label="Scade cantitatea"
                                     variant="secondary"
                                     size="sm"
                                     onClick={() => handleQuantityChange(product.id, (quantities[product.id] || 1) - 1)}
@@ -514,6 +516,7 @@ const WelcomePage: React.FC = () => {
                                     {quantities[product.id] || 1}
                                   </span>
                                   <Button
+                                    aria-label="Crește cantitatea"
                                     variant="secondary"
                                     size="sm"
                                     onClick={() => handleQuantityChange(product.id, (quantities[product.id] || 1) + 1)}
@@ -597,7 +600,7 @@ const WelcomePage: React.FC = () => {
           <div className="flex items-start space-x-3">
             <Clock className="h-6 w-6 text-blue-600 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900 mb-2">Orar Livrări</h4>
+              <h3 className="font-medium text-gray-900 mb-2">Orar Livrări</h3>
               <div className="text-sm text-gray-600 whitespace-pre-line">
                 {deliverySchedules?.find(s => s.id === publishedList.orare_livrari_id)?.orar_livrari || 'Orar nedefinit'}
               </div>
@@ -610,7 +613,7 @@ const WelcomePage: React.FC = () => {
           <div className="flex items-start space-x-3">
             <Truck className="h-6 w-6 text-orange-600 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900 mb-2">Metode de Livrare</h4>
+              <h3 className="font-medium text-gray-900 mb-2">Metode de Livrare</h3>
               <div className="text-sm text-gray-600">
                 {listDeliveryTypes && listDeliveryTypes.length > 0 
                   ? listDeliveryTypes.map(dt => (
@@ -640,7 +643,7 @@ const WelcomePage: React.FC = () => {
           <div className="flex items-start space-x-3">
             <CreditCard className="h-6 w-6 text-green-600 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900 mb-2">Metode de Plată</h4>
+              <h3 className="font-medium text-gray-900 mb-2">Metode de Plată</h3>
               <div className="text-sm text-gray-600">
                 {paymentMethods && paymentMethods.length > 0 
                   ? paymentMethods
