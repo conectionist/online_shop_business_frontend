@@ -28,8 +28,11 @@ class RouteErrorBoundary extends React.Component<RouteErrorBoundaryProps, RouteE
     console.error('Route failed to render:', error, info.componentStack);
   }
 
-  componentDidUpdate(prevProps: RouteErrorBoundaryProps) {
-    if (this.state.error && prevProps.resetKey !== this.props.resetKey) {
+  componentDidUpdate(prevProps: RouteErrorBoundaryProps, prevState: RouteErrorBoundaryState) {
+    // Reset only an error that was already showing before the key changed.
+    // An error caught in the same render that changed the key belongs to the
+    // new page; clearing it would render (and fail) that page a second time.
+    if (prevState.error && this.state.error && prevProps.resetKey !== this.props.resetKey) {
       this.setState({ error: null });
     }
   }

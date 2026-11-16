@@ -174,8 +174,10 @@ const Footer: React.FC = () => {
               >
                 <img
                   decoding="async"
-                  width={201}
+                  // ANPC Order 449/2022: the SAL pictogram is shown at 250x50 px
+                  width={250}
                   height={50}
+                  style={{ width: '250px', height: '50px' }}
                   src="/anpc-sal.png"
                   alt="Soluționarea Alternativă a Litigiilor"
                   title="Soluționarea Alternativă a Litigiilor"
