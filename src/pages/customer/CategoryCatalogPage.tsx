@@ -13,6 +13,8 @@ import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } fr
 import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
+import { cartLinkLabel, formatImageCount, formatRomanianCount } from '@/utils/cartLabel';
+import { HERO_IMAGE_LOADING, listImageLoading } from '@/utils/imageLoading';
 
 const CategoryCatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ const CategoryCatalogPage: React.FC = () => {
   const { data: units } = useUnits();
 
   const { addItem, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
 
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
   const [quantities, setQuantities] = React.useState<{ [key: number]: number }>({});
@@ -141,27 +144,16 @@ const CategoryCatalogPage: React.FC = () => {
 
     const quantity = quantities[product.id] || 1;
     
-    const currentItems = useCartStore.getState().items;
-    const existingItem = currentItems.find(item => item.id === product.id);
-
-    if (existingItem) {
-      const newQuantity = existingItem.quantity + quantity;
-      useCartStore.getState().updateQuantity(product.id, newQuantity);
-    } else {
-      addItem({
-        id: product.id,
-        nume: product.nume,
-        pret: product.pret,
-        unitati_id: product.unitati_id,
-        unitate_denumire: getUnitName(product.unitati_id),
-        images: product.images,
-        listId: publishedList.id
-      });
-      
-      setTimeout(() => {
-        useCartStore.getState().updateQuantity(product.id, quantity);
-      }, 0);
-    }
+    // Adds to an existing line or creates a new one, in a single store update
+    addItem({
+      id: product.id,
+      nume: product.nume,
+      pret: product.pret,
+      unitati_id: product.unitati_id,
+      unitate_denumire: getUnitName(product.unitati_id),
+      images: product.images,
+      listId: publishedList.id
+    }, quantity);
 
     setAddingToCart({ ...addingToCart, [product.id]: true });
     animateImageToCart(product.id);
@@ -235,6 +227,8 @@ const CategoryCatalogPage: React.FC = () => {
   }, [products, searchTerm, sortBy]);
 
   const isLoading = isLoadingCategory || isLoadingProducts;
+  // First product that actually shows an image: image loading counts from there
+  const firstProductImageIndex = filteredAndSortedProducts.findIndex((p: any) => p.images?.length > 0);
   const error = categoryError || productsError;
 
   // Show skeleton loaders instead of spinner for better UX
@@ -246,18 +240,21 @@ const CategoryCatalogPage: React.FC = () => {
           description="Produsele din categorie."
           robots="index, follow"
         />
-        <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
+        {/* Same keys as the loaded page, so React keeps these elements in place
+            (a placeholder element reused for different content counts as a layout shift) */}
+        <div key="category-header" className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
           <div className="max-w-4xl mx-auto px-6 py-8">
             <div className="flex flex-col items-center text-center gap-4">
               <div className="w-full max-w-[280px]">
                 <div className="aspect-square rounded-xl overflow-hidden relative border border-gray-200 shadow-sm bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse"></div>
               </div>
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-10 w-40 bg-gray-200 rounded animate-pulse"></div>
+              {/* Same heights as the loaded title (text-lg/xl, leading-tight) and button */}
+              <div className="h-[22.5px] md:h-[25px] w-48 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-9 w-40 bg-gray-200 rounded animate-pulse"></div>
             </div>
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
+        <div key="category-products" className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
           <div className="space-y-6">
             {[1, 2, 3, 4].map((index) => (
               <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
@@ -350,12 +347,12 @@ const CategoryCatalogPage: React.FC = () => {
       {/* Floating Cart Icon */}
       {publishedList && (
         <div ref={cartIconRef} className="fixed top-4 right-4 z-50">
-          <Link to="/cart">
+          <Link to="/cart" aria-label={cartLinkLabel(totalItems)}>
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
-                  {getTotalItems()}
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
+                  {totalItems}
                 </span>
               )}
             </div>
@@ -364,7 +361,7 @@ const CategoryCatalogPage: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
+      <div key="category-header" className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex flex-col items-center text-center gap-4">
             <div className="w-full max-w-[280px]">
@@ -373,7 +370,8 @@ const CategoryCatalogPage: React.FC = () => {
                   src={getCategoryImageUrl(category, imageSize)}
                   alt={category.name}
                   className="w-full h-full object-cover"
-                  loading="lazy"
+                  // Above the fold and usually the largest element: load it right away
+                  {...HERO_IMAGE_LOADING}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
@@ -397,7 +395,7 @@ const CategoryCatalogPage: React.FC = () => {
       </div>
 
       {/* Products Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
+      <div key="category-products" className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
         {/* Search and Sort Controls */}
         <div className="mb-6 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -437,7 +435,7 @@ const CategoryCatalogPage: React.FC = () => {
             <p className="text-sm text-gray-600">
               {filteredAndSortedProducts.length === 0
                 ? 'Nu s-au găsit produse'
-                : `${filteredAndSortedProducts.length} ${filteredAndSortedProducts.length === 1 ? 'produs găsit' : 'produse găsite'}`
+                : formatRomanianCount(filteredAndSortedProducts.length, 'produs găsit', 'produse găsite')
               }
             </p>
           )}
@@ -447,9 +445,9 @@ const CategoryCatalogPage: React.FC = () => {
           {filteredAndSortedProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 {searchTerm.trim() ? 'Nu s-au găsit produse' : 'Nu există produse în această categorie'}
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 {searchTerm.trim()
                   ? 'Încearcă să modifici termenii de căutare.'
@@ -476,6 +474,8 @@ const CategoryCatalogPage: React.FC = () => {
                 <Link
                   to={`/product/${product.id}`}
                   className="block"
+                  tabIndex={-1}
+                  aria-hidden="true"
                 >
                   <div className="p-4">
                     <div className={components.interactive.imageContainer + " relative"}>
@@ -486,7 +486,11 @@ const CategoryCatalogPage: React.FC = () => {
                             src={getProductImageUrl(product, imageSize)}
                             alt={product.nume}
                             className="w-full h-full object-cover"
-                            loading="lazy"
+                            // The header image above has the high priority; this one just loads right away
+                            {...listImageLoading(index, {
+                              firstImageIndex: firstProductImageIndex,
+                              highPriority: false,
+                            })}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
@@ -516,9 +520,12 @@ const CategoryCatalogPage: React.FC = () => {
                           to={`/product/${product.id}`}
                           className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
                         >
-                          <h5 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
+                          <h2 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
                             {product.nume}
-                          </h5>
+                          </h2>
+                          {product.images && product.images.length > 1 && (
+                            <span className="sr-only">, {formatImageCount(product.images.length)}</span>
+                          )}
                         </Link>
                       </div>
 
@@ -533,7 +540,7 @@ const CategoryCatalogPage: React.FC = () => {
                             {product.description.length > 80 && (
                               <button
                                 onClick={() => toggleDescription(product.id)}
-                                className="text-amber-600 hover:text-amber-700 font-medium ml-1"
+                                className="text-amber-700 hover:text-amber-800 font-medium ml-1"
                               >
                                 {expandedDescriptions[product.id] ? 'mai puțin' : 'mai mult'}
                               </button>
@@ -544,7 +551,7 @@ const CategoryCatalogPage: React.FC = () => {
 
                       <div className="pt-2">
                         <div>
-                          <span className="text-lg font-bold text-amber-600">
+                          <span className="text-lg font-bold text-amber-700">
                             {product.pret} RON / {product.cantitate} {getUnitName(product.unitati_id)}
                           </span>
                         </div>
@@ -556,6 +563,7 @@ const CategoryCatalogPage: React.FC = () => {
                       <div className="space-y-3 mt-4">
                         <div className="flex items-center justify-center space-x-4">
                           <Button
+                            aria-label={`Scade cantitatea pentru ${product.nume}`}
                             variant="secondary"
                             size="sm"
                             onClick={() => handleQuantityChange(product.id, -1)}
@@ -568,6 +576,7 @@ const CategoryCatalogPage: React.FC = () => {
                             {currentQuantity}
                           </span>
                           <Button
+                            aria-label={`Crește cantitatea pentru ${product.nume}`}
                             variant="secondary"
                             size="sm"
                             onClick={() => handleQuantityChange(product.id, 1)}

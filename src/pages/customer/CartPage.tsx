@@ -6,6 +6,7 @@ import { Package, Trash2, Plus, Minus, ArrowLeft, ShoppingCart } from 'lucide-re
 import { Button } from '@/components/ui/Button';
 import { Link } from 'react-router-dom';
 import { components } from '@/utils/theme';
+import { formatProductCount } from '@/utils/cartLabel';
 
 const CartPage: React.FC = () => {
   const { 
@@ -16,6 +17,7 @@ const CartPage: React.FC = () => {
     getTotalItems, 
     getTotalPrice 
   } = useCartStore();
+  const totalItems = getTotalItems();
   const { data: businessDetails } = useBusinessDetailsSingle();
 
   const handleQuantityChange = (itemId: number, newQuantity: number) => {
@@ -68,14 +70,14 @@ const CartPage: React.FC = () => {
             <Button 
               variant="secondary" 
               size="sm"
-              onClick={clearCart}
+              onClick={() => clearCart()}
               className={components.button.secondaryDanger()}
             >
               Golește coșul
             </Button>
           </div>
           <p className="text-gray-600 mt-2">
-            {getTotalItems()} produse în coș
+            {formatProductCount(totalItems)} în coș
           </p>
         </div>
 
@@ -118,7 +120,7 @@ const CartPage: React.FC = () => {
                     <p className="text-sm text-gray-600 mt-1">
                       Preț unitar: {item.pret} RON
                     </p>
-                    <p className="text-sm font-medium text-amber-600 mt-1">
+                    <p className="text-sm font-medium text-amber-700 mt-1">
                       Preț total: {item.pret * item.quantity} RON
                     </p>
                   </div>
@@ -128,6 +130,7 @@ const CartPage: React.FC = () => {
                 <div className="flex items-center justify-center pt-3 border-t border-amber-100 space-x-4">
                   {/* Delete Button */}
                   <Button
+                    aria-label={`Elimină ${item.nume} din coș`}
                     variant="secondary"
                     size="sm"
                     onClick={() => removeItem(item.id)}
@@ -139,6 +142,7 @@ const CartPage: React.FC = () => {
                   {/* Quantity Controls */}
                   <div className="flex items-center space-x-2">
                     <Button
+                      aria-label={`Scade cantitatea pentru ${item.nume}`}
                       variant="secondary"
                       size="sm"
                       onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
@@ -150,10 +154,11 @@ const CartPage: React.FC = () => {
                       {item.quantity}
                     </span>
                     <Button
+                      aria-label={`Crește cantitatea pentru ${item.nume}`}
                       variant="primary"
                       size="sm"
                       onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                      className="w-8 h-8 p-0 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm hover:shadow-md transition-all duration-300"
+                      className={components.button.primarySmall('w-8 h-8 p-0')}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
@@ -173,11 +178,11 @@ const CartPage: React.FC = () => {
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Numărul de produse:</span>
-              <span className="font-medium text-amber-700">{getTotalItems()}</span>
+              <span className="font-medium text-amber-700">{totalItems}</span>
             </div>
             <div className="flex justify-between text-lg font-semibold border-t border-amber-200 pt-3">
               <span>Total:</span>
-              <span className="text-amber-600">{getTotalPrice()} RON</span>
+              <span className="text-amber-700">{getTotalPrice()} RON</span>
             </div>
             <p className="text-xs text-gray-500 mt-2">
               Dacă alegi livrare la domiciliu, se va aplica o taxă de livrare{businessDetails?.delivery_tax ? ` de ${businessDetails.delivery_tax} RON` : ''}.

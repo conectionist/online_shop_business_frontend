@@ -60,10 +60,10 @@ const Footer: React.FC = () => {
           
           {/* Business Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center">
+            <h2 className="text-lg font-semibold text-white flex items-center">
               <Building className="h-5 w-5 mr-2" />
               Informații Firma
-            </h3>
+            </h2>
             <div className="space-y-2 text-sm">
               <p className="font-medium text-white">{businessName}</p>
               <p className="flex items-center">
@@ -94,10 +94,10 @@ const Footer: React.FC = () => {
 
           {/* Legal Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center">
+            <h2 className="text-lg font-semibold text-white flex items-center">
               <Shield className="h-5 w-5 mr-2" />
               Informații Legale
-            </h3>
+            </h2>
             <div className="space-y-2 text-sm">
               <Link 
                 to={legalRoutes.terms} 
@@ -139,10 +139,10 @@ const Footer: React.FC = () => {
 
           {/* Business Hours */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center">
+            <h2 className="text-lg font-semibold text-white flex items-center">
               <Clock className="h-5 w-5 mr-2" />
               Program
-            </h3>
+            </h2>
             <div className="space-y-2 text-sm">
               <div className="text-xs text-gray-400 p-3 bg-gray-800 rounded">
                 <p className="whitespace-pre-line">{businessHours}</p>
@@ -152,10 +152,10 @@ const Footer: React.FC = () => {
 
           {/* Consumer Rights */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center">
+            <h2 className="text-lg font-semibold text-white flex items-center">
               <Shield className="h-5 w-5 mr-2" />
               Drepturile Consumatorilor
-            </h3>
+            </h2>
             <div className="space-y-2 text-sm">
               <a 
                 href={anpcLink} 
@@ -174,6 +174,9 @@ const Footer: React.FC = () => {
               >
                 <img
                   decoding="async"
+                  // ANPC Order 449/2022: the SAL pictogram is shown at 250x50 px
+                  width={250}
+                  height={50}
                   style={{ width: '250px', height: '50px' }}
                   src="/anpc-sal.png"
                   alt="Soluționarea Alternativă a Litigiilor"
@@ -213,7 +216,7 @@ const Footer: React.FC = () => {
               <div className="mt-1">
                 <Link
                   to="/admin"
-                  className="text-[11px] text-gray-500 hover:text-amber-300 underline underline-offset-2"
+                  className="text-[11px] text-gray-400 hover:text-amber-300 underline underline-offset-2"
                 >
                   Admin
                 </Link>

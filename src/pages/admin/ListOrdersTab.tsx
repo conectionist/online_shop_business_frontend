@@ -16,11 +16,8 @@ import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/ToastContainer';
 import { getDeliveryTax } from '@/utils/delivery';
 import { formatOrderText as formatOrderTextUtil } from '@/utils/orderFormatter';
-import OrdersPDF from '@/components/features/admin/OrdersPDF';
-import ProductsTotalsPDF from '@/components/features/admin/ProductsTotalsPDF';
-import * as XLSX from 'xlsx-js-style';
+import { isChunkLoadError } from '@/utils/chunkLoad';
 import { EditOrderForm } from '@/components/features/admin/EditOrderForm';
-import { pdf } from '@react-pdf/renderer';
 
 
 interface ListOrdersTabProps {
@@ -481,6 +478,12 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         return;
       }
 
+      // The PDF libraries are large, so they load only when an export is requested
+      const [{ pdf }, { default: OrdersPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/features/admin/OrdersPDF'),
+      ]);
+
       // Create PDF document using react-pdf/renderer
       const pdfDoc = (
         <OrdersPDF
@@ -517,7 +520,10 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       showToast({
         type: 'error',
         title: 'Eroare la generarea PDF-ului',
-        message: 'Vă rugăm să încercați din nou.'
+        // A PDF library that failed to load stays failed until the page reloads
+        message: isChunkLoadError(error)
+          ? 'Vă rugăm să reîncărcați pagina și să încercați din nou.'
+          : 'Vă rugăm să încercați din nou.'
       });
     }
   };
@@ -588,6 +594,10 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
         })
         .map(({ name, quantity }) => ({ name, quantity }));
 
+      const [{ pdf }, { default: ProductsTotalsPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/features/admin/ProductsTotalsPDF'),
+      ]);
       const doc = <ProductsTotalsPDF items={items} />;
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
@@ -603,12 +613,15 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       showToast({
         type: 'error',
         title: 'Eroare la generarea PDF-ului',
-        message: 'Vă rugăm să încercați din nou.'
+        // A PDF library that failed to load stays failed until the page reloads
+        message: isChunkLoadError(error)
+          ? 'Vă rugăm să reîncărcați pagina și să încercați din nou.'
+          : 'Vă rugăm să încercați din nou.'
       });
     }
   };
 
-  const handleTotalsSaveAsXLS = () => {
+  const handleTotalsSaveAsXLS = async () => {
     setTotalsMenuOpen(false);
     // Build items in the same order as the Produse tab (flattened list order)
     const orderedProductIds: number[] = (listProductsData?.categories || [])
@@ -625,40 +638,63 @@ const ListOrdersTab: React.FC<ListOrdersTabProps> = ({ listId }) => {
       })
       .map(({ id, ...rest }) => rest);
 
-    // Create worksheet and workbook
-    const worksheet = XLSX.utils.json_to_sheet(items, { header: ['Nume', 'Cantitate'] });
-
-    // Header styling: uppercase, bold
-    const headerCells = ['A1', 'B1'];
-    headerCells.forEach((cell) => {
-      const c = worksheet[cell];
-      if (c && c.v) {
-        c.v = String(c.v).toUpperCase();
-        c.s = { font: { bold: true } } as any;
-      }
-    });
-
-    // Column widths: widen name column, narrower quantity
-    (worksheet as any)['!cols'] = [
-      { wch: 40 }, // Nume column width
-      { wch: 12 }, // Cantitate column width
-    ];
-
-    // Center align the quantity column values
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-    for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const addr = XLSX.utils.encode_cell({ r, c: 1 }); // column B (Cantitate)
-      const cell = worksheet[addr];
-      if (cell) {
-        cell.s = { alignment: { horizontal: 'center' } } as any;
-      }
+    // The Excel library is large, so it loads only when an export is requested
+    let XLSX: typeof import('xlsx-js-style');
+    try {
+      XLSX = await import('xlsx-js-style');
+    } catch (error) {
+      console.error('Error loading Excel export:', error);
+      showToast({
+        type: 'error',
+        title: 'Eroare la generarea fișierului Excel',
+        message: 'Vă rugăm să reîncărcați pagina și să încercați din nou.'
+      });
+      return;
     }
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Totaluri');
+    try {
+      // Create worksheet and workbook
+      const worksheet = XLSX.utils.json_to_sheet(items, { header: ['Nume', 'Cantitate'] });
 
-    // Generate and trigger download as .xlsx
-    XLSX.writeFile(workbook, `total-comenzi-per-produs-${new Date().toISOString().split('T')[0]}.xlsx`);
+      // Header styling: uppercase, bold
+      const headerCells = ['A1', 'B1'];
+      headerCells.forEach((cell) => {
+        const c = worksheet[cell];
+        if (c && c.v) {
+          c.v = String(c.v).toUpperCase();
+          c.s = { font: { bold: true } } as any;
+        }
+      });
+
+      // Column widths: widen name column, narrower quantity
+      (worksheet as any)['!cols'] = [
+        { wch: 40 }, // Nume column width
+        { wch: 12 }, // Cantitate column width
+      ];
+
+      // Center align the quantity column values
+      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+      for (let r = range.s.r + 1; r <= range.e.r; r++) {
+        const addr = XLSX.utils.encode_cell({ r, c: 1 }); // column B (Cantitate)
+        const cell = worksheet[addr];
+        if (cell) {
+          cell.s = { alignment: { horizontal: 'center' } } as any;
+        }
+      }
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Totaluri');
+
+      // Generate and trigger download as .xlsx
+      XLSX.writeFile(workbook, `total-comenzi-per-produs-${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      console.error('Error generating Excel file:', error);
+      showToast({
+        type: 'error',
+        title: 'Eroare la generarea fișierului Excel',
+        message: 'Vă rugăm să încercați din nou.'
+      });
+    }
   };
 
   // Close dropdown when clicking outside

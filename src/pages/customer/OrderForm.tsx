@@ -34,7 +34,7 @@ interface OrderFormData {
 const OrderForm: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { items, getTotalPrice, clearCart, removeItem } = useCartStore();
+  const { items, getTotalPrice, clearCart, removeItems } = useCartStore();
 
   // Get the current published list and list-specific delivery types
   const { data: publishedList, isLoading: isLoadingList } = usePublishedList();
@@ -48,6 +48,17 @@ const OrderForm: React.FC = () => {
   const [outOfStockProducts, setOutOfStockProducts] = useState<Array<{ id: number; nume: string }>>([]);
   const [serverErrorModalOpen, setServerErrorModalOpen] = useState(false);
   const [listClosedModalOpen, setListClosedModalOpen] = useState(false);
+  // Set once the order went through: the cart is cleared before the confirmation
+  // page opens, and the form shouldn't flash "your cart is empty" meanwhile
+  const [orderPlaced, setOrderPlaced] = useState(false);
+
+  // The confirmation page loads on demand; fetch its code now so it's ready
+  // the moment the order goes through
+  React.useEffect(() => {
+    import('./OrderConfirmation').catch(() => {
+      // Best effort: the route loads it (and recovers) when opened
+    });
+  }, []);
 
   // Prepare order creation
   const createOrderMutation = useCreateOrder();
@@ -286,8 +297,9 @@ const OrderForm: React.FC = () => {
       // Persist for confirmation page
       sessionStorage.setItem('orderData', JSON.stringify(orderData));
 
-      // Clear cart
-      clearCart();
+      // Clear cart (silently: the order went through, nothing for screen readers to hear)
+      setOrderPlaced(true);
+      clearCart({ silent: true });
 
       // Open WhatsApp using setTimeout(0) to preserve gesture context on iOS
       // This queues the open in the next event loop tick, which helps on iOS Safari
@@ -314,10 +326,8 @@ const OrderForm: React.FC = () => {
       
       setOutOfStockProducts(removedProducts);
       
-      // Remove out-of-stock products from cart
-      result.outOfStockProductIds.forEach(productId => {
-        removeItem(productId);
-      });
+      // Remove out-of-stock products from cart (silently: the modal explains it)
+      removeItems(result.outOfStockProductIds, { silent: true });
       
       setOutOfStockModalOpen(true);
     } else if (result.status && (result.status === 500 || result.status >= 500)) {
@@ -329,6 +339,20 @@ const OrderForm: React.FC = () => {
       setServerErrorModalOpen(true);
     }
   };
+
+  if (items.length === 0 && orderPlaced) {
+    // Order sent; the confirmation page is opening
+    return (
+      <div className={components.page.containerLarge}>
+        <div className="max-w-2xl mx-auto px-4">
+          <div className={components.card.main + " p-8 text-center"} role="status">
+            <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-amber-700" aria-hidden="true" />
+            <p className="text-gray-700">Comanda a fost trimisă. Se deschide confirmarea…</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

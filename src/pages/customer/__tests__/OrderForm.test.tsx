@@ -198,6 +198,11 @@ describe('OrderForm', () => {
       expect(capturedBody._source).toBe('whatsapp_button')
     })
 
+    // The cart is cleared once the order goes through; until the confirmation
+    // page opens, the form says so instead of "your cart is empty"
+    expect(await screen.findByText(/Comanda a fost trimisă/)).toBeInTheDocument()
+    expect(screen.queryByText('Coșul tău este gol')).not.toBeInTheDocument()
+
     openSpy.mockRestore()
   })
 

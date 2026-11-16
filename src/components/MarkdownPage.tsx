@@ -102,7 +102,7 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({ title, icon, src }) 
                 ),
                 li: (props: any) => <li className="text-gray-700" {...props} />,
                 a: (props: any) => (
-                  <a className="text-amber-600 underline hover:text-amber-700" {...props} />
+                  <a className="text-amber-700 underline hover:text-amber-800" {...props} />
                 ),
                 strong: (props: any) => <strong className="font-semibold" {...props} />,
                 em: (props: any) => <em className="italic" {...props} />,

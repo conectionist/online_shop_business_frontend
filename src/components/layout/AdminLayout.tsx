@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import VersionDisplay from '@/components/ui/VersionDisplay';
+import RouteSuspense from '@/components/layout/RouteSuspense';
 
 const AdminLayout: React.FC = () => {
   return (
@@ -9,7 +10,9 @@ const AdminLayout: React.FC = () => {
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:p-0">
         <div className="bg-white rounded-lg shadow-md p-6 print:shadow-none print:p-0">
-          <Outlet />
+          <RouteSuspense>
+            <Outlet />
+          </RouteSuspense>
         </div>
         <div className="mt-4 text-center print:hidden">
           <VersionDisplay />

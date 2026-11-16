@@ -15,7 +15,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 // Register service worker for PWA
 const updateSW = registerSW({
-  immediate: true,
+  // Register after the page has loaded, so precaching doesn't compete with
+  // the first render for bandwidth
+  immediate: false,
   onNeedRefresh() {
     updateSW(true)
   },

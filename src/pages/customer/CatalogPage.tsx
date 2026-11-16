@@ -14,6 +14,8 @@ import { getCategoryImageUrl, getProductImageUrl } from '@/services/api';
 import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
+import { cartLinkLabel, formatImageCount, formatRomanianCount } from '@/utils/cartLabel';
+import { gridColumnsOnScreen, listImageLoading } from '@/utils/imageLoading';
 
 const CatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ const CatalogPage: React.FC = () => {
   const { data: listProductsData } = useListProductsOrdered(publishedList?.id || 0);
   const { data: units } = useUnits();
   const { addItem, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
 
   const [viewMode, setViewMode] = React.useState<'categories' | 'products'>('categories');
   const [addingToCart, setAddingToCart] = React.useState<{ [key: number]: boolean }>({});
@@ -133,27 +136,16 @@ const CatalogPage: React.FC = () => {
 
     const quantity = quantities[product.id] || 1;
     
-    const currentItems = useCartStore.getState().items;
-    const existingItem = currentItems.find(item => item.id === product.id);
-
-    if (existingItem) {
-      const newQuantity = existingItem.quantity + quantity;
-      useCartStore.getState().updateQuantity(product.id, newQuantity);
-    } else {
-      addItem({
-        id: product.id,
-        nume: product.nume,
-        pret: product.pret,
-        unitati_id: product.unitati_id,
-        unitate_denumire: getUnitName(product.unitati_id),
-        images: product.images,
-        listId: publishedList.id
-      });
-      
-      setTimeout(() => {
-        useCartStore.getState().updateQuantity(product.id, quantity);
-      }, 0);
-    }
+    // Adds to an existing line or creates a new one, in a single store update
+    addItem({
+      id: product.id,
+      nume: product.nume,
+      pret: product.pret,
+      unitati_id: product.unitati_id,
+      unitate_denumire: getUnitName(product.unitati_id),
+      images: product.images,
+      listId: publishedList.id
+    }, quantity);
 
     setAddingToCart({ ...addingToCart, [product.id]: true });
     animateImageToCart(product.id);
@@ -229,164 +221,15 @@ const CatalogPage: React.FC = () => {
   const isLoading = isLoadingCategories || (viewMode === 'products' && isLoadingProducts);
   const error = categoriesError || (viewMode === 'products' && productsError);
 
-  // Show skeleton loaders instead of spinner for better UX
-  if (isLoading && viewMode === 'categories') {
-    return (
-      <>
-        <SEO
-          title="Catalog Produse"
-          description="Explorează categoriile și alege produsele preferate."
-          robots="index, follow"
-        />
-        <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
-          <div className="max-w-4xl mx-auto px-6 py-8">
-            <div className="text-center">
-              <div className="flex items-center justify-center space-x-4 mb-4">
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0 bg-gray-200 animate-pulse"></div>
-                <div className="text-left">
-                  <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-4xl mx-auto px-6 mb-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-            {[1, 2, 3, 4, 5, 6].map((index) => (
-              <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm animate-pulse">
-                <div className="aspect-square rounded-xl bg-gradient-to-br from-gray-200 to-gray-300"></div>
-                <div className="px-4 py-4 text-center">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </>
-    );
-  }
+  // First entries that actually show an image: image loading priority counts from there
+  const firstCategoryImageIndex = (categories ?? []).findIndex((c) => !!c.image_versions?.medium);
+  const firstProductImageIndex = filteredAndSortedProducts.findIndex((p: any) => p.images?.length > 0);
 
-  if (isLoading && viewMode === 'products') {
-    return (
-      <>
-        <SEO
-          title="Catalog Produse"
-          description="Explorează categoriile și alege produsele preferate."
-          robots="index, follow"
-        />
-        <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
-          <div className="max-w-4xl mx-auto px-6 py-8">
-            <div className="text-center">
-              <div className="flex items-center justify-center space-x-4 mb-4">
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0 bg-gray-200 animate-pulse"></div>
-                <div className="text-left">
-                  <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
-          <div className="space-y-6">
-            {[1, 2, 3, 4].map((index) => (
-              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
-                <div className="p-4">
-                  <div className={`${components.interactive.imageContainer} relative`}>
-                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300"></div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-2">
-                    <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                    <div className="space-y-1">
-                      <div className="h-4 bg-gray-200 rounded w-full"></div>
-                      <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
-                    </div>
-                    <div className="h-5 bg-gray-200 rounded w-32 mx-auto"></div>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    <div className="flex items-center justify-center space-x-4">
-                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
-                      <div className="h-6 w-12 bg-gray-200 rounded"></div>
-                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
-                    </div>
-                    <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <div className="max-w-md mx-auto">
-          <Package className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Eroare la încărcarea catalogului
-          </h1>
-          <p className="text-gray-600 mb-6">
-            A apărut o eroare la încărcarea catalogului de produse. Vă rugăm să încercați din nou.
-          </p>
-          <Button
-            variant="primary"
-            onClick={() => navigate('/')}
-            className={components.button.primary()}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Înapoi la Pagina Principală
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!categories || categories.length === 0) {
-    const emptyMessage = 'Nu există categorii disponibile momentan.';
-    return (
-      <>
-        <SEO
-          title="Catalog Produse"
-          description={emptyMessage}
-          robots="index, follow"
-        />
-        <div className="text-center py-12">
-          <div className="max-w-md mx-auto px-6 sm:px-6">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-gray-900 mb-4">
-              {emptyMessage}
-            </h1>
-            <p className="text-gray-600 mb-6">
-              Vă rugăm să reveniți mai târziu sau să contactați administratorul.
-            </p>
-            <Button
-              variant="primary"
-              onClick={() => navigate('/')}
-              className={components.button.primary()}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Înapoi la Pagina Principală
-            </Button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  return (
+  // Header and view toggle don't depend on the loaded data, so the loading
+  // states render them as they are. Only the grid/list below is a placeholder,
+  // so nothing jumps when the data arrives.
+  const pageTop = (
     <>
-      <SEO
-        title="Catalog Produse"
-        description="Explorează categoriile și alege produsele preferate."
-        robots="index, follow"
-      />
-
       {/* Header */}
       <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
         <div className="max-w-4xl mx-auto px-6 py-8">
@@ -447,7 +290,7 @@ const CatalogPage: React.FC = () => {
             onClick={() => setViewMode('categories')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               viewMode === 'categories'
-                ? 'bg-amber-600 text-white'
+                ? 'bg-amber-700 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -459,7 +302,7 @@ const CatalogPage: React.FC = () => {
             onClick={() => setViewMode('products')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               viewMode === 'products'
-                ? 'bg-amber-600 text-white'
+                ? 'bg-amber-700 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -468,16 +311,148 @@ const CatalogPage: React.FC = () => {
           </button>
         </div>
       </div>
+    </>
+  );
+
+  if (isLoading && viewMode === 'categories') {
+    return (
+      <>
+        <SEO
+          title="Catalog Produse"
+          description="Explorează categoriile și alege produsele preferate."
+          robots="index, follow"
+        />
+        {pageTop}
+        {/* Same key as the loaded section, so React keeps this element in place */}
+        <div key="catalog-categories" className="max-w-4xl mx-auto px-6 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            {[1, 2, 3, 4, 5, 6].map((index) => (
+              <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm animate-pulse">
+                <div className="aspect-square rounded-xl bg-gradient-to-br from-gray-200 to-gray-300"></div>
+                <div className="px-4 py-4 text-center">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (isLoading && viewMode === 'products') {
+    return (
+      <>
+        <SEO
+          title="Catalog Produse"
+          description="Explorează categoriile și alege produsele preferate."
+          robots="index, follow"
+        />
+        {pageTop}
+        {/* Same key as the loaded section, so React keeps this element in place */}
+        <div key="catalog-products" className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
+          <div className="space-y-6">
+            {[1, 2, 3, 4].map((index) => (
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+                <div className="p-4">
+                  <div className={`${components.interactive.imageContainer} relative`}>
+                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300"></div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                    <div className="space-y-1">
+                      <div className="h-4 bg-gray-200 rounded w-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                    </div>
+                    <div className="h-5 bg-gray-200 rounded w-32 mx-auto"></div>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-center space-x-4">
+                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
+                      <div className="h-6 w-12 bg-gray-200 rounded"></div>
+                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <SEO
+          title="Catalog Produse"
+          description="Explorează categoriile și alege produsele preferate."
+          robots="index, follow"
+        />
+        {pageTop}
+        <div className="text-center py-12" role="alert">
+          <div className="max-w-md mx-auto px-6">
+            <Package className="h-16 w-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Eroare la încărcarea catalogului
+            </h2>
+            <p className="text-gray-600">
+              A apărut o eroare la încărcarea catalogului de produse. Vă rugăm să încercați din nou.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!categories || categories.length === 0) {
+    const emptyMessage = 'Nu există categorii disponibile momentan.';
+    return (
+      <>
+        <SEO
+          title="Catalog Produse"
+          description={emptyMessage}
+          robots="index, follow"
+        />
+        {pageTop}
+        <div className="text-center py-12">
+          <div className="max-w-md mx-auto px-6">
+            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {emptyMessage}
+            </h2>
+            <p className="text-gray-600">
+              Vă rugăm să reveniți mai târziu sau să contactați administratorul.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <SEO
+        title="Catalog Produse"
+        description="Explorează categoriile și alege produsele preferate."
+        robots="index, follow"
+      />
+
+      {pageTop}
 
       {/* Floating Cart Icon */}
       {publishedList && viewMode === 'products' && (
         <div ref={cartIconRef} className="fixed top-4 right-4 z-50">
-          <Link to="/cart">
+          <Link to="/cart" aria-label={cartLinkLabel(totalItems)}>
             <div className={components.interactive.floatingCart}>
               <ShoppingCart className="h-6 w-6 text-amber-700" />
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
-                  {getTotalItems()}
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-lg">
+                  {totalItems}
                 </span>
               )}
             </div>
@@ -487,14 +462,14 @@ const CatalogPage: React.FC = () => {
 
       {/* Categories Section */}
       {viewMode === 'categories' && (
-        <div className="max-w-4xl mx-auto px-6 mb-10">
+        <div key="catalog-categories" className="max-w-4xl mx-auto px-6 mb-10">
           {!categories || categories.length === 0 ? (
             <div className={`${components.backgrounds.card} border ${components.borders.primary} rounded-lg p-4 text-gray-700`}>
               Nu există categorii disponibile momentan.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-              {categories.map((category) => {
+              {categories.map((category, index) => {
                 const hasImage = !!category.image_versions?.medium;
 
                 return (
@@ -508,9 +483,13 @@ const CatalogPage: React.FC = () => {
                       {hasImage ? (
                         <img
                           src={getCategoryImageUrl(category, imageSize)}
-                          alt={category.name}
+                          alt=""
                           className="w-full h-full object-cover"
-                          loading="lazy"
+                          // The first row is on screen when the page opens: 1 tile on phones, up to 3 on desktop
+                          {...listImageLoading(index, {
+                            eagerCount: gridColumnsOnScreen(),
+                            firstImageIndex: firstCategoryImageIndex,
+                          })}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -538,7 +517,7 @@ const CatalogPage: React.FC = () => {
 
       {/* Products Section */}
       {viewMode === 'products' && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
+        <div key="catalog-products" className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
           {/* Search and Sort Controls */}
           <div className="mb-6 space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -578,7 +557,7 @@ const CatalogPage: React.FC = () => {
               <p className="text-sm text-gray-600">
                 {filteredAndSortedProducts.length === 0
                   ? 'Nu s-au găsit produse'
-                  : `${filteredAndSortedProducts.length} ${filteredAndSortedProducts.length === 1 ? 'produs găsit' : 'produse găsite'}`
+                  : formatRomanianCount(filteredAndSortedProducts.length, 'produs găsit', 'produse găsite')
                 }
               </p>
             )}
@@ -587,9 +566,9 @@ const CatalogPage: React.FC = () => {
           {!allProducts || allProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 Nu există produse disponibile
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 Vă rugăm să reveniți mai târziu sau să explorați categorii.
               </p>
@@ -597,9 +576,9 @@ const CatalogPage: React.FC = () => {
           ) : filteredAndSortedProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 {searchTerm.trim() ? 'Nu s-au găsit produse' : 'Nu există produse disponibile'}
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 {searchTerm.trim()
                   ? 'Încearcă să modifici termenii de căutare.'
@@ -627,6 +606,8 @@ const CatalogPage: React.FC = () => {
                     <Link
                       to={`/product/${product.id}`}
                       className="block"
+                      tabIndex={-1}
+                      aria-hidden="true"
                     >
                       <div className="p-4">
                         <div className={components.interactive.imageContainer + " relative"}>
@@ -637,7 +618,9 @@ const CatalogPage: React.FC = () => {
                                 src={getProductImageUrl(product, imageSize)}
                                 alt={product.nume}
                                 className="w-full h-full object-cover"
-                                loading="lazy"
+                                {...listImageLoading(index, {
+                                  firstImageIndex: firstProductImageIndex,
+                                })}
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
@@ -667,9 +650,12 @@ const CatalogPage: React.FC = () => {
                               to={`/product/${product.id}`}
                               className="hover:bg-amber-50 rounded-lg p-2 -m-2 transition-colors block"
                             >
-                              <h5 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
+                              <h2 className="font-semibold text-gray-900 text-lg group-hover:text-amber-700 transition-colors duration-300">
                                 {product.nume}
-                              </h5>
+                              </h2>
+                              {product.images && product.images.length > 1 && (
+                                <span className="sr-only">, {formatImageCount(product.images.length)}</span>
+                              )}
                             </Link>
                           </div>
 
@@ -684,7 +670,7 @@ const CatalogPage: React.FC = () => {
                                 {product.description.length > 80 && (
                                   <button
                                     onClick={() => toggleDescription(product.id)}
-                                    className="text-amber-600 hover:text-amber-700 font-medium ml-1"
+                                    className="text-amber-700 hover:text-amber-800 font-medium ml-1"
                                   >
                                     {expandedDescriptions[product.id] ? 'mai puțin' : 'mai mult'}
                                   </button>
@@ -695,7 +681,7 @@ const CatalogPage: React.FC = () => {
 
                           <div className="pt-2">
                             <div>
-                              <span className="text-lg font-bold text-amber-600">
+                              <span className="text-lg font-bold text-amber-700">
                                 {product.pret} RON / {product.cantitate} {getUnitName(product.unitati_id)}
                               </span>
                             </div>
@@ -707,6 +693,7 @@ const CatalogPage: React.FC = () => {
                           <div className="space-y-3 mt-4">
                             <div className="flex items-center justify-center space-x-4">
                               <Button
+                                aria-label={`Scade cantitatea pentru ${product.nume}`}
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => handleQuantityChange(product.id, -1)}
@@ -719,6 +706,7 @@ const CatalogPage: React.FC = () => {
                                 {currentQuantity}
                               </span>
                               <Button
+                                aria-label={`Crește cantitatea pentru ${product.nume}`}
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => handleQuantityChange(product.id, 1)}
