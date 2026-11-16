@@ -318,7 +318,9 @@ const ProductPage: React.FC = () => {
                       src={getProductImageUrlFromImage(productImages[selectedImageIndex], imageSize)}
                       alt={displayProduct.nume}
                       className="w-full h-full object-cover"
-                      loading="lazy"
+                      // The page's main image: above the fold and usually its largest element
+                      loading="eager"
+                      fetchPriority="high"
                       onClick={() => setIsLightboxOpen(true)}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;

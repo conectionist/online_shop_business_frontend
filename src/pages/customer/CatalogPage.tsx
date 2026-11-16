@@ -15,6 +15,7 @@ import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } fr
 import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
 import { cartLinkLabel, formatImageCount, formatRomanianCount } from '@/utils/cartLabel';
+import { listImageLoading } from '@/utils/imageLoading';
 
 const CatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -464,7 +465,7 @@ const CatalogPage: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-              {categories.map((category) => {
+              {categories.map((category, index) => {
                 const hasImage = !!category.image_versions?.medium;
 
                 return (
@@ -480,7 +481,8 @@ const CatalogPage: React.FC = () => {
                           src={getCategoryImageUrl(category, imageSize)}
                           alt=""
                           className="w-full h-full object-cover"
-                          loading="lazy"
+                          // First row is on screen when the page opens
+                          {...listImageLoading(index, 3)}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -609,7 +611,7 @@ const CatalogPage: React.FC = () => {
                                 src={getProductImageUrl(product, imageSize)}
                                 alt={product.nume}
                                 className="w-full h-full object-cover"
-                                loading="lazy"
+                                {...listImageLoading(index)}
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';

@@ -14,6 +14,7 @@ import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { cartLinkLabel, formatImageCount, formatRomanianCount } from '@/utils/cartLabel';
+import { listImageLoading } from '@/utils/imageLoading';
 
 const CategoryCatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -484,7 +485,7 @@ const CategoryCatalogPage: React.FC = () => {
                             src={getProductImageUrl(product, imageSize)}
                             alt={product.nume}
                             className="w-full h-full object-cover"
-                            loading="lazy"
+                            {...listImageLoading(index)}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
