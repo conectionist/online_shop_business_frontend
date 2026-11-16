@@ -220,93 +220,92 @@ const CatalogPage: React.FC = () => {
   const isLoading = isLoadingCategories || (viewMode === 'products' && isLoadingProducts);
   const error = categoriesError || (viewMode === 'products' && productsError);
 
-  // Show skeleton loaders instead of spinner for better UX
   // Header and view toggle don't depend on the loaded data, so the loading
   // states render them as they are. Only the grid/list below is a placeholder,
   // so nothing jumps when the data arrives.
   const pageTop = (
     <>
-        {/* Header */}
-        <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
-          <div className="max-w-4xl mx-auto px-6 py-8">
-            <div className="text-center">
-              <div className="flex items-center justify-center space-x-4 mb-4">
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
-                  <img
-                    src={getLogoPath()}
-                    alt="Logo"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                </div>
-                <div className="text-left">
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">
-                    {getAppName()}
-                  </h1>
-                  <p className="text-amber-700 font-medium text-sm md:text-base">Catalog Produse</p>
-                </div>
+      {/* Header */}
+      <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-4 mb-4">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
+                <img
+                  src={getLogoPath()}
+                  alt="Logo"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
               </div>
+              <div className="text-left">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                  {getAppName()}
+                </h1>
+                <p className="text-amber-700 font-medium text-sm md:text-base">Catalog Produse</p>
+              </div>
+            </div>
 
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <div className="w-8 h-px bg-amber-300"></div>
-                <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                <div className="w-8 h-px bg-amber-300"></div>
-              </div>
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-8 h-px bg-amber-300"></div>
+              <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+              <div className="w-8 h-px bg-amber-300"></div>
+            </div>
 
-              <div className={`${components.backgrounds.card} rounded-xl p-6 shadow-sm border ${components.borders.primary}`}>
-                <p className="text-gray-700 text-lg font-semibold text-center">
-                  {viewMode === 'categories'
-                    ? 'Alege o categorie pentru a vedea produsele disponibile.'
-                    : 'Toate produsele disponibile în catalog.'}
-                </p>
-              </div>
+            <div className={`${components.backgrounds.card} rounded-xl p-6 shadow-sm border ${components.borders.primary}`}>
+              <p className="text-gray-700 text-lg font-semibold text-center">
+                {viewMode === 'categories'
+                  ? 'Alege o categorie pentru a vedea produsele disponibile.'
+                  : 'Toate produsele disponibile în catalog.'}
+              </p>
+            </div>
 
-              <div className="mt-6">
-                <Button
-                  variant="primary"
-                  onClick={() => navigate('/')}
-                  className={components.button.primary()}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Înapoi la Pagina Principală
-                </Button>
-              </div>
+            <div className="mt-6">
+              <Button
+                variant="primary"
+                onClick={() => navigate('/')}
+                className={components.button.primary()}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Înapoi la Pagina Principală
+              </Button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* View Toggle */}
-        <div className="max-w-4xl mx-auto px-6 mb-6">
-          <div className="flex items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => setViewMode('categories')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === 'categories'
-                  ? 'bg-amber-700 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <Grid3x3 className="w-4 h-4" />
-              Categorii
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('products')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === 'products'
-                  ? 'bg-amber-700 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <List className="w-4 h-4" />
-              Toate produsele
-            </button>
-          </div>
+      {/* View Toggle */}
+      <div className="max-w-4xl mx-auto px-6 mb-6">
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setViewMode('categories')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              viewMode === 'categories'
+                ? 'bg-amber-700 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Grid3x3 className="w-4 h-4" />
+            Categorii
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('products')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              viewMode === 'products'
+                ? 'bg-amber-700 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <List className="w-4 h-4" />
+            Toate produsele
+          </button>
         </div>
+      </div>
     </>
   );
 
@@ -319,7 +318,8 @@ const CatalogPage: React.FC = () => {
           robots="index, follow"
         />
         {pageTop}
-        <div className="max-w-4xl mx-auto px-6 mb-10">
+        {/* Same key as the loaded section, so React keeps this element in place */}
+        <div key="catalog-categories" className="max-w-4xl mx-auto px-6 mb-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {[1, 2, 3, 4, 5, 6].map((index) => (
               <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm animate-pulse">
@@ -344,7 +344,8 @@ const CatalogPage: React.FC = () => {
           robots="index, follow"
         />
         {pageTop}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
+        {/* Same key as the loaded section, so React keeps this element in place */}
+        <div key="catalog-products" className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
           <div className="space-y-6">
             {[1, 2, 3, 4].map((index) => (
               <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
@@ -381,25 +382,25 @@ const CatalogPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <div className="max-w-md mx-auto">
-          <Package className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Eroare la încărcarea catalogului
-          </h1>
-          <p className="text-gray-600 mb-6">
-            A apărut o eroare la încărcarea catalogului de produse. Vă rugăm să încercați din nou.
-          </p>
-          <Button
-            variant="primary"
-            onClick={() => navigate('/')}
-            className={components.button.primary()}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Înapoi la Pagina Principală
-          </Button>
+      <>
+        <SEO
+          title="Catalog Produse"
+          description="Explorează categoriile și alege produsele preferate."
+          robots="index, follow"
+        />
+        {pageTop}
+        <div className="text-center py-12" role="alert">
+          <div className="max-w-md mx-auto px-6">
+            <Package className="h-16 w-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Eroare la încărcarea catalogului
+            </h2>
+            <p className="text-gray-600">
+              A apărut o eroare la încărcarea catalogului de produse. Vă rugăm să încercați din nou.
+            </p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -412,23 +413,16 @@ const CatalogPage: React.FC = () => {
           description={emptyMessage}
           robots="index, follow"
         />
+        {pageTop}
         <div className="text-center py-12">
-          <div className="max-w-md mx-auto px-6 sm:px-6">
+          <div className="max-w-md mx-auto px-6">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
               {emptyMessage}
-            </h1>
-            <p className="text-gray-600 mb-6">
+            </h2>
+            <p className="text-gray-600">
               Vă rugăm să reveniți mai târziu sau să contactați administratorul.
             </p>
-            <Button
-              variant="primary"
-              onClick={() => navigate('/')}
-              className={components.button.primary()}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Înapoi la Pagina Principală
-            </Button>
           </div>
         </div>
       </>
@@ -463,7 +457,7 @@ const CatalogPage: React.FC = () => {
 
       {/* Categories Section */}
       {viewMode === 'categories' && (
-        <div className="max-w-4xl mx-auto px-6 mb-10">
+        <div key="catalog-categories" className="max-w-4xl mx-auto px-6 mb-10">
           {!categories || categories.length === 0 ? (
             <div className={`${components.backgrounds.card} border ${components.borders.primary} rounded-lg p-4 text-gray-700`}>
               Nu există categorii disponibile momentan.
@@ -514,7 +508,7 @@ const CatalogPage: React.FC = () => {
 
       {/* Products Section */}
       {viewMode === 'products' && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
+        <div key="catalog-products" className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto mb-10">
           {/* Search and Sort Controls */}
           <div className="mb-6 space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">

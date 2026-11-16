@@ -245,8 +245,9 @@ const CategoryCatalogPage: React.FC = () => {
               <div className="w-full max-w-[280px]">
                 <div className="aspect-square rounded-xl overflow-hidden relative border border-gray-200 shadow-sm bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse"></div>
               </div>
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-10 w-40 bg-gray-200 rounded animate-pulse"></div>
+              {/* Same heights as the loaded title (text-lg/xl, leading-tight) and button */}
+              <div className="h-[22.5px] md:h-[25px] w-48 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-9 w-40 bg-gray-200 rounded animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -366,7 +367,9 @@ const CategoryCatalogPage: React.FC = () => {
                   src={getCategoryImageUrl(category, imageSize)}
                   alt={category.name}
                   className="w-full h-full object-cover"
-                  loading="lazy"
+                  // Above the fold and usually the largest element: load it right away
+                  loading="eager"
+                  fetchPriority="high"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
