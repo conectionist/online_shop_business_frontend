@@ -15,6 +15,7 @@ import { generateOrganizationSchema, injectSchemaMarkup, removeSchemaMarkup } fr
 import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
 import { cartLinkLabel, formatImageCount, formatRomanianCount } from '@/utils/cartLabel';
+import { gridColumnsOnScreen, listImageLoading } from '@/utils/imageLoading';
 
 const CatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -219,6 +220,10 @@ const CatalogPage: React.FC = () => {
 
   const isLoading = isLoadingCategories || (viewMode === 'products' && isLoadingProducts);
   const error = categoriesError || (viewMode === 'products' && productsError);
+
+  // First entries that actually show an image: image loading priority counts from there
+  const firstCategoryImageIndex = (categories ?? []).findIndex((c) => !!c.image_versions?.medium);
+  const firstProductImageIndex = filteredAndSortedProducts.findIndex((p: any) => p.images?.length > 0);
 
   // Header and view toggle don't depend on the loaded data, so the loading
   // states render them as they are. Only the grid/list below is a placeholder,
@@ -464,7 +469,7 @@ const CatalogPage: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-              {categories.map((category) => {
+              {categories.map((category, index) => {
                 const hasImage = !!category.image_versions?.medium;
 
                 return (
@@ -480,7 +485,11 @@ const CatalogPage: React.FC = () => {
                           src={getCategoryImageUrl(category, imageSize)}
                           alt=""
                           className="w-full h-full object-cover"
-                          loading="lazy"
+                          // The first row is on screen when the page opens: 1 tile on phones, up to 3 on desktop
+                          {...listImageLoading(index, {
+                            eagerCount: gridColumnsOnScreen(),
+                            firstImageIndex: firstCategoryImageIndex,
+                          })}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -609,7 +618,9 @@ const CatalogPage: React.FC = () => {
                                 src={getProductImageUrl(product, imageSize)}
                                 alt={product.nume}
                                 className="w-full h-full object-cover"
-                                loading="lazy"
+                                {...listImageLoading(index, {
+                                  firstImageIndex: firstProductImageIndex,
+                                })}
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
