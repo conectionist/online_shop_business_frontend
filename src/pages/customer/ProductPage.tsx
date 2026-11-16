@@ -14,6 +14,7 @@ import SEO from '@/components/SEO';
 import { generateProductSchema, injectSchemaMarkup, removeSchemaMarkup } from '@/utils/schema';
 import { components } from '@/utils/theme';
 import { cartLinkLabel } from '@/utils/cartLabel';
+import { HERO_IMAGE_LOADING } from '@/utils/imageLoading';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -319,8 +320,7 @@ const ProductPage: React.FC = () => {
                       alt={displayProduct.nume}
                       className="w-full h-full object-cover"
                       // The page's main image: above the fold and usually its largest element
-                      loading="eager"
-                      fetchPriority="high"
+                      {...HERO_IMAGE_LOADING}
                       onClick={() => setIsLightboxOpen(true)}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;

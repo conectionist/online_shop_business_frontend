@@ -14,7 +14,7 @@ import { components } from '@/utils/theme';
 import SEO from '@/components/SEO';
 import { useBusinessDetailsSingle } from '@/hooks/useBusinessDetails';
 import { cartLinkLabel, formatImageCount, formatRomanianCount } from '@/utils/cartLabel';
-import { listImageLoading } from '@/utils/imageLoading';
+import { HERO_IMAGE_LOADING, listImageLoading } from '@/utils/imageLoading';
 
 const CategoryCatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -227,6 +227,8 @@ const CategoryCatalogPage: React.FC = () => {
   }, [products, searchTerm, sortBy]);
 
   const isLoading = isLoadingCategory || isLoadingProducts;
+  // First product that actually shows an image: image loading counts from there
+  const firstProductImageIndex = filteredAndSortedProducts.findIndex((p: any) => p.images?.length > 0);
   const error = categoryError || productsError;
 
   // Show skeleton loaders instead of spinner for better UX
@@ -369,8 +371,7 @@ const CategoryCatalogPage: React.FC = () => {
                   alt={category.name}
                   className="w-full h-full object-cover"
                   // Above the fold and usually the largest element: load it right away
-                  loading="eager"
-                  fetchPriority="high"
+                  {...HERO_IMAGE_LOADING}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
@@ -485,7 +486,11 @@ const CategoryCatalogPage: React.FC = () => {
                             src={getProductImageUrl(product, imageSize)}
                             alt={product.nume}
                             className="w-full h-full object-cover"
-                            {...listImageLoading(index)}
+                            // The header image above has the high priority; this one just loads right away
+                            {...listImageLoading(index, {
+                              firstImageIndex: firstProductImageIndex,
+                              highPriority: false,
+                            })}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
