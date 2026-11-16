@@ -79,7 +79,9 @@ const prefersReducedData = () =>
   Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
 
 const prefetchShopPages = () => {
-  if (!isShopPath(window.location.pathname) || prefersReducedData()) {
+  // Offline, a prefetch can only fail, and a failed import may be remembered
+  // by the browser; skip it and let the route load when visited
+  if (!isShopPath(window.location.pathname) || prefersReducedData() || navigator.onLine === false) {
     return
   }
   for (const route of shopRoutes) {

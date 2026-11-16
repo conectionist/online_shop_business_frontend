@@ -3,9 +3,12 @@ import { lazy, type ComponentType } from 'react';
 type PageModule = { default: ComponentType<any> };
 
 const RELOAD_KEY = 'chunk-reload-at';
-// A second failure within this window means reloading didn't help, so stop
-// reloading and let the error boundary show its message instead of looping.
-const RELOAD_WINDOW_MS = 10_000;
+// After one recovery reload, don't reload again until a page has loaded
+// successfully (or this long has passed), however slowly the next failure
+// arrives. A failure that reloading didn't fix shows the error boundary.
+const RELOAD_BLOCK_MS = 60 * 60 * 1000;
+// Delay before retrying a failed import once, in case the network blipped
+export const RETRY_DELAY_MS = 500;
 
 /**
  * True for errors thrown when a lazily loaded JS/CSS chunk can't be fetched:
@@ -24,14 +27,21 @@ export const isChunkLoadError = (error: unknown): boolean => {
   );
 };
 
+const isOffline = (): boolean => typeof navigator !== 'undefined' && navigator.onLine === false;
+
 /**
- * Reloads the page, unless it already did so moments ago.
+ * Reloads the page to fetch fresh code, at most once until a page loads
+ * successfully again. Never reloads while offline: that would replace the
+ * running app with the browser's offline page.
  * Returns whether a reload was started.
  */
 export const reloadOnce = (): boolean => {
+  if (isOffline()) {
+    return false;
+  }
   try {
     const last = Number(sessionStorage.getItem(RELOAD_KEY) || 0);
-    if (Date.now() - last < RELOAD_WINDOW_MS) {
+    if (Date.now() - last < RELOAD_BLOCK_MS) {
       return false;
     }
     sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
@@ -43,17 +53,44 @@ export const reloadOnce = (): boolean => {
   return true;
 };
 
+/** Called after a page chunk loads: the next failure may reload again. */
+const markLoadSucceeded = () => {
+  try {
+    sessionStorage.removeItem(RELOAD_KEY);
+  } catch {
+    // Storage blocked: nothing to clear
+  }
+};
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /**
- * Loads a page chunk. A failed import stays failed for the rest of the page's
- * life (React.lazy and the browser both remember it), so on a chunk error the
- * page reloads once to fetch fresh code. A second failure is rethrown for the
- * route's error boundary.
+ * Loads a page chunk. On a chunk error it retries once (a brief network drop,
+ * or an earlier background prefetch that failed); if that fails too, the page
+ * reloads once to fetch fresh code, since some browsers keep returning a
+ * failed import for the rest of the page's life. Otherwise the error is
+ * rethrown for the route's error boundary.
  */
 export const loadPage = async <T extends PageModule>(loader: () => Promise<T>): Promise<T> => {
   try {
-    return await loader();
+    const module = await loader();
+    markLoadSucceeded();
+    return module;
   } catch (error) {
-    if (isChunkLoadError(error) && reloadOnce()) {
+    if (!isChunkLoadError(error)) {
+      throw error;
+    }
+    if (!isOffline()) {
+      await wait(RETRY_DELAY_MS);
+      try {
+        const module = await loader();
+        markLoadSucceeded();
+        return module;
+      } catch {
+        // Still failing: fall through to the reload
+      }
+    }
+    if (reloadOnce()) {
       // Never resolves: the page is reloading
       return new Promise<T>(() => {});
     }

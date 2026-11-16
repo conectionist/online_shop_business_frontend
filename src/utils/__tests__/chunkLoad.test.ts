@@ -1,4 +1,4 @@
-import { isChunkLoadError, loadPage, reloadOnce } from '../chunkLoad'
+import { isChunkLoadError, loadPage, reloadOnce, RETRY_DELAY_MS } from '../chunkLoad'
 
 const chunkError = () => new TypeError('Failed to fetch dynamically imported module: /assets/CartPage-abc.js')
 
@@ -31,16 +31,32 @@ describe('isChunkLoadError', () => {
   })
 })
 
+const setOnline = (online: boolean) =>
+  Object.defineProperty(window.navigator, 'onLine', { configurable: true, get: () => online })
+
+afterEach(() => {
+  setOnline(true)
+  vi.useRealTimers()
+})
+
 describe('reloadOnce', () => {
   test('reloads the first time', () => {
     expect(reloadOnce()).toBe(true)
     expect(reload).toHaveBeenCalledTimes(1)
   })
 
-  test('does not reload again within a few seconds', () => {
+  test('does not reload again, however much later the next failure comes', () => {
+    vi.useFakeTimers()
     reloadOnce()
+    vi.advanceTimersByTime(30_000) // e.g. a slow auth check before the page renders
     expect(reloadOnce()).toBe(false)
     expect(reload).toHaveBeenCalledTimes(1)
+  })
+
+  test('never reloads while offline', () => {
+    setOnline(false)
+    expect(reloadOnce()).toBe(false)
+    expect(reload).not.toHaveBeenCalled()
   })
 })
 
@@ -51,22 +67,58 @@ describe('loadPage', () => {
     expect(reload).not.toHaveBeenCalled()
   })
 
-  test('reloads the page once on a chunk load error', async () => {
+  test('retries once and succeeds without reloading', async () => {
+    vi.useFakeTimers()
+    const module = { default: () => null }
+    const loader = vi.fn().mockRejectedValueOnce(chunkError()).mockResolvedValueOnce(module)
+    const result = loadPage(loader)
+    await vi.advanceTimersByTimeAsync(RETRY_DELAY_MS)
+    await expect(result).resolves.toBe(module)
+    expect(loader).toHaveBeenCalledTimes(2)
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  test('reloads the page once when the retry also fails', async () => {
+    vi.useFakeTimers()
     let settled = false
     loadPage(() => Promise.reject(chunkError())).then(() => { settled = true }, () => { settled = true })
-    await new Promise((r) => setTimeout(r, 0))
+    await vi.advanceTimersByTimeAsync(RETRY_DELAY_MS)
     expect(reload).toHaveBeenCalledTimes(1)
     expect(settled).toBe(false)
   })
 
-  test('rethrows when a reload just happened', async () => {
+  test('a successful load allows a later recovery reload', async () => {
+    vi.useFakeTimers()
     reloadOnce()
-    await expect(loadPage(() => Promise.reject(chunkError()))).rejects.toThrow(/dynamically imported module/)
+    await loadPage(() => Promise.resolve({ default: () => null }))
+    const failing = loadPage(() => Promise.reject(chunkError()))
+    failing.catch(() => {})
+    await vi.advanceTimersByTimeAsync(RETRY_DELAY_MS)
+    expect(reload).toHaveBeenCalledTimes(2)
+  })
+
+  test('shows the error instead of reloading when offline', async () => {
+    setOnline(false)
+    const loader = vi.fn().mockRejectedValue(chunkError())
+    await expect(loadPage(loader)).rejects.toThrow(/dynamically imported module/)
+    expect(loader).toHaveBeenCalledTimes(1)
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  test('rethrows when a reload already happened', async () => {
+    vi.useFakeTimers()
+    reloadOnce()
+    const result = loadPage(() => Promise.reject(chunkError()))
+    const check = expect(result).rejects.toThrow(/dynamically imported module/)
+    await vi.advanceTimersByTimeAsync(RETRY_DELAY_MS)
+    await check
     expect(reload).toHaveBeenCalledTimes(1)
   })
 
-  test('rethrows other errors without reloading', async () => {
-    await expect(loadPage(() => Promise.reject(new Error('boom')))).rejects.toThrow('boom')
+  test('rethrows other errors without retrying or reloading', async () => {
+    const loader = vi.fn().mockRejectedValue(new Error('boom'))
+    await expect(loadPage(loader)).rejects.toThrow('boom')
+    expect(loader).toHaveBeenCalledTimes(1)
     expect(reload).not.toHaveBeenCalled()
   })
 })
