@@ -237,7 +237,9 @@ const CategoryCatalogPage: React.FC = () => {
           description="Produsele din categorie."
           robots="index, follow"
         />
-        <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
+        {/* Same keys as the loaded page, so React keeps these elements in place
+            (a placeholder element reused for different content counts as a layout shift) */}
+        <div key="category-header" className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
           <div className="max-w-4xl mx-auto px-6 py-8">
             <div className="flex flex-col items-center text-center gap-4">
               <div className="w-full max-w-[280px]">
@@ -248,7 +250,7 @@ const CategoryCatalogPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
+        <div key="category-products" className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
           <div className="space-y-6">
             {[1, 2, 3, 4].map((index) => (
               <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
@@ -355,7 +357,7 @@ const CategoryCatalogPage: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
+      <div key="category-header" className={`${components.backgrounds.header} border-b ${components.borders.primary} mb-8`}>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex flex-col items-center text-center gap-4">
             <div className="w-full max-w-[280px]">
@@ -388,7 +390,7 @@ const CategoryCatalogPage: React.FC = () => {
       </div>
 
       {/* Products Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
+      <div key="category-products" className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto">
         {/* Search and Sort Controls */}
         <div className="mb-6 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
