@@ -42,6 +42,29 @@ beforeEach(() => {
 })
 
 describe('CatalogPage', () => {
+  test('shows the real header and toggle while loading, and keeps them when data arrives', async () => {
+    renderCatalogPage()
+
+    // Before the categories arrive, the header and toggle are already there
+    const toggle = screen.getByRole('button', { name: /Toate produsele/ })
+    const backButton = screen.getByRole('button', { name: /Înapoi la Pagina Principală/ })
+    expect(screen.queryByText('Pâine')).not.toBeInTheDocument()
+
+    // Once they arrive, the same elements are still on screen (nothing remounted)
+    await screen.findByText('Pâine')
+    expect(screen.getByRole('button', { name: /Toate produsele/ })).toBe(toggle)
+    expect(screen.getByRole('button', { name: /Înapoi la Pagina Principală/ })).toBe(backButton)
+  })
+
+  test('keeps the header and toggle when the catalog fails to load', async () => {
+    server.use(http.get(`${API}/categories`, () => new HttpResponse(null, { status: 500 })))
+    renderCatalogPage()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Eroare la încărcarea catalogului')
+    expect(screen.getByRole('button', { name: /Toate produsele/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Înapoi la Pagina Principală/ })).toBeInTheDocument()
+  })
+
   test('renders categories view by default', async () => {
     renderCatalogPage()
 
